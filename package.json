@@ -1,0 +1,19 @@
+{
+  "name": "infinitecanvas",
+  "version": "1.0.0",
+  "description": "可多人合作的无限缩放画布",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xiyuesaves/infiniteCanvas.git"
+  },
+  "author": "",
+  "license": "AGPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/xiyuesaves/infiniteCanvas/issues"
+  },
+  "homepage": "https://github.com/xiyuesaves/infiniteCanvas#readme"
+}
