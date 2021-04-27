@@ -1,4 +1,4 @@
-var zoom = 1,
+var zoom = 1000,
     dZoom = 0
 
 function z(num) {
@@ -40,41 +40,52 @@ function initCanvas() {
     // 刷新画布
     refreshCanvas();
 
+    // 监听鼠标移动操作
     canvas.addEventListener('mousemove', (e) => { // 展示当前画笔位置
         brushEl.style.transform = "translate3d(" + (e.offsetX - (brushEl.offsetWidth / 2)) + "px, " + (e.offsetY - (brushEl.offsetHeight / 2)) + "px, 0";
         if (e.buttons === 1) {
             draw(e)
-            pathArr.push([e.offsetX - toLeft, e.offsetY - toTop, dZoom])
+            pathArr.push([e.offsetX - ctxOrigin[0], e.offsetY - ctxOrigin[1], dZoom])
         };
         if (e.buttons === 2) {
             document.body.className = "move";
-            // ctxOrigin[0] = ctxOrigin[0] - e.offsetX
-            // ctxOrigin[1] = ctxOrigin[1] - e.offsetY
-            // toLeft = toLeft + ctxOrigin[0]
-            // toTop = toTop + ctxOrigin[1]
-            // fullCanvas()
-            moveCanvas()
-            // ctxOrigin[toLeft, toTop]
-        } else {
-            document.body.className = "";
-        };
-    });
-    canvas.addEventListener('mousedown', (e) => {
-        // 移动笔刷到鼠标下方
-        brushEl.style.transform = "translate3d(" + (e.offsetX - (brushEl.offsetWidth / 2)) + "px, " + (e.offsetY - (brushEl.offsetHeight / 2)) + "px, 0";
-        console.log(e.buttons);
-        if (e.buttons === 1) {
-            draw(e);
-            pathArr.push([e.offsetX, e.offsetY, dZoom]);
-        }
-        if (e.buttons === 2) {
-            document.body.className = "move";
-            ctxOrigin = [e.offsetX, e.offsetY];
+            ctxOrigin = [ctxOrigin[0] + e.movementX, ctxOrigin[1] + e.movementY]
+            fullCanvas()
         } else {
             document.body.className = "";
         };
     });
 
+    // 监听鼠标按下操作
+    canvas.addEventListener('mousedown', (e) => {
+        // 移动笔刷到鼠标下方
+        brushEl.style.transform = "translate3d(" + (e.offsetX - (brushEl.offsetWidth / 2)) + "px, " + (e.offsetY - (brushEl.offsetHeight / 2)) + "px, 0";
+        console.log(e.buttons);
+        // 鼠标左键按下开始绘制,并将坐标记录到数组内
+        if (e.buttons === 1) {
+            draw(e);
+            pathArr.push([e.offsetX - ctxOrigin[0], e.offsetY - ctxOrigin[1], dZoom]);
+        }
+        // 右键按下则记录按下初始位置
+        if (e.buttons === 2) {
+            document.body.className = "move";
+        } else {
+            document.body.className = "";
+        };
+    });
+
+    // 监听鼠标抬起
+    canvas.addEventListener('mouseup', (e) => {
+        if (e.buttons === 0) {
+            document.body.className = "";
+        }
+    })
+
+    // 画布缩放
+
+
+
+    // 绘制方法
     function draw(e) {
         ctx.fillStyle = brushColor; // 绘制颜色
         ctx.beginPath(); // 开始绘制路径
@@ -89,7 +100,7 @@ function initCanvas() {
             const brushWidth = brushEl.offsetWidth / 2;
             ctx.fillStyle = brushColor; // 绘制颜色
             ctx.beginPath(); // 开始绘制路径
-            ctx.arc((pathArr[i][0]-toLeft) / pathArr[i][2] * dZoom, (pathArr[i][1]-toTop) / pathArr[i][2] * dZoom, (brushWidth / pathArr[i][2] * dZoom), 0, 2 * Math.PI); // 绘制圆
+            ctx.arc((pathArr[i][0]+ctxOrigin[0]) / pathArr[i][2] * dZoom, (pathArr[i][1]+ctxOrigin[1]) / pathArr[i][2] * dZoom, (brushWidth / pathArr[i][2] * dZoom), 0, 2 * Math.PI); // 绘制圆
             ctx.fill(); // 填充路径
         };
     };
