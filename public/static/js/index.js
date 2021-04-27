@@ -1,138 +1,170 @@
-var zoom = 100000,
-    dZoom = 0
-
-function z(num) {
-    zoom = num
-}
-
-//取消默认的浏览器自带右键
+// 取消浏览器默认右键菜单
 window.oncontextmenu = function(e) {
     e.preventDefault();
 }
 
 window.onload = function() {
     // 计算画布大小
-    var canvas = document.querySelector("#canvas");
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    // 初始化画布
     initCanvas();
-    // 设置菜单
-    // brushSettingMenu();
 };
 
 // 初始化画布
 function initCanvas() {
-    let brushColor = "black";
-    let pathArr = [];
-    let ctxOrigin = [0, 0];
-    let toTop = 0,
-        toLeft = 0;
-    let canvasData;
+    // 主要操作元素
     const canvas = document.querySelector("#canvas");
-    const brushEl = document.querySelector(".brush");
-    const ctx = canvas.getContext('2d');
+    const bursh = document.querySelector("#brush");
+    const ctx = canvas.getContext("2d");
+
+    // 变量声明
+    let pathArr = [];
+    let lastX = 0,
+        lastY = 0;
+    let moveX = 0,
+        moveY = 0;
+    let tempX = 0,
+        tempY = 0;
+    let zoom = 1.1,
+        dZoom = 1;
+    let imageData;
+    let brushColor = "#ff0000";
+    let dragStart = false;
+    let moveStart = false;
+    // 宽度变化监听
     window.onresize = function() {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
-        fullCanvas();
+        drenArr(pathArr)
     }
+    // 初始化大小
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
 
-    // 刷新画布
-    refreshCanvas();
-
-    // 监听鼠标移动操作
-    canvas.addEventListener('mousemove', (e) => { // 展示当前画笔位置
-        brushEl.style.transform = "translate3d(" + (e.offsetX - (brushEl.offsetWidth / 2)) + "px, " + (e.offsetY - (brushEl.offsetHeight / 2)) + "px, 0";
+    // 监听笔刷位置
+    canvas.addEventListener("mousedown", function(e) {
         if (e.buttons === 1) {
-            draw(e)
-            pathArr.push([e.offsetX - ctxOrigin[0], e.offsetY - ctxOrigin[1], dZoom])
-        };
-        if (e.buttons === 2) {
-            document.body.className = "move";
-            ctxOrigin = [ctxOrigin[0] + e.movementX, ctxOrigin[1] + e.movementY]
-            moveCanvas()
-            // fullCanvas()
+            dragStart = true;
+            dren(e);
+        } else if (e.buttons === 2) {
+            drenArr(pathArr)
+            imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+            tempX = e.offsetX
+            tempY = e.offsetY
+            moveStart = true;
         } else {
-            document.body.className = "";
+            dragStart = false;
         };
     });
-
-    // 监听鼠标按下操作
-    canvas.addEventListener('mousedown', (e) => {
-        // 移动笔刷到鼠标下方
-        brushEl.style.transform = "translate3d(" + (e.offsetX - (brushEl.offsetWidth / 2)) + "px, " + (e.offsetY - (brushEl.offsetHeight / 2)) + "px, 0";
-        console.log(e.buttons);
-        // 鼠标左键按下开始绘制,并将坐标记录到数组内
-        if (e.buttons === 1) {
-            draw(e);
-            pathArr.push([e.offsetX - ctxOrigin[0], e.offsetY - ctxOrigin[1], dZoom]);
-        }
-        // 右键按下则记录按下初始位置
-        if (e.buttons === 2) {
-            document.body.className = "move";
-            // fullCanvas()
-        } else {
-            document.body.className = "";
-        };
+    canvas.addEventListener("mouseup", function(e) {
+        dragStart = false;
+        moveStart = false;
     });
-
-    // 监听鼠标抬起
-    canvas.addEventListener('mouseup', (e) => {
-        if (e.buttons === 0) {
-            document.body.className = "";
+    canvas.addEventListener("mousemove", function(e) {
+        let lefPotin = e.offsetX - bursh.offsetWidth / 2,
+            rightPoint = e.offsetY - bursh.offsetHeight / 2;
+        bursh.style.transform = "translate3d(" + lefPotin + "px, " + rightPoint + "px, 0px)";
+        if (dragStart) {
+            dren(e);
+        };
+        if (moveStart) {
+            moveCanvas(e)
         }
-    })
-
-    // 画布缩放
-    canvas.addEventListener('wheel', (e) => {
-        zoom = zoom - (e.deltaY)
-    })
+    });
 
     // 绘制方法
-    function draw(e) {
-        ctx.fillStyle = brushColor; // 绘制颜色
-        ctx.beginPath(); // 开始绘制路径
-        ctx.arc(e.offsetX, e.offsetY, (brushEl.offsetWidth / 2), 0, 2 * Math.PI); // 绘制圆
-        ctx.fill(); // 填充路径
-    };
+    function dren(e) {
+        pathArr.push({
+            x: (e.offsetX / dZoom - lastX) ,
+            y: (e.offsetY / dZoom - lastY) ,
+            color: brushColor,
+            brushSize:(bursh.offsetWidth / 2) / dZoom
+        })
+        ctx.fillStyle = brushColor;
+        ctx.beginPath();
+        ctx.arc(e.offsetX / dZoom, e.offsetY / dZoom, (bursh.offsetWidth / 2) / dZoom , 0, 2 * Math.PI);
+        ctx.fill();
+    }
+    // 绘制数组路径
+    function drenArr(arr) {
+        ctx.clearRect(0, 0, canvas.width / dZoom, canvas.height / dZoom);
+        // 绘制数组内数据
+        for (let i = arr.length - 1; i >= 0; i--) {
+            ctx.fillStyle = arr[i].color;
+            ctx.beginPath();
+            ctx.arc((arr[i].x + lastX), (arr[i].y + lastY), arr[i].brushSize, 0, 2 * Math.PI);
+            ctx.fill();
+        }
+    }
 
-    // 重绘画布[高资源占用]
-    function fullCanvas() {
-        console.log("重绘")
+    // 计算位移
+    function moveCanvas(e) {
+        let eX = e.offsetX;
+        let eY = e.offsetY;
+        moveX = -tempX + eX;
+        moveY = -tempY + eY;
+        tempX = eX;
+        tempY = eY;
+        lastX = lastX + moveX / dZoom;
+        lastY = lastY + moveY / dZoom;
+        drenArr(pathArr);
+    }
+    canvas.addEventListener('mousewheel', function(e) {
+        let delta = e.deltaY / 90
+        zoomFun(-delta)
+    }, false);
+
+    function zoomFun(delta) {
+        let zooms = Math.pow(zoom, delta);
+        ctx.scale(zooms, zooms);
+        dZoom = dZoom * zooms
+        console.log(dZoom)
+        drenArr(pathArr);
+    }
+
+
+    // 测试代码
+    var gkhead = new Image;
+    var ball = new Image;
+    // 加载图片素材
+    gkhead.src = 'http://127.0.0.1/1.jpg';
+    ball.src = 'http://127.0.0.1/1.jpg';
+
+    function redraw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        for (let i = 0; i < pathArr.length; i++) {
-            const brushWidth = brushEl.offsetWidth / 2;
-            ctx.fillStyle = brushColor; // 绘制颜色
-            ctx.beginPath(); // 开始绘制路径
-            ctx.arc((pathArr[i][0] + ctxOrigin[0]) / pathArr[i][2] * dZoom, (pathArr[i][1] + ctxOrigin[1]) / pathArr[i][2] * dZoom, (brushWidth / pathArr[i][2] * dZoom), 0, 2 * Math.PI); // 绘制圆
-            ctx.fill(); // 填充路径
-        };
-        canvasData = ctx.getImageData(0, 0, canvas.width, canvas.height)
-    };
-
-    // 移动画布[低资源占用]
-    function moveCanvas() {
-        // newCanvasData = ctx.getImageData(0, 0, canvas.width, canvas.height)
-        // if (canvasData !== newCanvasData) {
-        //     canvasData = newCanvasData
-        // }
-        ctx.translate(ctxOrigin[0], ctxOrigin[1])
-        fullCanvas()
-        // ctx.putImageData(canvasData, 0,0)
-    };
-
-    // 根据屏幕刷新率来刷新canvas
-    function refreshCanvas() {
-        // requestAnimationFrame(
-        //     function() {
-        //         // 如果改变缩放值则刷新画布
-        //         if (zoom !== dZoom) {
-        //             dZoom = zoom;
-        //             fullCanvas();
-        //         }
-        //         refreshCanvas();
-        //     }
-        // );
-    };
+        ctx.drawImage(gkhead, 200, 50);
+        ctx.beginPath();
+        ctx.lineWidth = 6;
+        ctx.moveTo(399, 250);
+        ctx.lineTo(474, 256);
+        ctx.stroke();
+        ctx.save();
+        ctx.translate(4, 2);
+        ctx.beginPath();
+        ctx.lineWidth = 1;
+        ctx.moveTo(436, 253);
+        ctx.lineTo(437.5, 233);
+        ctx.stroke();
+        ctx.save();
+        ctx.translate(438.5, 223);
+        ctx.strokeStyle = '#06c';
+        ctx.beginPath();
+        ctx.lineWidth = 0.05;
+        for (var i = 0; i < 60; ++i) {
+            ctx.rotate(6 * i * Math.PI / 180);
+            ctx.moveTo(9, 0);
+            ctx.lineTo(10, 0);
+            ctx.rotate(-6 * i * Math.PI / 180);
+        }
+        ctx.stroke();
+        ctx.restore();
+        ctx.beginPath();
+        ctx.lineWidth = 0.2;
+        ctx.arc(438.5, 223, 10, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+        ctx.drawImage(ball, 379, 233, 40, 40);
+        ctx.drawImage(ball, 454, 239, 40, 40);
+        ctx.drawImage(ball, 310, 295, 20, 20);
+        ctx.drawImage(ball, 314.5, 296.5, 5, 5);
+        ctx.drawImage(ball, 319, 297.2, 5, 5);
+    }
 };

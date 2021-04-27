@@ -9,12 +9,15 @@ body {
     background-color: rgba(0, 0, 0, 0.15);
 }
 
-.move {
+canvas.move {
     cursor: move;
 }
 
+div.move{
+    opacity: 0;
+}
 
-.brush {
+#brush {
     pointer-events: none;
     position: absolute;
     z-index: 10;
@@ -25,10 +28,6 @@ body {
     border-radius: 1000000px;
     border: solid 1px #999999;
     background-color: rgba(255, 255, 255, 0.4);
-}
-
-.move .brush {
-    opacity: 0;
 }
 
 .left-menu {
