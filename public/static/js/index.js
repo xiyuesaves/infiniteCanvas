@@ -41,7 +41,7 @@ function initCanvas() {
     let enableTween = true; // 是否启用补间
     let tweenInterval = 6; // 启用补间的间隔
     let tweenStride = 5; // 补间步幅
-    let highPerformanceDrag = true; // 是否启用高性能拖动
+    let highPerformanceDrag = false; // 是否启用高性能拖动
     // 宽度变化监听
     window.onresize = function() {
         canvas.width = window.innerWidth;

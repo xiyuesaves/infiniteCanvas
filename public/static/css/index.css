@@ -13,7 +13,7 @@ canvas.move {
     cursor: move;
 }
 
-div.move{
+div.move {
     opacity: 0;
 }
 
@@ -32,7 +32,7 @@ div.move{
 
 .left-menu {
     position: fixed;
-    background-color: rgba(255, 255, 255, 0.75);
+    background-color: rgba(255, 255, 255, 0.5);
     border-radius: 0 15px 15px 0;
     width: 150px;
     border: solid 1px #ffffff;
@@ -65,9 +65,11 @@ div.move{
     background-color: #ffffff;
     box-sizing: border-box;
 }
-.left-menu .top-select-color .color-box:nth-child(4n){
+
+.left-menu .top-select-color .color-box:nth-child(4n) {
     margin-right: 0;
 }
+
 .left-menu .top-select-color .color-box.select {
     border: solid 3px #0075ff;
 }
@@ -155,7 +157,7 @@ div.move{
     /*box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);*/
 }
 
-.left-menu .input-color-value{
+.left-menu .input-color-value {
     width: 100%;
     height: 28px;
     display: flex;
@@ -164,7 +166,8 @@ div.move{
     margin-top: 15px;
     margin-bottom: 15px;
 }
-.left-menu .input-color-value input{
+
+.left-menu .input-color-value input {
     font-size: 15px;
     line-height: 24px;
     color: #333333;
@@ -175,15 +178,198 @@ div.move{
     background-color: transparent;
     outline: none;
     border-bottom: solid 1px #999999;
-    text-transform:uppercase
+    text-transform: uppercase
 }
-.left-menu .input-color-value input::placeholder{
+
+.left-menu .input-color-value input::placeholder {
     font-family: 微软雅黑;
     font-size: 15px;
     line-height: 24px;
-    text-transform:uppercase
+    text-transform: uppercase
 }
-.left-menu .input-color-value .color-view{
+
+.left-menu .input-color-value .color-view {
     width: 28px;
     height: 28px;
+}
+
+.online {
+    width: 150px;
+    height: 40px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+}
+
+.online .total-num {
+    width: 150px;
+    height: 40px;
+    line-height: 40px;
+    border: solid 1px #ffffff;
+    text-align: center;
+    backdrop-filter: blur(5px);
+    margin: 0;
+    border-radius: 0 0 15px 0;
+    background-color: rgba(255, 255, 255, 0.5);
+    font-size: 16px;
+    color: #333333;
+    cursor: pointer;
+}
+
+.online:hover .online-list {
+    transform: translateY(0%);
+}
+
+.online .online-list {
+    width: 180px;
+    height: auto;
+    min-height: 50px;
+    position: absolute;
+    top: 0;
+    left: calc(100% + 20px);
+    border-radius: 0 0 15px 15px;
+    border: solid 1px #ffffff;
+    padding-top: 15px;
+    background-color: rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(5px);
+    box-sizing: border-box;
+    overflow: hidden;
+    transform: translateY(-100%);
+    transition: transform 300ms 100ms;
+}
+
+.online .online-list .user-name {
+    width: 100%;
+    font-size: 16px;
+    line-height: 40px;
+    padding: 0 15px 0;
+    box-sizing: border-box;
+    height: 40px;
+    margin: 0;
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: pointer;
+    transition: background-color 300ms, box-shadow 300ms;
+}
+
+.online .online-list .user-name:hover {
+    background-color: rgba(255, 255, 255, 0.8);
+    box-shadow: 2px 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+.omMsg {
+    position: absolute;
+    width: 400px;
+    height: 260px;
+    background-color: red;
+    left: 0;
+    bottom: 0;
+    border-radius: 0 15px 0 0;
+    border: solid 1px #ffffff;
+    background-color: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(5px);
+    box-sizing: border-box;
+    padding: 15px;
+    padding-bottom: 10px;
+}
+
+.omMsg .top-msg-list {
+    width: 100%;
+    height: 190px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    flex-direction: column;
+    overflow-y: scroll;
+}
+
+.omMsg .top-msg-list::-webkit-scrollbar {
+    width: 0 !important
+}
+.omMsg .top-msg-list .msg-text{
+    width: 100%;
+    height: auto;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    /*background-color: #ffaa00;*/
+    flex-direction: column;
+}
+.omMsg .top-msg-list .msg-text .user-name{
+    width: 100%;
+    margin: 0;
+    color: #333333;
+    font-weight: bold;
+}
+.omMsg .top-msg-list .msg-text .user-name::after{
+    content: "：";
+}
+.omMsg .top-msg-list .msg-text .content{
+    width: 100%;
+    height: auto;
+    word-break: break-all;
+    margin-top: 8px;
+    font-size: 14px;
+    color: #666666;
+    margin-bottom: 0;
+}
+.omMsg .bottom-msg-input{
+    width: 100%;
+    height: 35px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.omMsg .bottom-msg-input input{
+    width: 290px;
+    outline: none;
+    height: 100%;
+    padding: 0;
+    box-sizing: border-box;
+    border: none;
+    font-size: 15px;
+    background-color: transparent;
+    text-indent: 8px;
+    color: #555555;
+    border-bottom: solid 1px #ffffff;
+}
+.omMsg .bottom-msg-input button{
+    width: 78px;
+    height: 100%;
+    padding: 0;
+    margin: 0;
+    outline: none;
+    cursor: pointer;
+    background-color: #ffffff;
+    font-size: 14px;
+    color: #777777;
+    font-weight: bold;
+    border: none;
+}
+.omMsg .bottom-msg-input button:active{
+    line-height: 40px;
+}
+
+.right-zoom-indicator{
+    width: 16px;
+    height: 80%;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    right: 20px;
+    border-radius: 16px;
+    background-color: red;
+    border: solid 1px #ffffff;
+    background-color: ;
+    background-color: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(5px);
 }
