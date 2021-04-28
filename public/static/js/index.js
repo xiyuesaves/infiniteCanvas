@@ -30,11 +30,16 @@ function initCanvas() {
         mouseY = 0;
     let transX = 0, // 计算补间用
         transY = 0;
+    let hipX = 0, // 高性能移动坐标
+        hipY = 0;
     let imageData; // 图片数据[后期优化用]
     let brushColor = "#ff0000"; // 笔刷颜色
     let dragStart = false;
     let moveStart = false;
-    let enableTween = true // 是否启用补间
+    let enableTween = true; // 是否启用补间
+    let tweenInterval = 6; // 启用补间的间隔
+    let tweenStride = 5; // 补间步幅
+    let highPerformanceDrag = true; // 是否启用高性能拖动
     // 宽度变化监听
     window.onresize = function() {
         canvas.width = window.innerWidth;
@@ -54,8 +59,11 @@ function initCanvas() {
             dragStart = true;
             dren(e);
         } else if (e.buttons === 2) {
+            if (highPerformanceDrag) {
+                hipX = 0;
+                hipY = 0;
+            }
             drenArr(pathArr)
-            imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
             tempX = e.offsetX
             tempY = e.offsetY
             moveStart = true;
@@ -66,6 +74,9 @@ function initCanvas() {
     canvas.addEventListener("mouseup", function(e) {
         dragStart = false;
         moveStart = false;
+        if (highPerformanceDrag) {
+            drenArr(pathArr)
+        }
     });
     canvas.addEventListener("mousemove", function(e) {
         mouseX = e.offsetX;
@@ -77,8 +88,8 @@ function initCanvas() {
             frameY = transY - mouseY;
         if (dragStart) {
             // 补间,填充两个坐标之间的空隙
-            if (enableTween && (Math.abs(frameX) > 8 || Math.abs(frameY) > 8 || (Math.abs(frameX) > 4 && Math.abs(frameY) > 4))) {
-                let tween = Math.abs(frameX) > Math.abs(frameY) ? Math.abs(frameX) / 5 : Math.abs(frameY) / 5;
+            if (enableTween && (Math.abs(frameX) > tweenInterval || Math.abs(frameY) > tweenInterval || (Math.abs(frameX) > tweenInterval / 2 && Math.abs(frameY) > tweenInterval / 2))) {
+                let tween = Math.abs(frameX) > Math.abs(frameY) ? Math.abs(frameX) / tweenStride : Math.abs(frameY) / tweenStride;
                 let tweenX = frameX / tween,
                     tweenY = frameY / tween;
                 let stepX = tweenX,
@@ -130,6 +141,8 @@ function initCanvas() {
             ctx.arc((arr[i].x + lastX), (arr[i].y + lastY), arr[i].brushSize, 0, 2 * Math.PI);
             ctx.fill();
         }
+
+        imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
     }
 
     // 计算位移
@@ -142,7 +155,19 @@ function initCanvas() {
         tempY = eY;
         lastX = lastX + moveX / dZoom;
         lastY = lastY + moveY / dZoom;
-        drenArr(pathArr);
+        if (highPerformanceDrag) {
+            hipX = hipX + moveX;
+            hipY = hipY + moveY;
+            moveImage();
+        } else {
+            drenArr(pathArr);
+        }
+    }
+
+    // 高性能移动
+    function moveImage() {
+        ctx.clearRect(0, 0, canvas.width / dZoom, canvas.height / dZoom);
+        ctx.putImageData(imageData, hipX, hipY)
     }
 
     // 鼠标滚轮监听
