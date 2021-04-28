@@ -5,6 +5,8 @@ window.oncontextmenu = function(e) {
 }
 
 window.onload = function() {
+    // 初始化色块
+    initColorBlock();
     // 初始化画布
     initCanvas();
 };
@@ -32,7 +34,7 @@ function initCanvas() {
         transY = 0;
     let hipX = 0, // 高性能移动坐标
         hipY = 0;
-    let imageData; // 图片数据[后期优化用]
+    let imageData; // 图片数据
     let brushColor = "#ff0000"; // 笔刷颜色
     let dragStart = false;
     let moveStart = false;
@@ -141,7 +143,6 @@ function initCanvas() {
             ctx.arc((arr[i].x + lastX), (arr[i].y + lastY), arr[i].brushSize, 0, 2 * Math.PI);
             ctx.fill();
         }
-
         imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
     }
 
@@ -169,7 +170,6 @@ function initCanvas() {
         ctx.clearRect(0, 0, canvas.width / dZoom, canvas.height / dZoom);
         ctx.putImageData(imageData, hipX, hipY)
     }
-
     // 鼠标滚轮监听
     canvas.addEventListener('mousewheel', function(e) {
         let delta = e.deltaY / 90
@@ -300,4 +300,38 @@ function initCanvas() {
         };
     };
     brushMenu();
-}
+};
+
+// 初始化色块
+function initColorBlock() {
+    const colorArr = [
+        "#ec6841",
+        "#f19149",
+        "#f7b551",
+        "#fff45c",
+        "#b3d465",
+        "#7fc269",
+        "#31b16c",
+        "#12b4b1",
+        "#448ac9",
+        "#556fb5",
+        "#5f52a0",
+        "#8957a1",
+        "#ad5da1",
+        "#ea68a2",
+        "#000000"
+    ];
+    const blockNum = colorArr.length >= 24 ? colorArr.length : 32;
+    const selectColorBox = document.querySelector(".top-select-color");
+    for (let i = 0; i < blockNum; i++) {
+        const colorValue = colorArr[i] || "#ffffff";
+        const colorEl = document.createElement("div");
+        colorEl.setAttribute("title", colorValue);
+        colorEl.setAttribute("style", "background-color: " + colorValue + ";");
+        colorEl.className = "color-box";
+        if (i === 0) {
+            colorEl.className = "color-box select";
+        };
+        selectColorBox.appendChild(colorEl);
+    };
+};

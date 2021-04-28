@@ -9,47 +9,21 @@
 </head>
 
 <body>
+    <!-- 左侧菜单 -->
+    <div class="left-menu">
+        <div class="top-select-color"></div>
+        <div class="input-color-value">
+            <input onkeydown="" class="input-color" maxlength="7" type="text" placeholder="#ffffff" name="">
+            <div class="color-view" style="background-color: #ffffff;"></div>
+        </div>
+        <div class="brush-size" title="笔刷大小">
+            <div class="slider" data-value="20"></div>
+        </div>
+    </div>
+    <!-- 笔刷显示 -->
+    <div id="brush"></div>
+    <canvas id="canvas">
+    </canvas>
 </body>
-<!-- 左侧菜单 -->
-<div class="left-menu">
-	<div class="top-select-color">
-		<div class="color-box select" title="#ec6841" style="background-color: #ec6841;"></div>
-		<div class="color-box" title="#f19149" style="background-color: #f19149;"></div>
-		<div class="color-box" title="#f7b551" style="background-color: #f7b551;"></div>
-		<div class="color-box" title="#fff45c" style="background-color: #fff45c;"></div>
-		<div class="color-box" title="#b3d465" style="background-color: #b3d465;"></div>
-		<div class="color-box" title="#7fc269" style="background-color: #7fc269;"></div>
-		<div class="color-box" title="#31b16c" style="background-color: #31b16c;"></div>
-		<div class="color-box" title="#12b4b1" style="background-color: #12b4b1;"></div>
-		<div class="color-box" title="#448ac9" style="background-color: #448ac9;"></div>
-		<div class="color-box" title="#556fb5" style="background-color: #556fb5;"></div>
-		<div class="color-box" title="#5f52a0" style="background-color: #5f52a0;"></div>
-		<div class="color-box" title="#8957a1" style="background-color: #8957a1;"></div>
-		<div class="color-box" title="#ad5da1" style="background-color: #ad5da1;"></div>
-		<div class="color-box" title="#ea68a2" style="background-color: #ea68a2;"></div>
-		<div class="color-box" title="#000000" style="background-color: #000000;"></div>
-		<div class="color-box" title="#ffffff" style="background-color: #ffffff;"></div>
-		<!-- 自定义颜色 -->
-		<div class="color-box" title="#ffffff" style="background-color: #ffffff;"></div>
-		<div class="color-box" title="#ffffff" style="background-color: #ffffff;"></div>
-		<div class="color-box" title="#ffffff" style="background-color: #ffffff;"></div>
-		<div class="color-box" title="#ffffff" style="background-color: #ffffff;"></div>
-		<div class="color-box" title="#ffffff" style="background-color: #ffffff;"></div>
-		<div class="color-box" title="#ffffff" style="background-color: #ffffff;"></div>
-		<div class="color-box" title="#ffffff" style="background-color: #ffffff;"></div>
-		<div class="color-box" title="#ffffff" style="background-color: #ffffff;"></div>
-	</div>
-	<div class="input-color-value">
-		<input onkeydown="" class="input-color" maxlength="7" type="text" placeholder="#ffffff" name="">
-		<div class="color-view" style="background-color: #ffffff;"></div>
-	</div>
-	<div class="brush-size">
-		<div class="slider" data-value="20"></div>
-	</div>
-</div>
-<!-- 笔刷显示 -->
-<div id="brush"></div>
-<canvas id="canvas">
-</canvas>
 
 </html>
