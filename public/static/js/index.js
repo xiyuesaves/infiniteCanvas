@@ -25,6 +25,8 @@ function initCanvas() {
         tempY = 0;
     let zoom = 1.1,
         dZoom = 1;
+    let mouseX = 0,
+        mouseY = 0;
     let imageData;
     let brushColor = "#ff0000";
     let dragStart = false;
@@ -60,9 +62,11 @@ function initCanvas() {
         moveStart = false;
     });
     canvas.addEventListener("mousemove", function(e) {
-        let lefPotin = e.offsetX - bursh.offsetWidth / 2,
-            rightPoint = e.offsetY - bursh.offsetHeight / 2;
-        bursh.style.transform = "translate3d(" + lefPotin + "px, " + rightPoint + "px, 0px)";
+        mouseX = e.offsetX;
+        mouseY = e.offsetY;
+        let burshX = mouseX - bursh.offsetWidth / 2,
+            burshY = mouseY - bursh.offsetHeight / 2;
+        bursh.style.transform = "translate3d(" + burshX + "px, " + burshY + "px, 0px)";
         if (dragStart) {
             dren(e);
         };
@@ -118,8 +122,16 @@ function initCanvas() {
     function zoomFun(delta) {
         let zooms = Math.pow(zoom, delta);
         ctx.scale(zooms, zooms);
-        dZoom = dZoom * zooms
-        console.log("缩放比例 "+dZoom)
+        let afterW = canvas.width * dZoom,
+            afterH = canvas.height * dZoom;
+        dZoom = dZoom * zooms;
+        let beforeW = canvas.width * dZoom,
+            beforeH = canvas.height * dZoom;
+        // console.log("缩放比例 ", dZoom, "缩放大小", afterW, afterH, "-", beforeW, beforeH)
+        // console.log("鼠标相对xy轴比例", (mouseX / canvas.width), (mouseY / canvas.height))
+
+        lastX = lastX + ((mouseX / afterW) * (afterW - beforeW)) / dZoom;
+        lastY = lastY + ((mouseY / afterH) * (afterH - beforeH)) / dZoom;
 
         drenArr(pathArr);
     }
