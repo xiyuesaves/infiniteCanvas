@@ -33,6 +33,7 @@ function initCanvas() {
     window.onresize = function() {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
+        ctx.scale(dZoom, dZoom);
         drenArr(pathArr)
     }
     // 初始化大小
@@ -107,16 +108,20 @@ function initCanvas() {
         lastY = lastY + moveY / dZoom;
         drenArr(pathArr);
     }
+
     canvas.addEventListener('mousewheel', function(e) {
         let delta = e.deltaY / 90
         zoomFun(-delta)
     }, false);
 
+    // 缩放方法
     function zoomFun(delta) {
         let zooms = Math.pow(zoom, delta);
         ctx.scale(zooms, zooms);
         dZoom = dZoom * zooms
-        console.log(dZoom)
+        console.log("缩放比例 "+dZoom)
+
         drenArr(pathArr);
     }
+
 }
