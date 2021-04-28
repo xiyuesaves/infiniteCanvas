@@ -75,6 +75,7 @@ div.move{
 .left-menu .brush-size {
     width: calc(100% - 16px);
     margin: 0 auto;
+    cursor: pointer;
     position: relative;
     height: 16px;
     position: relative;
@@ -164,7 +165,9 @@ div.move{
     margin-bottom: 15px;
 }
 .left-menu .input-color-value input{
-    font-size: 16px;
+    font-size: 15px;
+    line-height: 24px;
+    color: #333333;
     font-family: 微软雅黑;
     width: 80px;
     border: none;
@@ -176,7 +179,8 @@ div.move{
 }
 .left-menu .input-color-value input::placeholder{
     font-family: 微软雅黑;
-    font-size: 16px;
+    font-size: 15px;
+    line-height: 24px;
     text-transform:uppercase
 }
 .left-menu .input-color-value .color-view{

@@ -1,3 +1,4 @@
+"use strict"
 // 取消浏览器默认右键菜单
 window.oncontextmenu = function(e) {
     e.preventDefault();
@@ -36,7 +37,7 @@ function initCanvas() {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
         ctx.scale(dZoom, dZoom);
-        drenArr(pathArr)
+        drenArr(pathArr);
     }
     // 初始化大小
     canvas.width = window.innerWidth;
@@ -71,8 +72,8 @@ function initCanvas() {
             dren(e);
         };
         if (moveStart) {
-            moveCanvas(e)
-        }
+            moveCanvas(e);
+        };
     });
 
     // 绘制方法
@@ -117,7 +118,7 @@ function initCanvas() {
     // 鼠标滚轮监听
     canvas.addEventListener('mousewheel', function(e) {
         let delta = e.deltaY / 90
-        zoomFun(-delta)
+        zoomFun(-delta);
     }, false);
 
     // 缩放方法
@@ -145,7 +146,7 @@ function initCanvas() {
         brushSize.addEventListener("mousedown", function(e) {
             if (e.buttons === 1) {
                 clickSlider = true;
-                moveSlider(e)
+                moveSlider(e);
             } else {
                 clickSlider = false;
             };
@@ -158,7 +159,7 @@ function initCanvas() {
         })
         brushSize.addEventListener("mousemove", function(e) {
             if (clickSlider) {
-                moveSlider(e)
+                moveSlider(e);
             };
         });
 
@@ -171,30 +172,69 @@ function initCanvas() {
             bursh.style.height = sliderW + "px";
         }
 
-        // 初始化笔刷颜色和绑定色块点击事件
+        // 绑定色块点击事件
         colorBox.forEach((el, index) => {
-            if (el.className.indexOf("select") !== -1) {
-                brushColor = el.getAttribute("title");
-                colorInput.setAttribute("placeholder", brushColor)
-                selectColor.setAttribute("style", "background-color: " + brushColor + ";")
-            };
             el.addEventListener("click", function() {
                 if (this.className.indexOf("select") === -1) {
-                    cleanSelect()
-                    this.setAttribute("class", "color-box select")
-                    colorInput.setAttribute("placeholder", brushColor)
-                    selectColor.setAttribute("style", "background-color: " + brushColor + ";")
-                    brushColor = el.getAttribute("title");
-                }
-            })
+                    cleanSelect();
+                    this.setAttribute("class", "color-box select");
+                    brushColor = this.getAttribute("title");
+                    colorInput.setAttribute("placeholder", brushColor);
+                    colorInput.value = "";
+                    selectColor.setAttribute("style", "background-color: " + brushColor + ";");
+                };
+            });
         });
+
+        // 初始笔刷颜色
+        function getBrushColor() {
+            colorBox.forEach((el, index) => {
+                if (el.className.indexOf("select") !== -1) {
+                    brushColor = el.getAttribute("title");
+                    colorInput.setAttribute("placeholder", brushColor);
+                    colorInput.value = "";
+                    selectColor.setAttribute("style", "background-color: " + brushColor + ";")
+                };
+            });
+        };
+        getBrushColor();
+
+        // 监听输入框输入值
+        colorInput.addEventListener("input", function(e) {
+            checkColor(this.value);
+        });
+        colorInput.addEventListener("propertychange", function(e) {
+            checkColor(this.value);
+        });
+
+        // 判断输入值是不是hex色值
+        function checkColor(hex) {
+            const hexReg = new RegExp(/(^#[0-9A-F]{6}$)|(^#[0-9A-F]{3}$)/i);
+            // 如果是正确hex值则重写当前选中颜色
+            if (hexReg.test(hex)) {
+                overlayColor(hex);
+            };
+        };
+
+        // 覆盖当前选中颜色
+        function overlayColor(hex) {
+            colorBox.forEach((el, index) => {
+                if (el.className.indexOf("select") !== -1) {
+                    el.setAttribute("title", hex);
+                    el.setAttribute("style", "background-color: " + hex + ";");
+                    brushColor = el.getAttribute("title");
+                    colorInput.setAttribute("placeholder", brushColor);
+                    selectColor.setAttribute("style", "background-color: " + brushColor + ";")
+                };
+            });
+        };
 
         // 清除选中颜色
         function cleanSelect() {
             colorBox.forEach((el, index) => {
-                el.setAttribute("class", "color-box")
-            })
-        }
+                el.setAttribute("class", "color-box");
+            });
+        };
     };
     brushMenu();
 }
