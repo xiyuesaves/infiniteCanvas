@@ -4,7 +4,7 @@ window.oncontextmenu = function(e) {
 }
 
 window.onload = function() {
-    // 计算画布大小
+    // 初始化画布
     initCanvas();
 };
 
@@ -16,19 +16,19 @@ function initCanvas() {
     const ctx = canvas.getContext("2d");
 
     // 变量声明
-    let pathArr = [];
-    let lastX = 0,
+    let pathArr = []; // 路径数组
+    let lastX = 0, // 当前位置
         lastY = 0;
-    let moveX = 0,
+    let moveX = 0, // 移动步幅
         moveY = 0;
-    let tempX = 0,
+    let tempX = 0, // 临时坐标
         tempY = 0;
-    let zoom = 1.1,
-        dZoom = 1;
-    let mouseX = 0,
+    let zoom = 1.1, // 缩放步幅
+        dZoom = 1; // 初始缩放值
+    let mouseX = 0, // 鼠标位置
         mouseY = 0;
-    let imageData;
-    let brushColor = "#ff0000";
+    let imageData; // 图片数据[后期优化用]
+    let brushColor = "#ff0000"; // 笔刷颜色
     let dragStart = false;
     let moveStart = false;
     // 宽度变化监听
@@ -88,11 +88,12 @@ function initCanvas() {
         ctx.arc(e.offsetX / dZoom, e.offsetY / dZoom, (bursh.offsetWidth / 2) / dZoom, 0, 2 * Math.PI);
         ctx.fill();
     }
+
     // 绘制数组路径
     function drenArr(arr) {
         ctx.clearRect(0, 0, canvas.width / dZoom, canvas.height / dZoom);
         // 绘制数组内数据
-        for (let i = arr.length - 1; i >= 0; i--) {
+        for (let i = 0; i < arr.length; i++) {
             ctx.fillStyle = arr[i].color;
             ctx.beginPath();
             ctx.arc((arr[i].x + lastX), (arr[i].y + lastY), arr[i].brushSize, 0, 2 * Math.PI);
@@ -113,6 +114,7 @@ function initCanvas() {
         drenArr(pathArr);
     }
 
+    // 鼠标滚轮监听
     canvas.addEventListener('mousewheel', function(e) {
         let delta = e.deltaY / 90
         zoomFun(-delta)
@@ -127,13 +129,72 @@ function initCanvas() {
         dZoom = dZoom * zooms;
         let beforeW = canvas.width * dZoom,
             beforeH = canvas.height * dZoom;
-        // console.log("缩放比例 ", dZoom, "缩放大小", afterW, afterH, "-", beforeW, beforeH)
-        // console.log("鼠标相对xy轴比例", (mouseX / canvas.width), (mouseY / canvas.height))
-
         lastX = lastX + ((mouseX / afterW) * (afterW - beforeW)) / dZoom;
         lastY = lastY + ((mouseY / afterH) * (afterH - beforeH)) / dZoom;
-
         drenArr(pathArr);
     }
 
+    // 笔刷菜单功能
+    function brushMenu() {
+        const brushSize = document.querySelector(".brush-size");
+        const burshSizeSlider = document.querySelector(".slider");
+        const colorBox = document.querySelectorAll(".color-box");
+        const colorInput = document.querySelector(".input-color");
+        const selectColor = document.querySelector(".color-view");
+        let clickSlider = false;
+        brushSize.addEventListener("mousedown", function(e) {
+            if (e.buttons === 1) {
+                clickSlider = true;
+                moveSlider(e)
+            } else {
+                clickSlider = false;
+            };
+        });
+        brushSize.addEventListener("mouseup", function(e) {
+            clickSlider = false;
+        });
+        brushSize.addEventListener("mouseout", function() {
+            clickSlider = false;
+        })
+        brushSize.addEventListener("mousemove", function(e) {
+            if (clickSlider) {
+                moveSlider(e)
+            };
+        });
+
+        function moveSlider(e) {
+            const floatX = e.offsetX - burshSizeSlider.offsetWidth / 2,
+                sliderW = floatX + 28;
+            burshSizeSlider.style.transform = "translate3d(" + floatX + "px, -50%, 0px)";
+            burshSizeSlider.setAttribute("data-value", sliderW);
+            bursh.style.width = sliderW + "px";
+            bursh.style.height = sliderW + "px";
+        }
+
+        // 初始化笔刷颜色和绑定色块点击事件
+        colorBox.forEach((el, index) => {
+            if (el.className.indexOf("select") !== -1) {
+                brushColor = el.getAttribute("title");
+                colorInput.setAttribute("placeholder", brushColor)
+                selectColor.setAttribute("style", "background-color: " + brushColor + ";")
+            };
+            el.addEventListener("click", function() {
+                if (this.className.indexOf("select") === -1) {
+                    cleanSelect()
+                    this.setAttribute("class", "color-box select")
+                    colorInput.setAttribute("placeholder", brushColor)
+                    selectColor.setAttribute("style", "background-color: " + brushColor + ";")
+                    brushColor = el.getAttribute("title");
+                }
+            })
+        });
+
+        // 清除选中颜色
+        function cleanSelect() {
+            colorBox.forEach((el, index) => {
+                el.setAttribute("class", "color-box")
+            })
+        }
+    };
+    brushMenu();
 }
