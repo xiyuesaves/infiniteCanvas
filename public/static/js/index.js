@@ -20,7 +20,7 @@ function initCanvas() {
     let pathArr = []; // 路径数组
     let lastX = 0, // 当前位置
         lastY = 0;
-    let moveX = 0, // 移动步幅
+    let moveX = 0,
         moveY = 0;
     let tempX = 0, // 临时坐标
         tempY = 0;
@@ -28,10 +28,13 @@ function initCanvas() {
         dZoom = 1; // 初始缩放值
     let mouseX = 0, // 鼠标位置
         mouseY = 0;
+    let transX = 0, // 计算补间用
+        transY = 0;
     let imageData; // 图片数据[后期优化用]
     let brushColor = "#ff0000"; // 笔刷颜色
     let dragStart = false;
     let moveStart = false;
+    let enableTween = true // 是否启用补间
     // 宽度变化监听
     window.onresize = function() {
         canvas.width = window.innerWidth;
@@ -46,6 +49,8 @@ function initCanvas() {
     // 监听笔刷位置
     canvas.addEventListener("mousedown", function(e) {
         if (e.buttons === 1) {
+            transX = e.offsetX;
+            transY = e.offsetY;
             dragStart = true;
             dren(e);
         } else if (e.buttons === 2) {
@@ -68,7 +73,32 @@ function initCanvas() {
         let burshX = mouseX - bursh.offsetWidth / 2,
             burshY = mouseY - bursh.offsetHeight / 2;
         bursh.style.transform = "translate3d(" + burshX + "px, " + burshY + "px, 0px)";
+        let frameX = transX - mouseX,
+            frameY = transY - mouseY;
         if (dragStart) {
+            // 补间,填充两个坐标之间的空隙
+            if (enableTween && (Math.abs(frameX) > 8 || Math.abs(frameY) > 8 || (Math.abs(frameX) > 4 && Math.abs(frameY) > 4))) {
+                let tween = Math.abs(frameX) > Math.abs(frameY) ? Math.abs(frameX) / 5 : Math.abs(frameY) / 5;
+                let tweenX = frameX / tween,
+                    tweenY = frameY / tween;
+                let stepX = tweenX,
+                    stepY = tweenY;
+                // let tempColor = brushColor;
+                // brushColor = "black";
+                for (let i = tween - 1; i >= 0; i--) {
+                    let point = {
+                        offsetX: mouseX + stepX,
+                        offsetY: mouseY + stepY
+                    };
+                    stepX += tweenX;
+                    stepY += tweenY;
+                    dren(point);
+                };
+                // brushColor = tempColor;
+            };
+
+            transX = mouseX;
+            transY = mouseY;
             dren(e);
         };
         if (moveStart) {
@@ -123,16 +153,24 @@ function initCanvas() {
 
     // 缩放方法
     function zoomFun(delta) {
-        let zooms = Math.pow(zoom, delta);
-        ctx.scale(zooms, zooms);
-        let afterW = canvas.width * dZoom,
-            afterH = canvas.height * dZoom;
-        dZoom = dZoom * zooms;
-        let beforeW = canvas.width * dZoom,
-            beforeH = canvas.height * dZoom;
-        lastX = lastX + ((mouseX / afterW) * (afterW - beforeW)) / dZoom;
-        lastY = lastY + ((mouseY / afterH) * (afterH - beforeH)) / dZoom;
-        drenArr(pathArr);
+        if (dZoom <= 95800000000000 || delta < 0) {
+            if (dZoom >= 1.1121848566736637e-35 || delta > 0) {
+                let zooms = Math.pow(zoom, delta);
+                ctx.scale(zooms, zooms);
+                let afterW = canvas.width * dZoom,
+                    afterH = canvas.height * dZoom;
+                dZoom = dZoom * zooms;
+                let beforeW = canvas.width * dZoom,
+                    beforeH = canvas.height * dZoom;
+                lastX = lastX + ((mouseX / afterW) * (afterW - beforeW)) / dZoom;
+                lastY = lastY + ((mouseY / afterH) * (afterH - beforeH)) / dZoom;
+                drenArr(pathArr);
+            } else {
+                console.log("最小值")
+            }
+        } else {
+            console.log("最大值")
+        }
     }
 
     // 笔刷菜单功能
