@@ -1,4 +1,5 @@
 "use strict"
+
 // 取消浏览器默认右键菜单
 window.oncontextmenu = function(e) {
     e.preventDefault();
@@ -20,7 +21,9 @@ function initCanvas() {
     const menuLayer = document.querySelector(".menus");
 
     // 变量声明
-    let pathArr = []; // 路径数组
+    let pathArrList = []; // 路径数组列表
+    let userId = 0; // 本地玩家id
+    let disabledPath = []; // 停止绘制id列表
     let lastX = 0, // 当前位置
         lastY = 0;
     let moveX = 0,
@@ -49,7 +52,7 @@ function initCanvas() {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
         ctx.scale(dZoom, dZoom);
-        drenArr(pathArr);
+        drenArr(pathArrList);
     }
     // 初始化大小
     canvas.width = window.innerWidth;
@@ -67,7 +70,7 @@ function initCanvas() {
                 hipX = 0;
                 hipY = 0;
             }
-            drenArr(pathArr)
+            drenArr(pathArrList)
             tempX = e.offsetX
             tempY = e.offsetY
             moveStart = true;
@@ -78,8 +81,9 @@ function initCanvas() {
     canvas.addEventListener("mouseup", function(e) {
         dragStart = false;
         moveStart = false;
+
         if (highPerformanceDrag) {
-            drenArr(pathArr)
+            drenArr(pathArrList)
         }
     });
     canvas.addEventListener("mousemove", function(e) {
@@ -122,7 +126,10 @@ function initCanvas() {
 
     // 绘制方法
     function dren(e) {
-        pathArr.push({
+        if (pathArrList[userId] === undefined) {
+            pathArrList[userId] = []
+        }
+        pathArrList[userId].push({
             x: (e.offsetX / dZoom - lastX),
             y: (e.offsetY / dZoom - lastY),
             color: brushColor,
@@ -138,16 +145,23 @@ function initCanvas() {
     function drenArr(arr) {
         ctx.clearRect(0, 0, canvas.width / dZoom, canvas.height / dZoom);
         // 绘制数组内数据
-        for (let i = 0; i < arr.length; i++) {
-            ctx.beginPath();
-            // 如果缩放后笔刷粗细小于阈值则不绘制
-            if (arr[i].brushSize * dZoom > minimumThreshold) {
-                ctx.fillStyle = arr[i].color;
-                ctx.arc((arr[i].x + lastX), (arr[i].y + lastY), arr[i].brushSize, 0, 2 * Math.PI);
+        for (let j = 0; j < arr.length; j++) {
+            if (disabledPath.indexOf(j) === -1) { // 停止绘制选中id的用户内容
+                for (let i = 0; i < arr[j].length; i++) {
+                    ctx.beginPath();
+                    // 如果缩放后笔刷粗细小于阈值则不绘制
+                    if (arr[j][i].brushSize * dZoom > minimumThreshold) {
+                        ctx.fillStyle = arr[j][i].color;
+                        ctx.arc((arr[j][i].x + lastX), (arr[j][i].y + lastY), arr[j][i].brushSize, 0, 2 * Math.PI);
+                    }
+                    ctx.fill();
+                }
             }
-            ctx.fill();
         }
-        imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+        
+        if (highPerformanceDrag) {
+            imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+        }
     }
 
     // 计算位移
@@ -165,7 +179,7 @@ function initCanvas() {
             hipY = hipY + moveY;
             moveImage();
         } else {
-            drenArr(pathArr);
+            drenArr(pathArrList);
         }
     }
 
@@ -193,7 +207,7 @@ function initCanvas() {
                     beforeH = canvas.height * dZoom;
                 lastX = lastX + ((mouseX / afterW) * (afterW - beforeW)) / dZoom;
                 lastY = lastY + ((mouseY / afterH) * (afterH - beforeH)) / dZoom;
-                drenArr(pathArr);
+                drenArr(pathArrList);
             } else {
                 console.log("最小值")
             }
