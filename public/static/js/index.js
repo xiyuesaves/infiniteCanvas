@@ -20,7 +20,7 @@ function initCanvas() {
     const ctx = canvas.getContext("2d");
     const menuLayer = document.querySelector(".menus");
 
-    // 变量声明
+    // 配置项
     let pathArrList = []; // 路径数组列表
     let userId = 0; // 本地玩家id
     let disabledPath = []; // 停止绘制id列表
@@ -39,13 +39,13 @@ function initCanvas() {
     let hipX = 0, // 高性能移动坐标
         hipY = 0;
     let imageData; // 图片数据
-    let minimumThreshold = 0.1; // 最低绘制宽度
-    let brushColor = "#ff0000"; // 笔刷颜色
+    let minimumThreshold = 0.1; // 画布最低绘制宽度
+    let brushColor = "#000000"; // 笔刷颜色
     let dragStart = false;
     let moveStart = false;
     let enableTween = true; // 是否启用补间
-    let tweenInterval = 6; // 启用补间的间隔
-    let tweenStride = 5; // 补间步幅
+    let tweenInterval = 2; // 启用补间的间隔
+    let tweenStride = 2; // 补间步幅
     let highPerformanceDrag = false; // 是否启用高性能拖动
     let brushMinSize = 5; // 笔刷最小直径
     // 宽度变化监听
@@ -149,13 +149,13 @@ function initCanvas() {
         for (let j = 0; j < arr.length; j++) {
             if (disabledPath.indexOf(j) === -1) { // 停止绘制选中id的用户内容
                 for (let i = 0; i < arr[j].length; i++) {
-                    ctx.beginPath();
-                    // 如果缩放后笔刷粗细小于阈值则不绘制
+                    // 如果缩放后笔刷粗细小于阈值则不绘制以提升性能
                     if (arr[j][i].brushSize * dZoom > minimumThreshold) {
+                        ctx.beginPath();
                         ctx.fillStyle = arr[j][i].color;
                         ctx.arc((arr[j][i].x + lastX), (arr[j][i].y + lastY), arr[j][i].brushSize, 0, 2 * Math.PI);
+                        ctx.fill();
                     }
-                    ctx.fill();
                 }
             }
         }
@@ -224,6 +224,12 @@ function initCanvas() {
         const colorInput = document.querySelector(".input-color");
         const selectColor = document.querySelector(".color-view");
         let clickSlider = false;
+
+        // 初始化笔刷直径
+        bursh.style.width = brushMinSize + "px";
+        bursh.style.height = brushMinSize + "px";
+        burshSizeSlider.setAttribute("data-value", brushMinSize);
+
         brushSize.addEventListener("mousedown", function(e) {
             if (e.buttons === 1) {
                 clickSlider = true;
