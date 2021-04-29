@@ -139,16 +139,13 @@ function initCanvas() {
         ctx.clearRect(0, 0, canvas.width / dZoom, canvas.height / dZoom);
         // 绘制数组内数据
         for (let i = 0; i < arr.length; i++) {
+            ctx.beginPath();
             // 如果缩放后笔刷粗细小于阈值则不绘制
             if (arr[i].brushSize * dZoom > minimumThreshold) {
-                // 如果坐标不在当前显示范围,则不绘制
-                if (true) {
-                    ctx.fillStyle = arr[i].color;
-                    ctx.beginPath();
-                    ctx.arc((arr[i].x + lastX), (arr[i].y + lastY), arr[i].brushSize, 0, 2 * Math.PI);
-                    ctx.fill();
-                }
+                ctx.fillStyle = arr[i].color;
+                ctx.arc((arr[i].x + lastX), (arr[i].y + lastY), arr[i].brushSize, 0, 2 * Math.PI);
             }
+            ctx.fill();
         }
         imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
     }
