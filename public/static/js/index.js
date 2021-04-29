@@ -47,6 +47,7 @@ function initCanvas() {
     let tweenInterval = 6; // 启用补间的间隔
     let tweenStride = 5; // 补间步幅
     let highPerformanceDrag = false; // 是否启用高性能拖动
+    let brushMinSize = 5; // 笔刷最小大小
     // 宽度变化监听
     window.onresize = function() {
         canvas.width = window.innerWidth;
@@ -245,7 +246,7 @@ function initCanvas() {
 
         function moveSlider(e) {
             const floatX = e.offsetX - burshSizeSlider.offsetWidth / 2,
-                sliderW = floatX + 28;
+                sliderW = floatX + brushMinSize + 8;
             burshSizeSlider.style.transform = "translate3d(" + floatX + "px, -50%, 0px)";
             burshSizeSlider.setAttribute("data-value", sliderW);
             bursh.style.width = sliderW + "px";
