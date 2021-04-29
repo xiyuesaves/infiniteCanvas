@@ -47,7 +47,7 @@ function initCanvas() {
     let tweenInterval = 6; // 启用补间的间隔
     let tweenStride = 5; // 补间步幅
     let highPerformanceDrag = false; // 是否启用高性能拖动
-    let brushMinSize = 5; // 笔刷最小大小
+    let brushMinSize = 5; // 笔刷最小直径
     // 宽度变化监听
     window.onresize = function() {
         canvas.width = window.innerWidth;
