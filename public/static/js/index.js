@@ -158,7 +158,6 @@ function initCanvas() {
                 }
             }
         }
-        
         if (highPerformanceDrag) {
             imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
         }
