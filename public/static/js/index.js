@@ -44,10 +44,12 @@ function initCanvas() {
     let dragStart = false;
     let moveStart = false;
     let enableTween = true; // 是否启用补间
-    let tweenInterval = 2; // 启用补间的间隔
-    let tweenStride = 2; // 补间步幅
+    let autoInterval = true; // 根据当前笔刷大小自动计算补间间隔,开启时"tweenInterval","tweenStride"将无效
+    let tweenInterval = 6; // 启用补间的间隔
+    let tweenStride = 5; // 补间步幅
     let highPerformanceDrag = false; // 是否启用高性能拖动
     let brushMinSize = 5; // 笔刷最小直径
+    let brushDefaultSize = 20; // 初始笔刷直径
     // 宽度变化监听
     window.onresize = function() {
         canvas.width = window.innerWidth;
@@ -98,21 +100,27 @@ function initCanvas() {
         if (dragStart) {
             menuLayer.className = "menus poe";
             // 补间,填充两个坐标之间的空隙
-            if (enableTween && (Math.abs(frameX) > tweenInterval || Math.abs(frameY) > tweenInterval || (Math.abs(frameX) > tweenInterval / 2 && Math.abs(frameY) > tweenInterval / 2))) {
-                let tween = Math.abs(frameX) > Math.abs(frameY) ? Math.abs(frameX) / tweenStride : Math.abs(frameY) / tweenStride;
-                let tweenX = frameX / tween,
-                    tweenY = frameY / tween;
-                let stepX = tweenX,
-                    stepY = tweenY;
-                for (let i = tween - 1; i >= 0; i--) {
-                    let point = {
-                        offsetX: mouseX + stepX,
-                        offsetY: mouseY + stepY
+            if (enableTween) {
+                if (autoInterval) {
+                    tweenInterval = Math.pow(bursh.offsetWidth, 0.6);
+                    tweenStride = 1;
+                }
+                if (Math.abs(frameX) > tweenInterval || Math.abs(frameY) > tweenInterval || (Math.abs(frameX) > tweenInterval / 2 && Math.abs(frameY) > tweenInterval / 2)) {
+                    let tween = Math.abs(frameX) > Math.abs(frameY) ? Math.abs(frameX) / tweenStride : Math.abs(frameY) / tweenStride;
+                    let tweenX = frameX / tween,
+                        tweenY = frameY / tween;
+                    let stepX = tweenX,
+                        stepY = tweenY;
+                    for (let i = tween - 1; i >= 0; i--) {
+                        let point = {
+                            offsetX: mouseX + stepX,
+                            offsetY: mouseY + stepY
+                        };
+                        stepX += tweenX;
+                        stepY += tweenY;
+                        dren(point);
                     };
-                    stepX += tweenX;
-                    stepY += tweenY;
-                    dren(point);
-                };
+                }
             };
             transX = mouseX;
             transY = mouseY;
@@ -226,9 +234,11 @@ function initCanvas() {
         let clickSlider = false;
 
         // 初始化笔刷直径
-        bursh.style.width = brushMinSize + "px";
-        bursh.style.height = brushMinSize + "px";
-        burshSizeSlider.setAttribute("data-value", brushMinSize);
+        bursh.style.width = brushDefaultSize + "px";
+        bursh.style.height = brushDefaultSize + "px";
+        burshSizeSlider.style.transform = "translate3d(" + brushDefaultSize + "px, -50%, 0px)";
+        burshSizeSlider.setAttribute("data-value", brushDefaultSize);
+
 
         brushSize.addEventListener("mousedown", function(e) {
             if (e.buttons === 1) {
@@ -251,8 +261,13 @@ function initCanvas() {
         });
 
         function moveSlider(e) {
-            const floatX = e.offsetX - burshSizeSlider.offsetWidth / 2,
-                sliderW = floatX + brushMinSize + 8;
+            let floatX = e.offsetX - burshSizeSlider.offsetWidth / 2;
+            if (floatX > brushSize.offsetWidth - burshSizeSlider.offsetWidth) {
+                floatX = brushSize.offsetWidth - burshSizeSlider.offsetWidth;
+            } else if (floatX < 0) {
+                floatX = 0;
+            };
+            const sliderW = floatX + brushMinSize;
             burshSizeSlider.style.transform = "translate3d(" + floatX + "px, -50%, 0px)";
             burshSizeSlider.setAttribute("data-value", sliderW);
             bursh.style.width = sliderW + "px";
@@ -273,7 +288,6 @@ function initCanvas() {
             });
         });
 
-        // 初始笔刷颜色
         function getBrushColor() {
             colorBox.forEach((el, index) => {
                 if (el.className.indexOf("select") !== -1) {
@@ -284,6 +298,7 @@ function initCanvas() {
                 };
             });
         };
+        // 获取笔刷颜色
         getBrushColor();
 
         // 监听输入框输入值
