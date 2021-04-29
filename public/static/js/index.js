@@ -36,6 +36,7 @@ function initCanvas() {
     let hipX = 0, // 高性能移动坐标
         hipY = 0;
     let imageData; // 图片数据
+    let minimumThreshold = 0.1; // 最低绘制宽度
     let brushColor = "#ff0000"; // 笔刷颜色
     let dragStart = false;
     let moveStart = false;
@@ -98,8 +99,6 @@ function initCanvas() {
                     tweenY = frameY / tween;
                 let stepX = tweenX,
                     stepY = tweenY;
-                // let tempColor = brushColor;
-                // brushColor = "black";
                 for (let i = tween - 1; i >= 0; i--) {
                     let point = {
                         offsetX: mouseX + stepX,
@@ -109,9 +108,7 @@ function initCanvas() {
                     stepY += tweenY;
                     dren(point);
                 };
-                // brushColor = tempColor;
             };
-
             transX = mouseX;
             transY = mouseY;
             dren(e);
@@ -142,10 +139,16 @@ function initCanvas() {
         ctx.clearRect(0, 0, canvas.width / dZoom, canvas.height / dZoom);
         // 绘制数组内数据
         for (let i = 0; i < arr.length; i++) {
-            ctx.fillStyle = arr[i].color;
-            ctx.beginPath();
-            ctx.arc((arr[i].x + lastX), (arr[i].y + lastY), arr[i].brushSize, 0, 2 * Math.PI);
-            ctx.fill();
+            // 如果缩放后笔刷粗细小于阈值则不绘制
+            if (arr[i].brushSize * dZoom > minimumThreshold) {
+                // 如果坐标不在当前显示范围,则不绘制
+                if (true) {
+                    ctx.fillStyle = arr[i].color;
+                    ctx.beginPath();
+                    ctx.arc((arr[i].x + lastX), (arr[i].y + lastY), arr[i].brushSize, 0, 2 * Math.PI);
+                    ctx.fill();
+                }
+            }
         }
         imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
     }
