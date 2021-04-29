@@ -9,68 +9,66 @@
 </head>
 
 <body>
-    <!-- 左侧菜单 -->
-    <div class="left-menu">
-        <div class="top-select-color"></div>
-        <div class="input-color-value">
-            <input onkeydown="" class="input-color" maxlength="7" type="text" placeholder="#ffffff" name="">
-            <div class="color-view" style="background-color: #ffffff;"></div>
+    <div class="menus poe">
+        <!-- 左侧菜单 -->
+        <div class="left-menu">
+            <div class="top-select-color"></div>
+            <div class="input-color-value">
+                <input onkeydown="" class="input-color" maxlength="7" type="text" placeholder="#ffffff" name="">
+                <div class="color-view" style="background-color: #ffffff;"></div>
+            </div>
+            <div class="brush-size" title="笔刷大小">
+                <div class="slider" data-value="20"></div>
+            </div>
         </div>
-        <div class="brush-size" title="笔刷大小">
-            <div class="slider" data-value="20"></div>
+        <!-- 人数显示 -->
+        <div class="online">
+            <p class="total-num">当前在线:0人</p>
+            <div class="online-list">
+                <p class="user-name">曦月</p>
+                <p class="user-name">测试测试测试测试测试</p>
+                <p class="user-name">1111111111111111111111111111111111111</p>
+            </div>
         </div>
-    </div>
-    <!-- 人数显示 -->
-    <div class="online">
-    	<p class="total-num">当前在线:0人</p>
-    	<div class="online-list">
-    		<p class="user-name">曦月</p>
-    		<p class="user-name">测试测试测试测试测试</p>
-    		<p class="user-name">1111111111111111111111111111111111111</p>
-    	</div>
+        <!-- 聊天框 -->
+        <div class="omMsg">
+            <div class="top-msg-list">
+                <span class="msg-text">
+                    <p class="user-name">曦月</p>
+                    <p class="content">123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123</p>
+                </span>
+                <span class="msg-text">
+                    <p class="user-name">曦月</p>
+                    <p class="content">123123123123123123123</p>
+                </span>
+                <span class="msg-text">
+                    <p class="user-name">曦月</p>
+                    <p class="content">123123123123123123123</p>
+                </span>
+                <span class="msg-text">
+                    <p class="user-name">曦月</p>
+                    <p class="content">123123123123123123123</p>
+                </span>
+                <span class="msg-text">
+                    <p class="user-name">曦月</p>
+                    <p class="content">123123123123123123123</p>
+                </span>
+            </div>
+            <div class="bottom-msg-input">
+                <input placeholder="click this" type="texts" name="">
+                <button>send</button>
+            </div>
+        </div>
+        <!-- 右侧缩放条 -->
+        <div class="right-zoom-indicator">
+            <div class="indicator-tag">
+            </div>
+            <div class="indicator-tag your-self">
+            </div>
+        </div>
     </div>
     <!-- 笔刷显示 -->
     <div id="brush"></div>
-    <!-- 聊天框 -->
-    <div class="omMsg">
-    	<div class="top-msg-list">
-    		<span class="msg-text">
-    			<p class="user-name">曦月</p>
-    			<p class="content">123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123123</p>
-    		</span>
-    		<span class="msg-text">
-    			<p class="user-name">曦月</p>
-    			<p class="content">123123123123123123123</p>
-    		</span>
-    		<span class="msg-text">
-    			<p class="user-name">曦月</p>
-    			<p class="content">123123123123123123123</p>
-    		</span>
-    		<span class="msg-text">
-    			<p class="user-name">曦月</p>
-    			<p class="content">123123123123123123123</p>
-    		</span>
-    		<span class="msg-text">
-    			<p class="user-name">曦月</p>
-    			<p class="content">123123123123123123123</p>
-    		</span>
-    	</div>
-    	<div class="bottom-msg-input">
-    		<input placeholder="click this" type="texts" name="">
-    		<button>send</button>
-    	</div>
-    </div>
-
-    <!-- 右侧缩放条 -->
-    <div class="right-zoom-indicator">
-    	<div class="indicator-tag">
-    		
-    	</div>
-    	<div class="indicator-tag your-self">
-    		
-    	</div>
-    </div>
-
     <canvas id="canvas">
     </canvas>
 </body>

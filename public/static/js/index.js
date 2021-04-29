@@ -17,6 +17,7 @@ function initCanvas() {
     const canvas = document.querySelector("#canvas");
     const bursh = document.querySelector("#brush");
     const ctx = canvas.getContext("2d");
+    const menuLayer = document.querySelector(".menus");
 
     // 变量声明
     let pathArr = []; // 路径数组
@@ -89,6 +90,7 @@ function initCanvas() {
         let frameX = transX - mouseX,
             frameY = transY - mouseY;
         if (dragStart) {
+            menuLayer.className = "menus poe";
             // 补间,填充两个坐标之间的空隙
             if (enableTween && (Math.abs(frameX) > tweenInterval || Math.abs(frameY) > tweenInterval || (Math.abs(frameX) > tweenInterval / 2 && Math.abs(frameY) > tweenInterval / 2))) {
                 let tween = Math.abs(frameX) > Math.abs(frameY) ? Math.abs(frameX) / tweenStride : Math.abs(frameY) / tweenStride;
@@ -113,6 +115,8 @@ function initCanvas() {
             transX = mouseX;
             transY = mouseY;
             dren(e);
+        } else {
+            menuLayer.className = "menus";
         };
         if (moveStart) {
             moveCanvas(e);
