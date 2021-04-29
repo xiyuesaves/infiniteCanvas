@@ -22,8 +22,9 @@ function initCanvas() {
 
     // 配置项
     let pathArrList = []; // 路径数组列表
-    let userId = 0; // 本地玩家id
+    let tempPathArr = []; // 临时绘制路径
     let disabledPath = []; // 停止绘制id列表
+    let userId = 0; // 本地玩家id
     let lastX = 0, // 当前位置
         lastY = 0;
     let moveX = 0,
@@ -84,10 +85,27 @@ function initCanvas() {
     canvas.addEventListener("mouseup", function(e) {
         dragStart = false;
         moveStart = false;
-
         if (highPerformanceDrag) {
             drenArr(pathArrList)
         }
+        if (pathArrList[userId] === undefined) {
+            pathArrList[userId] = new Array();
+        }
+        if (tempPathArr.length) {
+            console.log(!(tempPathArr.length % 2) , tempPathArr.length)
+            if (!(tempPathArr.length % 2)) {
+                let lastPoint = tempPathArr[tempPathArr.length - 1];
+                tempPathArr.push({
+                    x: lastPoint.x,
+                    y: lastPoint.y,
+                    color: lastPoint.color,
+                    brushSize: lastPoint.brushSize
+                });
+            }
+            pathArrList[userId].push(tempPathArr);
+            tempPathArr = [];
+        }
+        console.log(pathArrList)
     });
     canvas.addEventListener("mousemove", function(e) {
         mouseX = e.offsetX;
@@ -114,7 +132,8 @@ function initCanvas() {
                     for (let i = tween - 1; i >= 0; i--) {
                         let point = {
                             offsetX: mouseX + stepX,
-                            offsetY: mouseY + stepY
+                            offsetY: mouseY + stepY,
+                            tween: true
                         };
                         stepX += tweenX;
                         stepY += tweenY;
@@ -135,15 +154,15 @@ function initCanvas() {
 
     // 绘制方法
     function dren(e) {
-        if (pathArrList[userId] === undefined) {
-            pathArrList[userId] = []
+        // 补间数据不计入数组内
+        if (!e.tween) {
+            tempPathArr.push({
+                x: (e.offsetX / dZoom - lastX),
+                y: (e.offsetY / dZoom - lastY),
+                color: brushColor,
+                brushSize: bursh.offsetWidth / dZoom
+            })
         }
-        pathArrList[userId].push({
-            x: (e.offsetX / dZoom - lastX),
-            y: (e.offsetY / dZoom - lastY),
-            color: brushColor,
-            brushSize: (bursh.offsetWidth / 2) / dZoom
-        })
         ctx.fillStyle = brushColor;
         ctx.beginPath();
         ctx.arc(e.offsetX / dZoom, e.offsetY / dZoom, (bursh.offsetWidth / 2) / dZoom, 0, 2 * Math.PI);
@@ -153,15 +172,30 @@ function initCanvas() {
     // 绘制数组路径
     function drenArr(arr) {
         ctx.clearRect(0, 0, canvas.width / dZoom, canvas.height / dZoom);
-        // 绘制数组内数据
-        for (let j = 0; j < arr.length; j++) {
-            if (disabledPath.indexOf(j) === -1) { // 停止绘制选中id的用户内容
-                for (let i = 0; i < arr[j].length; i++) {
-                    // 如果缩放后笔刷粗细小于阈值则不绘制以提升性能
-                    if (arr[j][i].brushSize * dZoom > minimumThreshold) {
-                        ctx.beginPath();
-                        ctx.fillStyle = arr[j][i].color;
-                        ctx.arc((arr[j][i].x + lastX), (arr[j][i].y + lastY), arr[j][i].brushSize, 0, 2 * Math.PI);
+        // 循环用户数组
+        for (let userId = 0; userId < arr.length; userId++) {
+            // 判断是否渲染该用户的数据
+            if (disabledPath.indexOf(userId) === -1) {
+                // 循环该用户的所有路径
+                for (let path = 0; path < arr[userId].length; path++) {
+                    // 开始绘制路径
+                    ctx.beginPath();
+                    if (arr[userId][path].length > 1) {
+                        ctx.lineCap = "round";
+                        ctx.moveTo((arr[userId][path][0].x + lastX), (arr[userId][path][0].y + lastY));
+                        ctx.lineWidth = arr[userId][path][0].brushSize;
+                        ctx.strokeStyle = arr[userId][path][0].color;
+                        for (var point = 1; point < arr[userId][path].length; point = point + 2) {
+                            // 如果缩放后笔刷粗细小于阈值则不绘制以提升性能
+                            if (arr[userId][path][point].brushSize * dZoom > minimumThreshold) {
+                                ctx.quadraticCurveTo((arr[userId][path][point].x + lastX), (arr[userId][path][point].y + lastY), (arr[userId][path][point + 1].x + lastX), (arr[userId][path][point + 1].y + lastY));
+                                // ctx.lineTo((arr[userId][path][point].x + lastX), (arr[userId][path][point].y + lastY));
+                            }
+                        }
+                        ctx.stroke();
+                    } else {
+                        ctx.fillStyle = arr[userId][path][0].color;
+                        ctx.arc((arr[userId][path][0].x + lastX), (arr[userId][path][0].y + lastY), arr[userId][path][0].brushSize / 2, 0, 2 * Math.PI);
                         ctx.fill();
                     }
                 }
