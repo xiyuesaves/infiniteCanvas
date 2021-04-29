@@ -308,10 +308,21 @@ div.move {
     width: 100%;
     margin: 0;
     color: #333333;
+    cursor: pointer;
     font-weight: bold;
 }
-.omMsg .top-msg-list .msg-text .user-name::after{
-    content: "：";
+.omMsg .top-msg-list .msg-text.your-self .user-name{
+    text-align: right;
+}
+.omMsg .top-msg-list .msg-text.your-self .content{
+    width: auto;
+    align-self: flex-end;
+    height: auto;
+    word-break: break-all;
+    margin-top: 8px;
+    font-size: 14px;
+    color: #666666;
+    margin-bottom: 0;
 }
 .omMsg .top-msg-list .msg-text .content{
     width: 100%;
