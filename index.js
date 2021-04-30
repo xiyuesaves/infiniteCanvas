@@ -4,11 +4,19 @@ app.use(express.static('public'));
 const server = require('http').Server(app);
 const io = require('socket.io')(server)
 
-server.listen(3399);
+const point = 3399;
+console.log(`服务已启动,正在监听${point}`)
+server.listen(point);
+
+let userId = [];
+let userNum = 0;
 
 io.on('connection', (socket) => {
-    socket.emit('news', { hello: 'world' });
-    socket.on('my other event', (data) => {
-        console.log(data);
+    console.log("new user content")
+    socket.emit('hello', {id:userNum});
+    userNum++
+    ;
+    socket.on('msg', (data) => {
+        console.log("msg",data);
     });
 });

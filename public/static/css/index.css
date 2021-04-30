@@ -9,10 +9,11 @@ body {
     width: 100%;
     height: 100%;
     background-color: rgba(0, 0, 0, 0.15);
+    /*cursor: none;*/
 }
 
 canvas.move {
-    cursor: move;
+    cursor: grabbing!important;
 }
 
 div.move {
@@ -32,6 +33,9 @@ div.move {
     background-color: rgba(255, 255, 255, 0.4);
 }
 
+.menus{
+}
+
 .left-menu {
     position: fixed;
     background-color: rgba(255, 255, 255, 0.5);
@@ -43,6 +47,7 @@ div.move {
     backdrop-filter: blur(5px);
     top: 80px;
     padding: 15px;
+    z-index: 100;
     display: flex;
     align-items: flex-start;
     justify-content: center;
@@ -204,6 +209,7 @@ div.move {
     height: 40px;
     position: fixed;
     top: 0;
+    z-index: 100;
     left: 0;
     box-sizing: border-box;
     display: flex;
@@ -273,6 +279,7 @@ div.move {
 .omMsg {
     position: absolute;
     width: 400px;
+    z-index: 100;
     height: 260px;
     background-color: red;
     left: 0;
@@ -379,6 +386,7 @@ div.move {
 .right-zoom-indicator{
     width: 16px;
     height: 80%;
+    z-index: 100;
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
@@ -390,10 +398,100 @@ div.move {
     background-color: rgba(255, 255, 255, 0.4);
     backdrop-filter: blur(5px);
 }
+.right-zoom-indicator .indicator-tag{
+    width: 22px;
+    height: 8px;
+    background-color: #ffffff;
+    position: absolute;
+    top: 0;
+    cursor: pointer;
+    left: 50%;
+    border-radius: 2px;
+    border: solid 1px #ffffff;
+    transform: translateX(-50%);
+}
+
 
 .poe{
     pointer-events: none;
 }
 .disable{
     display: none;
+}
+
+.other-user-mouse{
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    z-index: 1;
+}
+.other-user-mouse .player-mouse{
+    pointer-events: auto;
+    width: 20px;
+    height: 20px;
+    z-index: -1;
+    border: solid 1px #ffffff;
+    background-color: rgba(255, 255, 255, 0.4);
+    border-radius: 10000px;
+    position: absolute;
+    top: 400px;
+    left: 300px;
+    pointer-events: none;
+    cursor: pointer;
+}
+.other-user-mouse .player-mouse .user-name{
+    width: 90px;
+    height: 20px;
+    color: #333333;
+    font-size: 12px;
+    transform: scale(0.8) translateX(-8px);
+    position: absolute;
+    top: 90%;
+    left: 90%;
+    margin: 0;
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.other-user-mouse .player-mouse.out{
+    pointer-events: auto;
+    border: none;
+    background-color: transparent;
+}
+.other-user-mouse .player-mouse.out::before{
+    content: "";
+    opacity: 1;
+    position: absolute;
+    width: 10px;
+    height: 20px;
+    border: solid 5px;
+    top: -5px;
+    left: 50%;
+    transform: translateX(-50%);
+    box-sizing: border-box;
+    border-color: transparent;
+    border-bottom-width: 20px;
+    border-bottom-color: red;
+}
+.other-user-mouse .player-mouse.to-top::before{
+
+}
+.other-user-mouse .player-mouse.to-bottom::before{
+    transform: translateX(-50%) rotateZ(180deg);
+}
+.other-user-mouse .player-mouse.to-bottom .user-name{
+    top: -90%;
+}
+.other-user-mouse .player-mouse.to-left::before{
+    transform: translateX(-50%) rotateZ(270deg);
+}
+.other-user-mouse .player-mouse.to-right::before{
+    transform: translateX(-50%) rotateZ(90deg);
+}
+.other-user-mouse .player-mouse.to-right .user-name{
+    left: -70px;
 }

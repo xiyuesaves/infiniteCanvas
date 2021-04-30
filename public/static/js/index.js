@@ -1,4 +1,5 @@
 "use strict"
+let zoomVal = 0; // 记录用缩放值
 
 // 取消浏览器默认右键菜单
 window.oncontextmenu = function(e) {
@@ -8,6 +9,8 @@ window.oncontextmenu = function(e) {
 window.onload = function() {
     // 初始化色块
     initColorBlock();
+    // 初始化socket连接
+    initSockit();
     // 初始化画布
     initCanvas();
 };
@@ -19,7 +22,7 @@ function initCanvas() {
     const bursh = document.querySelector("#brush");
     const ctx = canvas.getContext("2d");
     const menuLayer = document.querySelector(".menus");
-
+    const zoomIndicator = document.querySelector(".indicator-tag.your-self");
     // 配置项
     let pathArrList = []; // 路径数组列表
     let tempPathArr = []; // 临时绘制路径
@@ -32,7 +35,9 @@ function initCanvas() {
     let tempX = 0, // 临时坐标
         tempY = 0;
     let zoom = 1.1, // 缩放步幅
-        dZoom = 1; // 初始缩放值
+        dZoom = 1, // 初始缩放值
+        maxZoom = 400,
+        minZoom = 0;
     let mouseX = 0, // 鼠标位置
         mouseY = 0;
     let transX = 0, // 计算补间用
@@ -79,6 +84,8 @@ function initCanvas() {
             tempX = e.offsetX
             tempY = e.offsetY
             moveStart = true;
+            canvas.className = "move";
+            brush.className = "move";
         } else {
             dragStart = false;
         };
@@ -86,6 +93,8 @@ function initCanvas() {
     canvas.addEventListener("mouseup", function(e) {
         dragStart = false;
         moveStart = false;
+        canvas.className = "";
+        brush.className = "";
         if (highPerformanceDrag) {
             drenArr(pathArrList)
         }
@@ -93,16 +102,6 @@ function initCanvas() {
             pathArrList[userId] = new Array();
         }
         if (tempPathArr.length) {
-            console.log(!(tempPathArr.length % 2), tempPathArr.length)
-            if (!(tempPathArr.length % 2)) {
-                let lastPoint = tempPathArr[tempPathArr.length - 1];
-                tempPathArr.push({
-                    x: lastPoint.x,
-                    y: lastPoint.y,
-                    color: lastPoint.color,
-                    brushSize: lastPoint.brushSize
-                });
-            }
             pathArrList[userId].push(tempPathArr);
             tempPathArr = [];
         }
@@ -149,6 +148,7 @@ function initCanvas() {
             menuLayer.className = "menus";
         };
         if (moveStart) {
+            menuLayer.className = "menus poe";
             moveCanvas(e);
         };
     });
@@ -195,7 +195,6 @@ function initCanvas() {
                             let points = removeTween(arr[userId][path]);
                             // let points = arr[userId][path];
                             let besselPoints = getBessel(points);
-                            console.log(besselPoints)
                             let int = 0;
                             for (let i = 0; i < points.length; i++) {
                                 ctx.lineTo(points[i].x + lastX, points[i].y + lastY);
@@ -334,18 +333,33 @@ function initCanvas() {
         ctx.clearRect(0, 0, canvas.width / dZoom, canvas.height / dZoom);
         ctx.putImageData(imageData, hipX, hipY)
     }
-
+    var proportion = 0
     // 鼠标滚轮监听
     canvas.addEventListener('mousewheel', function(e) {
-        let delta = e.deltaY / 90
-        zoomFun(-delta);
+        if (!dragStart) {
+            let delta = e.deltaY / 90
+            if (e.deltaY > 0) {
+                zoomVal++
+            } else {
+                zoomVal--
+            }
+            zoomFun(-delta);
+            proportion = zoomVal / maxZoom * 100
+            zoomIndicator.style.top = `${proportion}%`;
+        }
     }, false);
 
     // 缩放方法
     function zoomFun(delta) {
-        if (dZoom <= 95800000000000 || delta < 0) {
-            if (dZoom >= 1.1121848566736637e-35 || delta > 0) {
-                let zooms = Math.pow(zoom, delta);
+        // console.log(dZoom)
+        if (zoomVal <= maxZoom || delta > 0) {
+            if (zoomVal >= minZoom || delta < 0) {
+                let zooms = 0
+                if (delta > 0) {
+                    zooms = Math.pow(zoom, 1.1);
+                } else {
+                    zooms = Math.pow(zoom, -1.1);
+                }
                 ctx.scale(zooms, zooms);
                 let afterW = canvas.width * dZoom,
                     afterH = canvas.height * dZoom;
@@ -357,9 +371,13 @@ function initCanvas() {
                 drenArr(pathArrList);
             } else {
                 console.log("最小值")
+                console.log(zoomVal)
+                zoomVal = minZoom
             }
         } else {
             console.log("最大值")
+            console.log(zoomVal)
+            zoomVal = maxZoom
         }
     }
 
@@ -377,8 +395,6 @@ function initCanvas() {
         bursh.style.height = brushDefaultSize + "px";
         burshSizeSlider.style.transform = "translate3d(" + brushDefaultSize + "px, -50%, 0px)";
         burshSizeSlider.setAttribute("data-value", brushDefaultSize);
-
-
         brushSize.addEventListener("mousedown", function(e) {
             if (e.buttons === 1) {
                 clickSlider = true;
@@ -423,6 +439,7 @@ function initCanvas() {
                     colorInput.setAttribute("placeholder", brushColor);
                     colorInput.value = "";
                     selectColor.setAttribute("style", "background-color: " + brushColor + ";");
+                    bursh.style.backgroundColor = brushColor + "6B";
                 };
             });
         });
@@ -434,6 +451,7 @@ function initCanvas() {
                     colorInput.setAttribute("placeholder", brushColor);
                     colorInput.value = "";
                     selectColor.setAttribute("style", "background-color: " + brushColor + ";")
+                    bursh.style.backgroundColor = brushColor + "6B";
                 };
             });
         };
@@ -513,3 +531,17 @@ function initColorBlock() {
         selectColorBox.appendChild(colorEl);
     };
 };
+
+function initSockit() {
+    const socket = io();
+    socket.on("hello", (data) => {
+        console.log(data)
+        socket.emit('msg', "hello service,my id is " + data.id);
+    })
+    socket.on("connect", () => {
+        console.log("服务器已连接")
+    });
+    socket.on("disconnect", () => {
+        console.log("服务器断开连接")
+    });
+}
