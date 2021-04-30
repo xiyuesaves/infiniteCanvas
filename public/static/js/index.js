@@ -39,6 +39,7 @@ function initCanvas() {
         transY = 0;
     let hipX = 0, // 高性能移动坐标
         hipY = 0;
+    let drowLine = true; // 更改绘制模式为线条
     let imageData; // 图片数据
     let minimumThreshold = 0.1; // 画布最低绘制宽度
     let brushColor = "#000000"; // 笔刷颜色
@@ -92,7 +93,7 @@ function initCanvas() {
             pathArrList[userId] = new Array();
         }
         if (tempPathArr.length) {
-            console.log(!(tempPathArr.length % 2) , tempPathArr.length)
+            console.log(!(tempPathArr.length % 3), tempPathArr.length)
             if (!(tempPathArr.length % 2)) {
                 let lastPoint = tempPathArr[tempPathArr.length - 1];
                 tempPathArr.push({
@@ -154,15 +155,16 @@ function initCanvas() {
 
     // 绘制方法
     function dren(e) {
-        // 补间数据不计入数组内
         if (!e.tween) {
             tempPathArr.push({
                 x: (e.offsetX / dZoom - lastX),
                 y: (e.offsetY / dZoom - lastY),
                 color: brushColor,
-                brushSize: bursh.offsetWidth / dZoom
+                brushSize: bursh.offsetWidth / dZoom,
+                tween: e.tween ? true : false
             })
         }
+
         ctx.fillStyle = brushColor;
         ctx.beginPath();
         ctx.arc(e.offsetX / dZoom, e.offsetY / dZoom, (bursh.offsetWidth / 2) / dZoom, 0, 2 * Math.PI);
@@ -179,21 +181,60 @@ function initCanvas() {
                 // 循环该用户的所有路径
                 for (let path = 0; path < arr[userId].length; path++) {
                     // 开始绘制路径
-                    ctx.beginPath();
                     if (arr[userId][path].length > 1) {
-                        ctx.lineCap = "round";
-                        ctx.moveTo((arr[userId][path][0].x + lastX), (arr[userId][path][0].y + lastY));
-                        ctx.lineWidth = arr[userId][path][0].brushSize;
-                        ctx.strokeStyle = arr[userId][path][0].color;
-                        for (var point = 1; point < arr[userId][path].length; point = point + 2) {
-                            // 如果缩放后笔刷粗细小于阈值则不绘制以提升性能
-                            if (arr[userId][path][point].brushSize * dZoom > minimumThreshold) {
-                                ctx.quadraticCurveTo((arr[userId][path][point].x + lastX), (arr[userId][path][point].y + lastY), (arr[userId][path][point + 1].x + lastX), (arr[userId][path][point + 1].y + lastY));
-                                // ctx.lineTo((arr[userId][path][point].x + lastX), (arr[userId][path][point].y + lastY));
+                        // 判断绘制方法
+                        if (drowLine) {
+                            ctx.beginPath();
+                            ctx.lineCap = "round";
+                            ctx.lineWidth = arr[userId][path][0].brushSize;
+                            // ctx.lineWidth = 1;
+                            ctx.strokeStyle = arr[userId][path][0].color;
+
+                            // 新的贝塞尔曲线绘制方法
+                            let besselPoints = getBessel(arr[userId][path]);
+                            let points = arr[userId][path];
+                            let int = 0;
+                            for (let i = 0; i < points.length; i++) {
+                                if (i == 0) {
+                                    ctx.moveTo(points[0].x, points[0].y);
+                                    ctx.quadraticCurveTo(besselPoints[0].x, besselPoints[0].y, points[1].x, points[1].y);
+                                    int = int + 1;
+                                } else if (i < points.length - 2) {
+                                    ctx.moveTo(points[i].x, points[i].y);
+                                    ctx.bezierCurveTo(besselPoints[int].x, besselPoints[int].y, besselPoints[int + 1].x, besselPoints[int + 1].y, points[i + 1].x, points[i + 1].y);
+                                    int += 2;
+                                } else if (i == points.length - 2) {
+                                    ctx.moveTo(points[points.length - 2].x, points[points.length - 2].y);
+                                    ctx.quadraticCurveTo(besselPoints[besselPoints.length - 1].x, besselPoints[besselPoints.length - 1].y, points[points.length - 1].x, points[points.length - 1].y);
+                                }
+                            }
+                            
+                            ctx.stroke();
+
+                            // 测试代码,绘制每个坐标点
+                            for (let point = 0; point < arr[userId][path].length; point++) {
+                                // 如果缩放后笔刷粗细小于阈值则不绘制以提升性能
+                                if (arr[userId][path][point].brushSize * dZoom > minimumThreshold && !arr[userId][path][point].tween) {
+                                    ctx.beginPath();
+                                    ctx.fillStyle = "rgba(0,0,0,0.5)";
+                                    ctx.arc((arr[userId][path][point].x + lastX), (arr[userId][path][point].y + lastY), arr[userId][path][point].brushSize / 2, 0, 2 * Math.PI);
+                                    ctx.fill();
+                                }
+                            }
+
+                        } else {
+                            for (let point = 0; point < arr[userId][path].length; point++) {
+                                // 如果缩放后笔刷粗细小于阈值则不绘制以提升性能
+                                if (arr[userId][path][point].brushSize * dZoom > minimumThreshold) {
+                                    ctx.beginPath();
+                                    ctx.fillStyle = arr[userId][path][point].color;
+                                    ctx.arc((arr[userId][path][point].x + lastX), (arr[userId][path][point].y + lastY), arr[userId][path][point].brushSize / 2, 0, 2 * Math.PI);
+                                    ctx.fill();
+                                }
                             }
                         }
-                        ctx.stroke();
                     } else {
+                        ctx.beginPath();
                         ctx.fillStyle = arr[userId][path][0].color;
                         ctx.arc((arr[userId][path][0].x + lastX), (arr[userId][path][0].y + lastY), arr[userId][path][0].brushSize / 2, 0, 2 * Math.PI);
                         ctx.fill();
@@ -222,7 +263,62 @@ function initCanvas() {
             moveImage();
         } else {
             drenArr(pathArrList);
+        };
+    };
+
+    // 转换坐标点为贝塞尔控制点
+    function getBessel(arr) {
+        let Vector2 = function(x, y) {
+            this.x = x;
+            this.y = y;
+        };
+        Vector2.prototype = {
+            "length": function() {
+                return Math.sqrt(this.x * this.x + this.y * this.y);
+            },
+            "normalize": function() {
+                var inv = 1 / this.length();
+                return new Vector2(this.x * inv, this.y * inv);
+            },
+            "add": function(v) {
+                return new Vector2(this.x + v.x, this.y + v.y);
+            },
+            "multiply": function(f) {
+                return new Vector2(this.x * f, this.y * f);
+            },
+            "dot": function(v) {
+                return this.x * v.x + this.y * v.y;
+            },
+            "angle": function(v) {
+                return Math.acos(this.dot(v) / (this.length() * v.length())) * 180 / Math.PI;
+            }
+        };
+        let rt = 0.3;
+        let i = 0,
+            count = arr.length - 2;
+        let arrs = [];
+        for (; i < count; i++) {
+            let a = arr[i],
+                b = arr[i + 1],
+                c = arr[i + 2];
+            let v1 = new Vector2(a.x - b.x, a.y - b.y);
+            let v2 = new Vector2(c.x - b.x, c.y - b.y);
+            let v1Len = v1.length(),
+                v2Len = v2.length();
+            let centerV = v1.normalize().add(v2.normalize()).normalize();
+            let ncp1 = new Vector2(centerV.y, centerV.x * -1);
+            let ncp2 = new Vector2(centerV.y * -1, centerV.x);
+            if (ncp1.angle(v1) < 90) {
+                let p1 = ncp1.multiply(v1Len * rt).add(b);
+                let p2 = ncp2.multiply(v2Len * rt).add(b);
+                arrs.push(p1, p2)
+            } else {
+                let p1 = ncp1.multiply(v2Len * rt).add(b);
+                let p2 = ncp2.multiply(v1Len * rt).add(b);
+                arrs.push(p2, p1)
+            }
         }
+        return arrs;
     }
 
     // 高性能移动
@@ -230,6 +326,7 @@ function initCanvas() {
         ctx.clearRect(0, 0, canvas.width / dZoom, canvas.height / dZoom);
         ctx.putImageData(imageData, hipX, hipY)
     }
+
     // 鼠标滚轮监听
     canvas.addEventListener('mousewheel', function(e) {
         let delta = e.deltaY / 90
