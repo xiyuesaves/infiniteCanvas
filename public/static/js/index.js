@@ -93,7 +93,7 @@ function initCanvas() {
             pathArrList[userId] = new Array();
         }
         if (tempPathArr.length) {
-            console.log(!(tempPathArr.length % 3), tempPathArr.length)
+            console.log(!(tempPathArr.length % 2), tempPathArr.length)
             if (!(tempPathArr.length % 2)) {
                 let lastPoint = tempPathArr[tempPathArr.length - 1];
                 tempPathArr.push({
@@ -106,7 +106,7 @@ function initCanvas() {
             pathArrList[userId].push(tempPathArr);
             tempPathArr = [];
         }
-        console.log(pathArrList)
+        // console.log(pathArrList)
     });
     canvas.addEventListener("mousemove", function(e) {
         mouseX = e.offsetX;
@@ -155,15 +155,15 @@ function initCanvas() {
 
     // 绘制方法
     function dren(e) {
-        if (!e.tween) {
-            tempPathArr.push({
-                x: (e.offsetX / dZoom - lastX),
-                y: (e.offsetY / dZoom - lastY),
-                color: brushColor,
-                brushSize: bursh.offsetWidth / dZoom,
-                tween: e.tween ? true : false
-            })
-        }
+        // if (!e.tween) {
+        tempPathArr.push({
+            x: (e.offsetX / dZoom - lastX),
+            y: (e.offsetY / dZoom - lastY),
+            color: brushColor,
+            brushSize: bursh.offsetWidth / dZoom,
+            tween: e.tween ? true : false
+        })
+        // }
 
         ctx.fillStyle = brushColor;
         ctx.beginPath();
@@ -193,9 +193,12 @@ function initCanvas() {
 
                             // 新的贝塞尔曲线绘制方法
                             let points = removeTween(arr[userId][path]);
+                            // let points = arr[userId][path];
                             let besselPoints = getBessel(points);
+                            console.log(besselPoints)
                             let int = 0;
                             for (let i = 0; i < points.length; i++) {
+                                ctx.lineTo(points[i].x + lastX, points[i].y + lastY);
                                 if (i == 0) {
                                     ctx.moveTo(points[0].x + lastX, points[0].y + lastY);
                                     ctx.quadraticCurveTo(besselPoints[0].x + lastX, besselPoints[0].y + lastY, points[1].x + lastX, points[1].y + lastY);
@@ -209,16 +212,15 @@ function initCanvas() {
                                     ctx.quadraticCurveTo(besselPoints[besselPoints.length - 1].x + lastX, besselPoints[besselPoints.length - 1].y + lastY, points[points.length - 1].x + lastX, points[points.length - 1].y + lastY);
                                 }
                             }
-
                             ctx.stroke();
 
                             // 测试代码,绘制每个坐标点
-                            for (let point = 0; point < arr[userId][path].length; point++) {
+                            for (let point = 0; point < points.length; point++) {
                                 // 如果缩放后笔刷粗细小于阈值则不绘制以提升性能
-                                if (arr[userId][path][point].brushSize * dZoom > minimumThreshold) {
+                                if (points[point].brushSize * dZoom > minimumThreshold) {
                                     ctx.beginPath();
                                     ctx.fillStyle = "rgba(0,0,0,0.2)";
-                                    ctx.arc((arr[userId][path][point].x + lastX), (arr[userId][path][point].y + lastY), arr[userId][path][point].brushSize / 2, 0, 2 * Math.PI);
+                                    ctx.arc((points[point].x + lastX), (points[point].y + lastY), points[point].brushSize / 2, 0, 2 * Math.PI);
                                     ctx.fill();
                                 }
                             }
@@ -276,7 +278,7 @@ function initCanvas() {
     function removeTween(arr) {
         let newArr = [];
         for (let i = 0; i < arr.length; i++) {
-            if (!arr.tween) {
+            if (!arr[i].tween) {
                 newArr.push(arr[i]);
             };
         };
@@ -284,32 +286,33 @@ function initCanvas() {
     };
 
     // 转换坐标点为贝塞尔控制点
+    let Vector2 = function(x, y) {
+        this.x = x;
+        this.y = y;
+    };
+    Vector2.prototype = {
+        "length": function() {
+            return Math.sqrt(this.x * this.x + this.y * this.y);
+        },
+        "normalize": function() {
+            var inv = 1 / this.length();
+            return new Vector2(this.x * inv, this.y * inv);
+        },
+        "add": function(v) {
+            return new Vector2(this.x + v.x, this.y + v.y);
+        },
+        "multiply": function(f) {
+            return new Vector2(this.x * f, this.y * f);
+        },
+        "dot": function(v) {
+            return this.x * v.x + this.y * v.y;
+        },
+        "angle": function(v) {
+            return Math.acos(this.dot(v) / (this.length() * v.length())) * 180 / Math.PI;
+        }
+    };
+
     function getBessel(arr) {
-        let Vector2 = function(x, y) {
-            this.x = x;
-            this.y = y;
-        };
-        Vector2.prototype = {
-            "length": function() {
-                return Math.sqrt(this.x * this.x + this.y * this.y);
-            },
-            "normalize": function() {
-                var inv = 1 / this.length();
-                return new Vector2(this.x * inv, this.y * inv);
-            },
-            "add": function(v) {
-                return new Vector2(this.x + v.x, this.y + v.y);
-            },
-            "multiply": function(f) {
-                return new Vector2(this.x * f, this.y * f);
-            },
-            "dot": function(v) {
-                return this.x * v.x + this.y * v.y;
-            },
-            "angle": function(v) {
-                return Math.acos(this.dot(v) / (this.length() * v.length())) * 180 / Math.PI;
-            }
-        };
         let rt = 0.3;
         let i = 0,
             count = arr.length - 2;
