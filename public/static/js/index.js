@@ -213,18 +213,6 @@ function initCanvas() {
                                 }
                             }
                             ctx.stroke();
-
-                            // 测试代码,绘制每个坐标点
-                            for (let point = 0; point < points.length; point++) {
-                                // 如果缩放后笔刷粗细小于阈值则不绘制以提升性能
-                                if (points[point].brushSize * dZoom > minimumThreshold) {
-                                    ctx.beginPath();
-                                    ctx.fillStyle = "rgba(0,0,0,0.2)";
-                                    ctx.arc((points[point].x + lastX), (points[point].y + lastY), points[point].brushSize / 2, 0, 2 * Math.PI);
-                                    ctx.fill();
-                                }
-                            }
-
                         } else {
                             for (let point = 0; point < arr[userId][path].length; point++) {
                                 // 如果缩放后笔刷粗细小于阈值则不绘制以提升性能
