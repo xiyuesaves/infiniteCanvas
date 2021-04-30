@@ -371,12 +371,12 @@ function initCanvas() {
                 drenArr(pathArrList);
             } else {
                 console.log("最小值")
-                console.log(zoomVal)
+                console.log(zoomVal,dZoom)
                 zoomVal = minZoom
             }
         } else {
             console.log("最大值")
-            console.log(zoomVal)
+            console.log(zoomVal,dZoom)
             zoomVal = maxZoom
         }
     }
