@@ -1,5 +1,5 @@
 "use strict"
-let zoomVal = 0; // 记录用缩放值
+let pathArrList = {}; // 路径数组列表
 
 // 取消浏览器默认右键菜单
 window.oncontextmenu = function(e) {
@@ -9,8 +9,6 @@ window.oncontextmenu = function(e) {
 window.onload = function() {
     // 初始化色块
     initColorBlock();
-    // 初始化socket连接
-    initSockit();
     // 初始化画布
     initCanvas();
 };
@@ -23,11 +21,13 @@ function initCanvas() {
     const ctx = canvas.getContext("2d");
     const menuLayer = document.querySelector(".menus");
     const zoomIndicator = document.querySelector(".indicator-tag.your-self");
+    const socket = io();
+    const fullImfo = document.querySelector(".wating-service")
+    const userName = document.querySelector(".input-user-name")
     // 配置项
-    let pathArrList = []; // 路径数组列表
     let tempPathArr = []; // 临时绘制路径
     let disabledPath = []; // 停止绘制id列表
-    let userId = 0; // 本地玩家id
+    let userId = "null"; // 本地玩家id
     let lastX = 0, // 当前位置
         lastY = 0;
     let moveX = 0,
@@ -36,8 +36,8 @@ function initCanvas() {
         tempY = 0;
     let zoom = 1.1, // 缩放步幅
         dZoom = 1, // 初始缩放值
-        maxZoom = 300,
-        minZoom = 0;
+        maxZoom = 150,
+        minZoom = -150;
     let mouseX = 0, // 鼠标位置
         mouseY = 0;
     let transX = 0, // 计算补间用
@@ -58,6 +58,8 @@ function initCanvas() {
     let brushMinSize = 5; // 笔刷最小直径
     let brushMaxSize = 120;
     let brushDefaultSize = 20; // 初始笔刷直径
+    let zoomVal = 0; // 记录用缩放值
+    let prohibitedWords = ["测试"]; // 违禁词
     // 宽度变化监听
     window.onresize = function() {
         canvas.width = window.innerWidth;
@@ -99,13 +101,18 @@ function initCanvas() {
         if (highPerformanceDrag) {
             drenArr(pathArrList)
         }
-        if (pathArrList[userId] === undefined) {
-            pathArrList[userId] = new Array();
+        if (userId) {
+            if (pathArrList[userId] === undefined) {
+                pathArrList[userId] = new Array();
+            }
+            if (tempPathArr.length) {
+                pathArrList[userId].push(tempPathArr);
+                tempPathArr = [];
+            }
+        } else {
+            alert("出现错误\nNot Found userId");
         }
-        if (tempPathArr.length) {
-            pathArrList[userId].push(tempPathArr);
-            tempPathArr = [];
-        }
+
         // console.log(pathArrList)
     });
     canvas.addEventListener("mousemove", function(e) {
@@ -156,15 +163,22 @@ function initCanvas() {
 
     // 绘制方法
     function dren(e) {
-        // if (!e.tween) {
-        tempPathArr.push({
-            x: (e.offsetX / dZoom - lastX),
-            y: (e.offsetY / dZoom - lastY),
-            color: brushColor,
-            brushSize: bursh.offsetWidth / dZoom,
-            tween: e.tween ? true : false
-        })
-        // }
+        if (!tempPathArr.length) {
+            tempPathArr.push({
+                x: (e.offsetX / dZoom - lastX),
+                y: (e.offsetY / dZoom - lastY),
+                color: brushColor,
+                brushSize: bursh.offsetWidth / dZoom,
+                tween: e.tween ? true : false
+            })
+        }else{
+            tempPathArr.push({
+                x: (e.offsetX / dZoom - lastX),
+                y: (e.offsetY / dZoom - lastY),
+                tween: e.tween ? true : false
+            })
+        }
+
 
         ctx.fillStyle = brushColor;
         ctx.beginPath();
@@ -176,8 +190,7 @@ function initCanvas() {
     function drenArr(arr) {
         ctx.clearRect(0, 0, canvas.width / dZoom, canvas.height / dZoom);
         // 循环用户数组
-        for (let userId = 0; userId < arr.length; userId++) {
-            // 判断是否渲染该用户的数据
+        for (let userId in arr) {
             if (disabledPath.indexOf(userId) === -1) {
                 // 循环该用户的所有路径
                 for (let path = 0; path < arr[userId].length; path++) {
@@ -238,6 +251,10 @@ function initCanvas() {
                 }
             }
         }
+        // for (let userId = 0; userId < arr.length; userId++) {
+        //     // 判断是否渲染该用户的数据
+
+        // }
         if (highPerformanceDrag) {
             imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
         }
@@ -283,7 +300,7 @@ function initCanvas() {
             return Math.sqrt(this.x * this.x + this.y * this.y);
         },
         "normalize": function() {
-            var inv = 1 / this.length();
+            let inv = 1 / this.length();
             return new Vector2(this.x * inv, this.y * inv);
         },
         "add": function(v) {
@@ -334,7 +351,7 @@ function initCanvas() {
         ctx.clearRect(0, 0, canvas.width / dZoom, canvas.height / dZoom);
         ctx.putImageData(imageData, hipX, hipY)
     }
-    var proportion = 0
+    let proportion = 0
     // 鼠标滚轮监听
     canvas.addEventListener('mousewheel', function(e) {
         if (!dragStart) {
@@ -346,7 +363,7 @@ function initCanvas() {
             }
             zoomFun(-delta);
             proportion = zoomVal / maxZoom * 100
-            zoomIndicator.style.top = `${proportion}%`;
+            zoomIndicator.style.top = `${50 - (proportion / 2)}%`;
         }
     }, false);
 
@@ -401,7 +418,7 @@ function initCanvas() {
         brushSize.setAttribute("title", "当前笔刷大小" + brushDefaultSize + "px");
 
         function onRangeChange(r, f) {
-            var n, c, m;
+            let n, c, m;
             r.addEventListener("input", function(e) {
                 n = 1;
                 c = e.target.value;
@@ -420,6 +437,7 @@ function initCanvas() {
             colorInput.setAttribute("placeholder", selectColor.value);
             overlayColor(selectColor.value);
             bursh.style.backgroundColor = brushColor + "6B";
+            zoomIndicator.style.backgroundColor = brushColor + "6B";
         })
         // 绑定色块点击事件
         colorBox.forEach((el, index) => {
@@ -433,6 +451,7 @@ function initCanvas() {
                     selectColor.setAttribute("style", "background-color: " + brushColor + ";");
                     selectColor.value = brushColor;
                     bursh.style.backgroundColor = brushColor + "6B";
+                    zoomIndicator.style.backgroundColor = brushColor + "6B";
                 };
             });
         });
@@ -446,6 +465,7 @@ function initCanvas() {
                     selectColor.setAttribute("style", "background-color: " + brushColor + ";");
                     selectColor.value = brushColor;
                     bursh.style.backgroundColor = brushColor + "6B";
+                    zoomIndicator.style.backgroundColor = brushColor + "6B";
                 };
             });
         };
@@ -482,7 +502,6 @@ function initCanvas() {
                 };
             });
         };
-
         // 清除选中颜色
         function cleanSelect() {
             colorBox.forEach((el, index) => {
@@ -491,6 +510,97 @@ function initCanvas() {
         };
     };
     brushMenu();
+
+
+
+    // 开始初始化与服务器的连接
+    function initSockit() {
+        const infoText = document.querySelector(".login-info");
+        const loginBtn = document.querySelector(".login-btn");
+        socket.on("connect", () => {
+            console.log("服务器已连接")
+            fullImfo.className = "wating-service disable";
+        });
+        socket.on("disconnect", () => {
+            console.log("服务器断开连接")
+            fullImfo.className = "wating-service";
+            fullImfo.innerText = "与服务器断开通信,正在重新连接...";
+        });
+        // 判断是否有记录登录状态
+        if (Cookies.get("loginId")) {
+            loginuserId()
+        }
+        userName.addEventListener("input", function(e) {
+            checkName(this.value);
+        });
+        userName.addEventListener("propertychange", function(e) {
+            checkName(this.value);
+        });
+        userName.addEventListener("change", function(e) {
+            onlineName(this.value)
+        });
+        // 检测名称
+        function checkName(name) {
+            const reg = new RegExp("^([\u4E00-\uFA29]|[\uE7C7-\uE7F3]|[a-zA-Z0-9_]){1,20}$");
+            if (checkProhibitedWords(name)) {
+                infoText.innerText = "加入绘画";
+                if (name.length >= 2) {
+                    if (name.length <= 8) {
+                        if (reg.test(name)) {
+                            return true;
+                        } else {
+                            infoText.innerText = "不要乱填奇奇怪怪的东西阿喂!";
+                            return false;
+                        }
+                    } else {
+                        infoText.innerText = "太——长——啦——————";
+                        return false;
+                    }
+                } else if (name.length > 0) {
+                    infoText.innerText = "这也太短了吧(?";
+                    return false;
+                } else {
+                    infoText.innerText = "加入绘画";
+                    return false;
+                }
+            } else {
+                infoText.innerText = "emmmm你这名字似乎不太行...";
+                return false;
+            }
+        }
+        // 登录按钮监听
+        loginBtn.addEventListener("click", function() {
+            console.log(checkName(userName.value));
+            if (checkName(userName.value)) {
+                infoText.innerText = "正在自报家门...";
+                socket.emit('newPlayer', {
+                    name: userName.value
+                });
+            };
+        });
+        socket.on("loginReturn", function(data) {
+            console.log(data)
+        })
+        socket.on("checkNameReturn", function(data) {
+            console.log(data)
+        })
+        // 在线检查是否已有此用户名
+        function onlineName(name) {
+            socket.emit('checkName', {
+                name: name
+            });
+        }
+    }
+    initSockit()
+
+    function checkProhibitedWords(name) {
+        for (let i = 0; i < prohibitedWords.length; i++) {
+            if (name.includes(prohibitedWords[i])) {
+                return false;
+            };
+        };
+        return true;
+    }
 };
 
 // 初始化色块
@@ -526,17 +636,3 @@ function initColorBlock() {
         selectColorBox.appendChild(colorEl);
     };
 };
-
-function initSockit() {
-    const socket = io();
-    socket.on("hello", (data) => {
-        console.log(data)
-        socket.emit('msg', "hello service,my id is " + data.id);
-    })
-    socket.on("connect", () => {
-        console.log("服务器已连接")
-    });
-    socket.on("disconnect", () => {
-        console.log("服务器断开连接")
-    });
-}

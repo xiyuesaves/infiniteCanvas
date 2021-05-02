@@ -4,14 +4,26 @@
 <head>
     <meta charset="utf-8">
     <title>无限画布-测试</title>
-    <script src='static/js/index.js'></script>
     <script src='socket.io/socket.io.js'></script>
+    <script src='cookies.js'></script>
+    <script src='static/js/index.js'></script>
     <link rel='stylesheet' type='text/css' href='static/css/index.css'>
     <meta name="viewport" content="width=device-width, user-scalable=no,initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
 </head>
 
 <body>
-    <!--  -->
+    <!-- 连接服务器 -->
+    <div class="wating-service">
+        连接服务器中...
+    </div>
+    <div class="login">
+        <p class="login-info">加入绘画</p>
+        <input class="input-user-name" type="text" placeholder="写上别人对你的称呼?" name="">
+        <input class="input-user-psw" type="password" placeholder="密码可别忘了" name="">
+        <button class="login-btn">
+            注册
+        </button>
+    </div>
     <!-- 菜单 -->
     <div class="menus">
         <!-- 左侧菜单 -->
