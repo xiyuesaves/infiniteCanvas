@@ -36,7 +36,7 @@ function initCanvas() {
         tempY = 0;
     let zoom = 1.1, // 缩放步幅
         dZoom = 1, // 初始缩放值
-        maxZoom = 400,
+        maxZoom = 300,
         minZoom = 0;
     let mouseX = 0, // 鼠标位置
         mouseY = 0;
@@ -366,6 +366,7 @@ function initCanvas() {
                 dZoom = dZoom * zooms;
                 let beforeW = canvas.width * dZoom,
                     beforeH = canvas.height * dZoom;
+                    
                 lastX = lastX + ((mouseX / afterW) * (afterW - beforeW)) / dZoom;
                 lastY = lastY + ((mouseY / afterH) * (afterH - beforeH)) / dZoom;
                 drenArr(pathArrList);
