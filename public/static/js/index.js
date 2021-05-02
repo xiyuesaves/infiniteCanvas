@@ -44,7 +44,7 @@ function initCanvas() {
         transY = 0;
     let hipX = 0, // 高性能移动坐标
         hipY = 0;
-    let drowLine = true; // 更改绘制模式为线条
+    let drowLine = true; // 更改绘制模式为线条,可大幅度提高性能,但小几率出现线条扭曲
     let imageData; // 图片数据
     let minimumThreshold = 0.1; // 画布最低绘制宽度
     let brushColor = "#000000"; // 笔刷颜色
@@ -56,6 +56,7 @@ function initCanvas() {
     let tweenStride = 5; // 补间步幅
     let highPerformanceDrag = false; // 是否启用高性能拖动
     let brushMinSize = 5; // 笔刷最小直径
+    let brushMaxSize = 120;
     let brushDefaultSize = 20; // 初始笔刷直径
     // 宽度变化监听
     window.onresize = function() {
@@ -272,7 +273,7 @@ function initCanvas() {
         return newArr;
     };
 
-    // 转换坐标点为贝塞尔控制点
+    // 转换坐标点为贝塞尔控制点 (借鉴代码,有bug,可能返回NaN)
     let Vector2 = function(x, y) {
         this.x = x;
         this.y = y;
@@ -366,26 +367,25 @@ function initCanvas() {
                 dZoom = dZoom * zooms;
                 let beforeW = canvas.width * dZoom,
                     beforeH = canvas.height * dZoom;
-                    
+
                 lastX = lastX + ((mouseX / afterW) * (afterW - beforeW)) / dZoom;
                 lastY = lastY + ((mouseY / afterH) * (afterH - beforeH)) / dZoom;
                 drenArr(pathArrList);
             } else {
                 console.log("最小值")
-                console.log(zoomVal,dZoom)
+                console.log(zoomVal, dZoom)
                 zoomVal = minZoom
             }
         } else {
             console.log("最大值")
-            console.log(zoomVal,dZoom)
+            console.log(zoomVal, dZoom)
             zoomVal = maxZoom
         }
     }
 
     // 笔刷菜单功能
     function brushMenu() {
-        const brushSize = document.querySelector(".brush-size");
-        const burshSizeSlider = document.querySelector(".slider");
+        const brushSize = document.querySelector(".brush-size-range");
         const colorBox = document.querySelectorAll(".color-box");
         const colorInput = document.querySelector(".input-color");
         const selectColor = document.querySelector(".color-view");
@@ -394,42 +394,33 @@ function initCanvas() {
         // 初始化笔刷直径
         bursh.style.width = brushDefaultSize + "px";
         bursh.style.height = brushDefaultSize + "px";
-        burshSizeSlider.style.transform = "translate3d(" + brushDefaultSize + "px, -50%, 0px)";
-        burshSizeSlider.setAttribute("data-value", brushDefaultSize);
-        brushSize.addEventListener("mousedown", function(e) {
-            if (e.buttons === 1) {
-                clickSlider = true;
-                moveSlider(e);
-            } else {
-                clickSlider = false;
-            };
-        });
-        brushSize.addEventListener("mouseup", function(e) {
-            clickSlider = false;
-        });
-        brushSize.addEventListener("mouseout", function() {
-            clickSlider = false;
-        })
-        brushSize.addEventListener("mousemove", function(e) {
-            if (clickSlider) {
-                moveSlider(e);
-            };
-        });
+        // 初始化笔刷控制器默认值
+        brushSize.setAttribute("min", brushMinSize);
+        brushSize.setAttribute("max", brushMaxSize);
+        brushSize.value = brushDefaultSize;
+        brushSize.setAttribute("title", "当前笔刷大小" + brushDefaultSize + "px");
 
-        function moveSlider(e) {
-            let floatX = e.offsetX - burshSizeSlider.offsetWidth / 2;
-            if (floatX > brushSize.offsetWidth - burshSizeSlider.offsetWidth) {
-                floatX = brushSize.offsetWidth - burshSizeSlider.offsetWidth;
-            } else if (floatX < 0) {
-                floatX = 0;
-            };
-            const sliderW = floatX + brushMinSize;
-            burshSizeSlider.style.transform = "translate3d(" + floatX + "px, -50%, 0px)";
-            burshSizeSlider.setAttribute("data-value", sliderW);
-            bursh.style.width = sliderW + "px";
-            bursh.style.height = sliderW + "px";
+        function onRangeChange(r, f) {
+            var n, c, m;
+            r.addEventListener("input", function(e) {
+                n = 1;
+                c = e.target.value;
+                if (c != m) f(e);
+                m = c;
+            });
+            r.addEventListener("change", function(e) { if (!n) f(e); });
         }
-
+        onRangeChange(brushSize, function() {
+            bursh.style.width = brushSize.value + "px";
+            bursh.style.height = brushSize.value + "px";
+            brushSize.setAttribute("title", "当前笔刷大小" + brushSize.value + "px");
+        })
+        onRangeChange(selectColor, function(e) {
+            selectColor.style.backgroundColor = selectColor.value;
+            colorInput.setAttribute("placeholder", selectColor.value);
+            overlayColor(selectColor.value);
+            bursh.style.backgroundColor = brushColor + "6B";
+        })
         // 绑定色块点击事件
         colorBox.forEach((el, index) => {
             el.addEventListener("click", function() {
@@ -440,6 +431,7 @@ function initCanvas() {
                     colorInput.setAttribute("placeholder", brushColor);
                     colorInput.value = "";
                     selectColor.setAttribute("style", "background-color: " + brushColor + ";");
+                    selectColor.value = brushColor;
                     bursh.style.backgroundColor = brushColor + "6B";
                 };
             });
@@ -451,7 +443,8 @@ function initCanvas() {
                     brushColor = el.getAttribute("title");
                     colorInput.setAttribute("placeholder", brushColor);
                     colorInput.value = "";
-                    selectColor.setAttribute("style", "background-color: " + brushColor + ";")
+                    selectColor.setAttribute("style", "background-color: " + brushColor + ";");
+                    selectColor.value = brushColor;
                     bursh.style.backgroundColor = brushColor + "6B";
                 };
             });
@@ -469,7 +462,7 @@ function initCanvas() {
 
         // 判断输入值是不是hex色值
         function checkColor(hex) {
-            const hexReg = new RegExp(/(^#[0-9A-F]{6}$)|(^#[0-9A-F]{3}$)/i);
+            const hexReg = new RegExp(/(^#[0-9A-F]{6}$)/i);
             // 如果是正确hex值则重写当前选中颜色
             if (hexReg.test(hex)) {
                 overlayColor(hex);
@@ -485,6 +478,7 @@ function initCanvas() {
                     brushColor = el.getAttribute("title");
                     colorInput.setAttribute("placeholder", brushColor);
                     selectColor.setAttribute("style", "background-color: " + brushColor + ";")
+                    selectColor.value = brushColor;
                 };
             });
         };

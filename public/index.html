@@ -7,6 +7,7 @@
     <script src='static/js/index.js'></script>
     <script src='socket.io/socket.io.js'></script>
     <link rel='stylesheet' type='text/css' href='static/css/index.css'>
+    <meta name="viewport" content="width=device-width, user-scalable=no,initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
 </head>
 
 <body>
@@ -18,11 +19,9 @@
             <div class="top-select-color"></div>
             <div class="input-color-value">
                 <input onkeydown="" class="input-color" maxlength="7" type="text" placeholder="#ffffff" name="">
-                <div class="color-view" style="background-color: #ffffff;"></div>
+                <input title="点击选取颜色" class="color-view" style="background-color: #ffffff;" type="color"  name="">
             </div>
-            <div class="brush-size" title="笔刷大小">
-                <div class="slider" data-value="20"></div>
-            </div>
+            <input title="调整笔刷大小" class="brush-size-range" type="range" value="0" min="0" max="100" step="1"/>
         </div>
         <!-- 人数显示 -->
         <div class="online">
