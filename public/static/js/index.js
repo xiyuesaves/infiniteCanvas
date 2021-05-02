@@ -1,5 +1,4 @@
 "use strict"
-let pathArrList = {}; // 路径数组列表
 
 // 取消浏览器默认右键菜单
 window.oncontextmenu = function(e) {
@@ -15,19 +14,22 @@ window.onload = function() {
 
 // 初始化画布
 function initCanvas() {
+    const socket = io();
     // 主要操作元素
     const canvas = document.querySelector("#canvas");
     const bursh = document.querySelector("#brush");
     const ctx = canvas.getContext("2d");
     const menuLayer = document.querySelector(".menus");
     const zoomIndicator = document.querySelector(".indicator-tag.your-self");
-    const socket = io();
-    const fullImfo = document.querySelector(".wating-service")
-    const userName = document.querySelector(".input-user-name")
+    const fullImfo = document.querySelector(".wating-service");
+    const userName = document.querySelector(".input-user-name");
+    const userPsw = document.querySelector(".input-user-psw");
+    const loginView = document.querySelector(".login");
     // 配置项
+    let pathArrList = {}; // 路径数组列表
     let tempPathArr = []; // 临时绘制路径
     let disabledPath = []; // 停止绘制id列表
-    let userId = "null"; // 本地玩家id
+    let userId = null; // 本地玩家id
     let lastX = 0, // 当前位置
         lastY = 0;
     let moveX = 0,
@@ -55,6 +57,7 @@ function initCanvas() {
     let tweenInterval = 6; // 启用补间的间隔
     let tweenStride = 5; // 补间步幅
     let highPerformanceDrag = false; // 是否启用高性能拖动
+    let loginStatus = false; // 登录状态
     let brushMinSize = 5; // 笔刷最小直径
     let brushMaxSize = 120;
     let brushDefaultSize = 20; // 初始笔刷直径
@@ -171,7 +174,7 @@ function initCanvas() {
                 brushSize: bursh.offsetWidth / dZoom,
                 tween: e.tween ? true : false
             })
-        }else{
+        } else {
             tempPathArr.push({
                 x: (e.offsetX / dZoom - lastX),
                 y: (e.offsetY / dZoom - lastY),
@@ -517,9 +520,14 @@ function initCanvas() {
     function initSockit() {
         const infoText = document.querySelector(".login-info");
         const loginBtn = document.querySelector(".login-btn");
+        let logOrReg = null;
         socket.on("connect", () => {
             console.log("服务器已连接")
             fullImfo.className = "wating-service disable";
+            if (loginStatus) {
+                console.log("重新登录")
+                cookieLogin(Cookies.get("cookieId"));
+            };
         });
         socket.on("disconnect", () => {
             console.log("服务器断开连接")
@@ -527,8 +535,14 @@ function initCanvas() {
             fullImfo.innerText = "与服务器断开通信,正在重新连接...";
         });
         // 判断是否有记录登录状态
-        if (Cookies.get("loginId")) {
-            loginuserId()
+        if (Cookies.get("cookieId")) {
+            if (Cookies.get("cookieId").length) {
+                cookieLogin(Cookies.get("cookieId"));
+                infoText.innerText = "啊,我好像记得你...";
+                userPsw.setAttribute("disabled", "disabled");
+                userName.setAttribute("disabled", "disabled");
+                loginBtn.setAttribute("disabled", "disabled");
+            }
         }
         userName.addEventListener("input", function(e) {
             checkName(this.value);
@@ -539,6 +553,63 @@ function initCanvas() {
         userName.addEventListener("change", function(e) {
             onlineName(this.value)
         });
+        socket.on("loginReturn", function(data) {
+            if (data.status) {
+                Cookies.set("cookieId", data.cookieId, { expires: 365 });
+                infoText.innerText = "登录成功啦~";
+                userId = "id"+data.cookieId;
+                loginStatus = true;
+                loginView.className = "login disable";
+            } else {
+                infoText.innerText = "这个用户名已被使用,或密码错误";
+                userPsw.removeAttribute("disabled");
+                userName.removeAttribute("disabled");
+                loginBtn.removeAttribute("disabled");
+                Cookies.remove("cookieId");
+            }
+        })
+        socket.on("registeredReturn", function(data) {
+            if (data.status) {
+                Cookies.set("cookieId", data.cookieId, { expires: 365 });
+                infoText.innerText = "注册成功啦~";
+                loginStatus = true;
+                userId = "id"+data.cookieId;
+                loginView.className = "login disable";
+            } else {
+                infoText.innerText = "注册失败了诶,换个名字试试?";
+                userPsw.removeAttribute("disabled");
+                userName.removeAttribute("disabled");
+                loginBtn.removeAttribute("disabled");
+                Cookies.remove("cookieId");
+            }
+        })
+        socket.on("autoLoginReturn", function(data) {
+            if (!data.status) {
+                fullImfo.className = "wating-service";
+                infoText.innerText = "记住登录过期啦";
+                loginStatus = false;
+                userPsw.removeAttribute("disabled");
+                userName.removeAttribute("disabled");
+                loginBtn.removeAttribute("disabled");
+                Cookies.remove("cookieId");
+            }
+        })
+        socket.on("checkNameReturn", function(data) {
+            console.log(data)
+            if (data.status) { // 存在
+                loginBtn.innerText = "登录";
+                logOrReg = "login";
+            } else { // 不存在
+                loginBtn.innerText = "注册";
+                logOrReg = "registered";
+            }
+        })
+        // cookie登录
+        function cookieLogin(cookieId) {
+            socket.emit("cookieLogin", {
+                cookie: cookieId
+            });
+        }
         // 检测名称
         function checkName(name) {
             const reg = new RegExp("^([\u4E00-\uFA29]|[\uE7C7-\uE7F3]|[a-zA-Z0-9_]){1,20}$");
@@ -553,7 +624,7 @@ function initCanvas() {
                             return false;
                         }
                     } else {
-                        infoText.innerText = "太——长——啦——————";
+                        infoText.innerText = "名字太——长——啦——————";
                         return false;
                     }
                 } else if (name.length > 0) {
@@ -570,25 +641,40 @@ function initCanvas() {
         }
         // 登录按钮监听
         loginBtn.addEventListener("click", function() {
-            console.log(checkName(userName.value));
             if (checkName(userName.value)) {
-                infoText.innerText = "正在自报家门...";
-                socket.emit('newPlayer', {
-                    name: userName.value
-                });
+                if (userPsw.value.length >= 6) {
+                    if (userPsw.value.length <= 16) {
+                        if (logOrReg) {
+                            if (logOrReg === "login") {
+                                infoText.innerText = "正在向大家问好...";
+                            }else{
+                                infoText.innerText = "正在自报家门...";
+                            }
+                            socket.emit(logOrReg, {
+                                name: userName.value,
+                                psw: userPsw.value
+                            });
+                            userPsw.setAttribute("disabled", "disabled");
+                            userName.setAttribute("disabled", "disabled");
+                            loginBtn.setAttribute("disabled", "disabled");
+                        } else {
+                            infoText.innerText = "服务器似乎没有理你,再试一下吧~";
+                        }
+                    } else {
+                        infoText.innerText = "密码太—长—啦———";
+                    }
+                } else {
+                    infoText.innerText = "密码也太短了吧!";
+                }
             };
         });
-        socket.on("loginReturn", function(data) {
-            console.log(data)
-        })
-        socket.on("checkNameReturn", function(data) {
-            console.log(data)
-        })
         // 在线检查是否已有此用户名
         function onlineName(name) {
-            socket.emit('checkName', {
-                name: name
-            });
+            if (checkName(name)) {
+                socket.emit('checkName', {
+                    name: name
+                });
+            }
         }
     }
     initSockit()
