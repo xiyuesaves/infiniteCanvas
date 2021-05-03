@@ -34,6 +34,7 @@ function initCanvas() {
     let tempPathArr = []; // 临时绘制路径
     let disabledPath = []; // 停止绘制id列表
     let userId = null; // 本地玩家id
+    let localUserId = null; // 服务器上用户的id
     let loaclUserName = null; // 本地玩家名称
     let lockUserList = []; // 本地用户统计
     let lastX = 0, // 当前位置
@@ -187,7 +188,6 @@ function initCanvas() {
                 tween: e.tween ? true : false
             })
         }
-
 
         ctx.fillStyle = brushColor;
         ctx.beginPath();
@@ -527,20 +527,9 @@ function initCanvas() {
         const infoText = document.querySelector(".login-info");
         const loginBtn = document.querySelector(".login-btn");
         const invitationCode = document.querySelector(".input-invitation-code");
+        const sendBtn = document.querySelector(".send-msg");
+        const inputMsg = document.querySelector(".input-msg");
         let logOrReg = null;
-        socket.on("connect", () => {
-            console.log("服务器已连接")
-            fullImfo.className = "wating-service disable";
-            if (loginStatus) {
-                console.log("重新登录")
-                cookieLogin(Cookies.get("cookieId"));
-            };
-        });
-        socket.on("disconnect", () => {
-            console.log("服务器断开连接")
-            fullImfo.className = "wating-service";
-            fullImfo.innerText = "与服务器断开通信,正在重新连接...";
-        });
 
         // 判断是否有记录登录状态
         if (Cookies.get("cookieId")) {
@@ -550,6 +539,7 @@ function initCanvas() {
             }
         }
 
+        // 监听输入
         userName.addEventListener("input", function(e) {
             checkName(this.value);
         });
@@ -560,15 +550,32 @@ function initCanvas() {
             onlineName(this.value)
         });
 
+        // 与服务器建立连接
+        socket.on("connect", () => {
+            console.log("服务器已连接")
+            fullImfo.className = "wating-service disable";
+            if (loginStatus) {
+                console.log("重新登录")
+                cookieLogin(Cookies.get("cookieId"));
+            };
+        });
+
+        // 断开与服务器的连接
+        socket.on("disconnect", () => {
+            console.log("服务器断开连接")
+            fullImfo.className = "wating-service";
+            fullImfo.innerText = "与服务器断开通信,正在重新连接...";
+        });
+
         // 返回登录结果
         socket.on("loginReturn", function(data) {
-            console.log("登录成功");
+            console.log("登录成功", data);
             if (data.status) {
                 Cookies.set("cookieId", data.cookieId, { expires: 365 });
                 infoText.innerText = "登录成功啦~";
                 userId = "id" + data.cookieId;
+                localUserId = data.id;
                 loaclUserName = data.name;
-                loginStatus = true;
                 loginView.className = "login";
                 loginSuccess();
             } else {
@@ -652,9 +659,32 @@ function initCanvas() {
         })
 
         // 返回历史消息
-        socket.on("returnMessage", function (data) {
+        socket.on("returnHistoricalMessage", function(data) {
             console.log("接收到历史消息列表", data)
-            
+            for (let i = 0; i < data.length; i++) {
+                if (data[i].type === 1) { // 1为系统消息
+                    putSystemMsg(data[i].content);
+                } else if (data[i].type === 0) { // 0为用户消息
+                    if (data[i].userId === localUserId) {
+                        putUsMsg(data[i].userName, data[i].content)
+                    } else {
+                        putUserMsg(data[i].userName, data[i].content)
+                    }
+                }
+            }
+        })
+
+        // 新消息接收
+        socket.on("newMessage", function(data) {
+            if (data.type === 1) { // 1为系统消息
+                putSystemMsg(data.content);
+            } else if (data.type === 0) { // 0为用户消息
+                if (data.userId === localUserId) {
+                    putUsMsg(data.userName, data.content)
+                } else {
+                    putUserMsg(data.userName, data.content)
+                }
+            }
         })
 
         // 删除下线用户
@@ -691,16 +721,20 @@ function initCanvas() {
 
         // 登录成功方法
         function loginSuccess() {
-            console.log("开始请求登录数据");
-            infoText.innerText = "正在加载历史数据,用户列表...";
-            socket.emit("getUserList", { userId: Cookies.get("cookieId") });
-            socket.emit("getHistoricalPath", { userId: Cookies.get("cookieId") });
-            socket.emit("getHistoricalMessage", { userId: Cookies.get("cookieId") });
+            if (!loginStatus) {
+                loginStatus = true;
+                console.log("开始请求登录数据");
+                infoText.innerText = "正在加载历史数据,用户列表...";
+                socket.emit("getUserList", { userId: Cookies.get("cookieId") });
+                socket.emit("getHistoricalPath", { userId: Cookies.get("cookieId") });
+                socket.emit("getHistoricalMessage", { userId: Cookies.get("cookieId") });
+            }
+            loginView.className = "login disable";
         }
 
         // 判断是否加载完成
         function isloadOk() {
-            if (loadOk === 1) {
+            if (loadOk > 1) {
                 infoText.innerText = "数据加载完成.";
                 loginView.className = "login disable";
             }
@@ -743,6 +777,75 @@ function initCanvas() {
             }
         }
 
+        // 在线检查是否已有此用户名
+        function onlineName(name) {
+            if (checkName(name)) {
+                socket.emit('checkName', {
+                    name: name
+                });
+            }
+        }
+
+        // 初始化登录页面
+        function initLoginView(viewText) {
+            if (viewText) {
+                infoText.innerText = viewText;
+            }
+            userPsw.removeAttribute("disabled");
+            userName.removeAttribute("disabled");
+            loginBtn.removeAttribute("disabled");
+        }
+
+        // 禁用登录页面
+        function disableLogin(viewText) {
+            if (viewText) {
+                infoText.innerText = viewText;
+            }
+            userPsw.setAttribute("disabled", "disabled");
+            userName.setAttribute("disabled", "disabled");
+            loginBtn.setAttribute("disabled", "disabled");
+        }
+
+        // 系统消息
+        function putSystemMsg(msg) {
+            const msgEl = document.createElement("span");
+            msgEl.className = "system-info";
+            msgEl.innerText = msg;
+            msgList.appendChild(msgEl)
+            msgList.scrollTop = msgList.scrollHeight;
+        }
+        // 我的消息
+        function putUserMsg(userName, msg) {
+            const msgEl = document.createElement("span");
+            msgEl.className = "msg-text";
+            const userNameEl = document.createElement("p");
+            userNameEl.className = "user-name";
+            userNameEl.innerText = userName;
+            const content = document.createElement("p");
+            content.className = "content";
+            content.innerText = msg;
+            msgEl.appendChild(userNameEl);
+            msgEl.appendChild(content);
+            msgList.appendChild(msgEl)
+            msgList.scrollTop = msgList.scrollHeight;
+        }
+        // 其他用户消息
+        function putUsMsg(userName, msg) {
+            const msgEl = document.createElement("span");
+            msgEl.className = "msg-text your-self";
+            const userNameEl = document.createElement("p");
+            userNameEl.className = "user-name";
+            userNameEl.innerText = userName;
+            const content = document.createElement("p");
+            content.className = "content";
+            content.innerText = msg;
+            msgEl.appendChild(userNameEl);
+            msgEl.appendChild(content);
+            msgList.appendChild(msgEl)
+            msgList.scrollTop = msgList.scrollHeight;
+        }
+
+
         // 登录按钮监听
         loginBtn.addEventListener("click", function() {
             if (checkName(userName.value)) {
@@ -779,42 +882,15 @@ function initCanvas() {
                 }
             };
         });
-        // 在线检查是否已有此用户名
-        function onlineName(name) {
-            if (checkName(name)) {
-                socket.emit('checkName', {
-                    name: name
-                });
-            }
-        }
 
-        // 初始化登录页面
-        function initLoginView(viewText) {
-            if (viewText) {
-                infoText.innerText = viewText;
+        // 监听发送消息按钮
+        sendBtn.addEventListener("click", function () {
+            let tempInputVal = inputMsg.value;
+            if (tempInputVal.length) {
+                inputMsg.value = "";
+                socket.emit("sendMsg", {cookie: Cookies.get("cookieId"), content: tempInputVal});
             }
-            userPsw.removeAttribute("disabled");
-            userName.removeAttribute("disabled");
-            loginBtn.removeAttribute("disabled");
-        }
-
-        // 禁用登录页面
-        function disableLogin(viewText) {
-            if (viewText) {
-                infoText.innerText = viewText;
-            }
-            userPsw.setAttribute("disabled", "disabled");
-            userName.setAttribute("disabled", "disabled");
-            loginBtn.setAttribute("disabled", "disabled");
-        }
-
-        // 系统消息
-        function systemMsg(msg) {
-            const msgEl = document.createElement("span");
-            msgEl.className = "system-info";
-            msgEl.innerText = msg;
-            msgList.appendChild(msgEl)
-        }
+        })
     }
     initSockit()
 
@@ -827,8 +903,6 @@ function initCanvas() {
         };
         return true;
     }
-
-
 };
 
 // 初始化色块
@@ -850,7 +924,7 @@ function initColorBlock() {
         "#ea68a2",
         "#000000"
     ];
-    const blockNum = colorArr.length >= 24 ? colorArr.length : 32;
+    const blockNum = colorArr.length >= 32 ? colorArr.length : 32;
     const selectColorBox = document.querySelector(".top-select-color");
     for (let i = 0; i < blockNum; i++) {
         const colorValue = colorArr[i] || "#ffffff";

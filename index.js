@@ -31,7 +31,7 @@ io.on('connection', (socket) => {
         db.get("SELECT userName,password,userId FROM user WHERE user.userName = ?", [data.name], function(err, dbData) {
             if (data.name === dbData.userName && data.psw === dbData.password) {
                 let cookieId = Buffer.from("user" + data.name + new Date().getTime() + "time").toString('base64');
-                socket.emit("loginReturn", { status: true, cookieId: cookieId, name: data.name });
+                socket.emit("loginReturn", { status: true, cookieId: cookieId, name: data.name, id: dbData.userId });
                 updateCookieId(dbData.userId, cookieId);
                 newUserAdd(dbData.userName, dbData.userId, cookieId);
             } else {
@@ -46,7 +46,7 @@ io.on('connection', (socket) => {
         db.get("SELECT userName,userId,cookieId FROM user WHERE user.cookieId = ?", [data.cookie], function(err, dbData) {
             if (dbData) {
                 if (data.cookie === dbData.cookieId) {
-                    socket.emit("loginReturn", { status: true, cookieId: data.cookie, name: dbData.userName });
+                    socket.emit("loginReturn", { status: true, cookieId: data.cookie, name: dbData.userName, id: dbData.userId });
                     newUserAdd(dbData.userName, dbData.userId, data.cookie);
                 } else {
                     console.log("cookie登录失败, 数据库错误");
@@ -119,15 +119,33 @@ io.on('connection', (socket) => {
         }
     });
     // 获取历史消息 刚刚在写这里2021年5月3日21:28:33
-    // socket.on("getHistoricalMessage", function (cookie) {
-    //     if (checkCookie(cookie.userId)) {
-    //         db.all()
-    //         socket.emit("returnHistoricalMessage", userListArr)
-    //     }else{
-    //         console.log("没有通过检测",cookie.userId)
-    //     }
-    // });
-
+    socket.on("getHistoricalMessage", function (cookie) {
+        if (checkCookie(cookie.userId)) {
+            db.all("SELECT msgId,userName,content,time,type,userId FROM message WHERE message.canvasId = ?", [0], function (err, dbData) {
+                socket.emit("returnHistoricalMessage", dbData)
+            })
+        }else{
+            console.log("没有通过检测",cookie.userId)
+        }
+    });
+    // 收到信息
+    socket.on("sendMsg", function (data) {
+        console.log(data)
+        if (checkCookie(data.cookie)) {
+            let userData = checkCookie(data.cookie)
+            console.log(userData.userName)
+            let sendTime = new Date().getTime() + "";
+            db.run("INSERT INTO message (userName,userId,content,canvasId,time,type) VALUES (?,?,?,?,?,?)",[userData.userName, userData.userId, data.content, 0, sendTime, 0]);
+            sendMessage({content: data.content, time: sendTime, type: 0, userId: userData.userId, userName: userData.userName})
+        } else {
+            console.log("没有通过检测 sendMsg",data.userId)
+        }
+    })
+    // 广播消息
+    function sendMessage(msg) {
+        socket.emit("newMessage", msg);
+        socket.broadcast.emit("newMessage", msg);
+    }
     // 新用户加入
     function newUserAdd(userName, userId, userCookie) {
         console.log("用户上线");
@@ -149,10 +167,11 @@ io.on('connection', (socket) => {
 function updateCookieId(userId, cookieId) {
     db.run("UPDATE user SET cookieId = ? WHERE userId = ?", [cookieId, userId], function(err, data) {});
 };
+
 function checkCookie(cookie) {
     for (let i = 0; i < userList.length; i++) {
         if (userList[i].userCookie === cookie) {
-            return true;
+            return userList[i]
         };
     };
     return false;
