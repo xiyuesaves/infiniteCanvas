@@ -28,6 +28,7 @@ function initCanvas() {
     const titalNum = document.querySelector(".total-num");
     const onlineList = document.querySelector(".online-list");
     const msgList = document.querySelector(".top-msg-list");
+    const otherPlayerList = document.querySelector(".other-user-mouse");
     // 配置项
     let loadOk = 0; // 历史数据加载状态
     let pathArrList = {}; // 路径数组列表
@@ -126,6 +127,7 @@ function initCanvas() {
         // console.log(pathArrList)
     });
     canvas.addEventListener("mousemove", function(e) {
+        const testEl = document.querySelector(".full-z")
         mouseX = e.offsetX;
         mouseY = e.offsetY;
         let burshX = mouseX - bursh.offsetWidth / 2,
@@ -133,6 +135,15 @@ function initCanvas() {
         bursh.style.transform = "translate3d(" + burshX + "px, " + burshY + "px, 0px)";
         let frameX = transX - mouseX,
             frameY = transY - mouseY;
+        const mouseData = {
+            x: (burshX - lastX) / dZoom,
+            y: (burshY - lastY) / dZoom,
+            brushSize: bursh.offsetWidth / dZoom,
+            drag: dragStart,
+            color: brushColor
+        }
+        socket.emit("pointMove", { point: mouseData, cookie: Cookies.get("cookieId") });
+        testEl.innerText = JSON.stringify(mouseData);
         if (dragStart) {
             menuLayer.className = "menus poe";
             // 补间,填充两个坐标之间的空隙
@@ -520,8 +531,6 @@ function initCanvas() {
     };
     brushMenu();
 
-
-
     // 开始初始化与服务器的连接
     function initSockit() {
         const infoText = document.querySelector(".login-info");
@@ -634,6 +643,7 @@ function initCanvas() {
         // 新用户上线监听
         socket.on("userAdd", function(data) {
             console.log("新用户上线", data)
+            createBursh(data)
             newUserAdd(data)
             lockUserList.push(data)
             console.log(lockUserList)
@@ -642,7 +652,8 @@ function initCanvas() {
         // 用户下线监听
         socket.on("userDisconnect", function(data) {
             console.log("用户下线", data)
-            removeUser(data)
+            remveUserBrush(data);
+            removeUser(data);
         })
 
         // 接收用户列表
@@ -653,6 +664,7 @@ function initCanvas() {
             for (let i = 0; i < data.length; i++) {
                 lockUserList.push(data[i]);
                 newUserAdd(data[i]);
+                createBursh(data[i]);
             }
             isloadOk();
             console.log(lockUserList)
@@ -687,6 +699,74 @@ function initCanvas() {
             }
         })
 
+        // 接收其他用户的坐标信息
+        let somX, somY, playrDrag = false;
+        socket.on("otherPlayer", function(data) {
+            let playerBursh = document.querySelector("#id" + data.userId)
+            if (playerBursh) {
+                playerBursh.style.transform = "translate3d(" + (data.point.x) + "px, " + (data.point.y) + "px, 0px)";
+                if (!data.point.drag) {
+                    playrDrag = false
+                }
+                if (data.point.drag) {
+                    if (!playrDrag) {
+                        playrDrag = true
+                        somX = data.point.x;
+                        somY = data.point.y;
+                    }
+                    ctx.fillStyle = data.point.color;
+                    ctx.beginPath();
+                    ctx.arc(data.point.x + (data.point.brushSize / 2), data.point.y + (data.point.brushSize / 2), data.point.brushSize / 2, 0, 2 * Math.PI);
+                    ctx.fill();
+                    // 对其他用户的补间
+                    let tempX = somX - data.point.x;
+                    let tempY = somY - data.point.y;
+                    if (Math.abs(tempX) > tweenInterval || Math.abs(tempY) > tweenInterval || (Math.abs(tempX) > tweenInterval / 2 && Math.abs(tempY) > tweenInterval / 2)) {
+                        let tween = Math.abs(tempX) > Math.abs(tempY) ? Math.abs(tempX) / tweenStride : Math.abs(tempY) / tweenStride;
+                        let tweenX = tempX / tween,
+                            tweenY = tempY / tween;
+                        let stepX = tweenX,
+                            stepY = tweenY;
+                        for (let i = tween - 1; i >= 0; i--) {
+                            let point = {
+                                offsetX: data.point.x + stepX,
+                                offsetY: data.point.y + stepY
+                            };
+                            stepX += tweenX;
+                            stepY += tweenY;
+                            ctx.fillStyle = data.point.color;
+                            ctx.beginPath();
+                            ctx.arc(point.offsetX + (data.point.brushSize / 2), point.offsetY + (data.point.brushSize / 2), data.point.brushSize / 2, 0, 2 * Math.PI);
+                            ctx.fill();
+                        };
+                    }
+                    somX = data.point.x
+                    somY = data.point.y
+                }
+            }
+        })
+
+        // 创建其他用户笔刷
+        function createBursh(data) {
+            console.log("其他用户笔刷", data)
+            if (data.userId !== localUserId && !document.querySelector("#id" + data.userId)) {
+                const playerEl = document.createElement("div");
+                playerEl.className = "player-mouse";
+                playerEl.id = `id${data.userId}`;
+                const userNameEl = document.createElement("p");
+                userNameEl.className = "user-name";
+                userNameEl.innerText = data.name;
+                playerEl.appendChild(userNameEl);
+                otherPlayerList.appendChild(playerEl);
+            }
+        }
+
+        // 删除下线用户笔刷
+        function remveUserBrush(data) {
+            const removeEl = document.querySelector("#id" + data.userId)
+            otherPlayerList.removeChild(removeEl)
+        }
+
         // 删除下线用户
         function removeUser(data) {
             for (let i = 0; i < lockUserList.length; i++) {
@@ -711,12 +791,14 @@ function initCanvas() {
 
         // 新用户加入
         function newUserAdd(userData) {
-            const userEl = document.createElement("div");
-            userEl.className = "user-name list-user-name";
-            userEl.setAttribute("data-user-id", userData.userId)
-            userEl.innerText = userData.name;
-            onlineList.appendChild(userEl);
-            titalNum.innerText = "当前在线:" + document.querySelectorAll(".list-user-name").length + "人";
+            if (!document.querySelector("#listId" + userData.userId)) {
+                const userEl = document.createElement("div");
+                userEl.className = "user-name list-user-name";
+                userEl.id = "listId" + userData.userId
+                userEl.innerText = userData.name;
+                onlineList.appendChild(userEl);
+                titalNum.innerText = "当前在线:" + document.querySelectorAll(".list-user-name").length + "人";
+            }
         }
 
         // 登录成功方法
@@ -845,7 +927,6 @@ function initCanvas() {
             msgList.scrollTop = msgList.scrollHeight;
         }
 
-
         // 登录按钮监听
         loginBtn.addEventListener("click", function() {
             if (checkName(userName.value)) {
@@ -884,11 +965,11 @@ function initCanvas() {
         });
 
         // 监听发送消息按钮
-        sendBtn.addEventListener("click", function () {
+        sendBtn.addEventListener("click", function() {
             let tempInputVal = inputMsg.value;
             if (tempInputVal.length) {
                 inputMsg.value = "";
-                socket.emit("sendMsg", {cookie: Cookies.get("cookieId"), content: tempInputVal});
+                socket.emit("sendMsg", { cookie: Cookies.get("cookieId"), content: tempInputVal });
             }
         })
     }

@@ -37,6 +37,11 @@ div.move {
 
 .menus {}
 
+.menus .full-z{
+    position: absolute;
+    top: 0px;
+    left: 220px;
+}
 .left-menu {
     position: fixed;
     background-color: rgba(255, 255, 255, 0.5);
@@ -389,8 +394,8 @@ div.move {
     background-color: rgba(255, 255, 255, 0.4);
     border-radius: 10000px;
     position: absolute;
-    top: 400px;
-    left: 300px;
+    top: 0;
+    left: 0;
     pointer-events: none;
     cursor: pointer;
 }

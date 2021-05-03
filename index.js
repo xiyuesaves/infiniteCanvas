@@ -141,6 +141,14 @@ io.on('connection', (socket) => {
             console.log("没有通过检测 sendMsg",data.userId)
         }
     })
+    // 广播移动数据
+    socket.on("pointMove", function (data) {
+        let decodeData = {
+            point: data.point,
+            userId: checkCookie(data.cookie).userId
+        }
+        socket.broadcast.emit("otherPlayer", decodeData);
+    })
     // 广播消息
     function sendMessage(msg) {
         socket.emit("newMessage", msg);
