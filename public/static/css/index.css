@@ -237,7 +237,12 @@ div.move {
     flex-direction: column;
     overflow-y: scroll;
 }
-
+.omMsg .top-msg-list .system-info{
+    width: 100%;
+    font-size: 16px;
+    color: #999999;
+    text-align: center;
+}
 .omMsg .top-msg-list::-webkit-scrollbar {
     width: 0 !important
 }

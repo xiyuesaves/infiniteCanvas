@@ -27,7 +27,9 @@ function initCanvas() {
     const loginView = document.querySelector(".login");
     const titalNum = document.querySelector(".total-num");
     const onlineList = document.querySelector(".online-list");
+    const msgList = document.querySelector(".top-msg-list");
     // 配置项
+    let loadOk = 0; // 历史数据加载状态
     let pathArrList = {}; // 路径数组列表
     let tempPathArr = []; // 临时绘制路径
     let disabledPath = []; // 停止绘制id列表
@@ -567,7 +569,7 @@ function initCanvas() {
                 userId = "id" + data.cookieId;
                 loaclUserName = data.name;
                 loginStatus = true;
-                loginView.className = "login disable";
+                loginView.className = "login";
                 loginSuccess();
             } else {
                 initLoginView("这个用户名已被使用,或密码错误")
@@ -639,12 +641,20 @@ function initCanvas() {
         // 接收用户列表
         socket.on("returnUserList", function(data) {
             console.log("接收到用户列表", data)
+            loadOk++
             initUserList()
             for (let i = 0; i < data.length; i++) {
                 lockUserList.push(data[i]);
                 newUserAdd(data[i]);
             }
+            isloadOk();
             console.log(lockUserList)
+        })
+
+        // 返回历史消息
+        socket.on("returnMessage", function (data) {
+            console.log("接收到历史消息列表", data)
+            
         })
 
         // 删除下线用户
@@ -682,9 +692,18 @@ function initCanvas() {
         // 登录成功方法
         function loginSuccess() {
             console.log("开始请求登录数据");
+            infoText.innerText = "正在加载历史数据,用户列表...";
             socket.emit("getUserList", { userId: Cookies.get("cookieId") });
             socket.emit("getHistoricalPath", { userId: Cookies.get("cookieId") });
             socket.emit("getHistoricalMessage", { userId: Cookies.get("cookieId") });
+        }
+
+        // 判断是否加载完成
+        function isloadOk() {
+            if (loadOk === 1) {
+                infoText.innerText = "数据加载完成.";
+                loginView.className = "login disable";
+            }
         }
 
         // cookie登录
@@ -787,6 +806,14 @@ function initCanvas() {
             userPsw.setAttribute("disabled", "disabled");
             userName.setAttribute("disabled", "disabled");
             loginBtn.setAttribute("disabled", "disabled");
+        }
+
+        // 系统消息
+        function systemMsg(msg) {
+            const msgEl = document.createElement("span");
+            msgEl.className = "system-info";
+            msgEl.innerText = msg;
+            msgList.appendChild(msgEl)
         }
     }
     initSockit()

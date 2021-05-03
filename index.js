@@ -15,6 +15,8 @@ const db = new sqlite3.Database("main.db");
 
 const invitationCode = "xiyue";
 
+const canvasId = 0;
+
 const point = 3399;
 console.log(`服务已启动,正在监听${point}`)
 server.listen(point);
@@ -23,6 +25,7 @@ let userList = [];
 let userNum = 0;
 
 io.on('connection', (socket) => {
+    // 登录请求
     socket.on("login", function(data) {
         console.log("用户登录");
         db.get("SELECT userName,password,userId FROM user WHERE user.userName = ?", [data.name], function(err, dbData) {
@@ -37,6 +40,7 @@ io.on('connection', (socket) => {
             }
         })
     })
+    // cookie登录请求
     socket.on("cookieLogin", function(data) {
         console.log("cookie登录", data.cookie)
         db.get("SELECT userName,userId,cookieId FROM user WHERE user.cookieId = ?", [data.cookie], function(err, dbData) {
@@ -54,6 +58,7 @@ io.on('connection', (socket) => {
             }
         })
     })
+    // 注册
     socket.on("registered", function(data) {
         console.log("用户注册", data.name)
         db.get("SELECT userName FROM user WHERE user.userName = ?", [data.name], function(err, name) {
@@ -81,6 +86,7 @@ io.on('connection', (socket) => {
             }
         })
     })
+    // 判断用户名是否存在
     socket.on("checkName", function(data) {
         console.log("判断用户名是否存在", data)
         db.get("SELECT userName FROM user WHERE user.userName = ?", [data.name], function(err, data) {
@@ -92,10 +98,12 @@ io.on('connection', (socket) => {
             }
         })
     })
+    // 断开连接
     socket.on("disconnect", function(data) {
         userDisconnect(socket);
     });
     // 登录之后的请求方法
+    // 获取用户列表
     socket.on("getUserList", function (cookie) {
         if (checkCookie(cookie.userId)) {
             let userListArr = [];
@@ -110,12 +118,23 @@ io.on('connection', (socket) => {
             console.log("没有通过检测",cookie.userId)
         }
     });
+    // 获取历史消息 刚刚在写这里2021年5月3日21:28:33
+    // socket.on("getHistoricalMessage", function (cookie) {
+    //     if (checkCookie(cookie.userId)) {
+    //         db.all()
+    //         socket.emit("returnHistoricalMessage", userListArr)
+    //     }else{
+    //         console.log("没有通过检测",cookie.userId)
+    //     }
+    // });
 
+    // 新用户加入
     function newUserAdd(userName, userId, userCookie) {
         console.log("用户上线");
         userList.push({ socket: socket, userName: userName, userId: userId, userCookie: userCookie});
         socket.broadcast.emit("userAdd", { name: userName, userId: userId });
     };
+    // 用户下线
     function userDisconnect(userSocket) {
         for (let i = 0; i < userList.length; i++) {
             if (userList[i].socket == userSocket) {
