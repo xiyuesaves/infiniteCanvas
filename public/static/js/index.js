@@ -25,11 +25,15 @@ function initCanvas() {
     const userName = document.querySelector(".input-user-name");
     const userPsw = document.querySelector(".input-user-psw");
     const loginView = document.querySelector(".login");
+    const titalNum = document.querySelector(".total-num");
+    const onlineList = document.querySelector(".online-list");
     // 配置项
     let pathArrList = {}; // 路径数组列表
     let tempPathArr = []; // 临时绘制路径
     let disabledPath = []; // 停止绘制id列表
     let userId = null; // 本地玩家id
+    let loaclUserName = null; // 本地玩家名称
+    let lockUserList = []; // 本地用户统计
     let lastX = 0, // 当前位置
         lastY = 0;
     let moveX = 0,
@@ -520,6 +524,7 @@ function initCanvas() {
     function initSockit() {
         const infoText = document.querySelector(".login-info");
         const loginBtn = document.querySelector(".login-btn");
+        const invitationCode = document.querySelector(".input-invitation-code");
         let logOrReg = null;
         socket.on("connect", () => {
             console.log("服务器已连接")
@@ -534,16 +539,15 @@ function initCanvas() {
             fullImfo.className = "wating-service";
             fullImfo.innerText = "与服务器断开通信,正在重新连接...";
         });
+
         // 判断是否有记录登录状态
         if (Cookies.get("cookieId")) {
             if (Cookies.get("cookieId").length) {
                 cookieLogin(Cookies.get("cookieId"));
-                infoText.innerText = "啊,我好像记得你...";
-                userPsw.setAttribute("disabled", "disabled");
-                userName.setAttribute("disabled", "disabled");
-                loginBtn.setAttribute("disabled", "disabled");
+                disableLogin("啊,我好像记得你...")
             }
         }
+
         userName.addEventListener("input", function(e) {
             checkName(this.value);
         });
@@ -553,63 +557,143 @@ function initCanvas() {
         userName.addEventListener("change", function(e) {
             onlineName(this.value)
         });
+
+        // 返回登录结果
         socket.on("loginReturn", function(data) {
+            console.log("登录成功");
             if (data.status) {
                 Cookies.set("cookieId", data.cookieId, { expires: 365 });
                 infoText.innerText = "登录成功啦~";
-                userId = "id"+data.cookieId;
+                userId = "id" + data.cookieId;
+                loaclUserName = data.name;
                 loginStatus = true;
                 loginView.className = "login disable";
+                loginSuccess();
             } else {
-                infoText.innerText = "这个用户名已被使用,或密码错误";
-                userPsw.removeAttribute("disabled");
-                userName.removeAttribute("disabled");
-                loginBtn.removeAttribute("disabled");
+                initLoginView("这个用户名已被使用,或密码错误")
                 Cookies.remove("cookieId");
             }
         })
+
+        // 返回注册结果
         socket.on("registeredReturn", function(data) {
+            console.log(data)
             if (data.status) {
                 Cookies.set("cookieId", data.cookieId, { expires: 365 });
                 infoText.innerText = "注册成功啦~";
                 loginStatus = true;
-                userId = "id"+data.cookieId;
+                userId = "id" + data.cookieId;
                 loginView.className = "login disable";
             } else {
-                infoText.innerText = "注册失败了诶,换个名字试试?";
-                userPsw.removeAttribute("disabled");
-                userName.removeAttribute("disabled");
-                loginBtn.removeAttribute("disabled");
-                Cookies.remove("cookieId");
+                if (data.err === 1) {
+                    initLoginView("注册失败了诶,换个名字试试?")
+                    Cookies.remove("cookieId");
+                } else if (data.err === 2) {
+                    initLoginView("邀请码填错啦")
+                    Cookies.remove("cookieId");
+                } else {
+                    initLoginView("未知错误诶,重试一下?")
+                    Cookies.remove("cookieId");
+                }
             }
         })
+
+        // 返回自动登录结果
         socket.on("autoLoginReturn", function(data) {
             if (!data.status) {
                 fullImfo.className = "wating-service";
-                infoText.innerText = "记住登录过期啦";
                 loginStatus = false;
-                userPsw.removeAttribute("disabled");
-                userName.removeAttribute("disabled");
-                loginBtn.removeAttribute("disabled");
+                initLoginView("记住登录过期啦")
                 Cookies.remove("cookieId");
             }
         })
+
+        // 在服务器检测用户名结果
         socket.on("checkNameReturn", function(data) {
             console.log(data)
             if (data.status) { // 存在
                 loginBtn.innerText = "登录";
                 logOrReg = "login";
+                invitationCode.className = "input-invitation-code disable";
             } else { // 不存在
                 loginBtn.innerText = "注册";
                 logOrReg = "registered";
+                invitationCode.className = "input-invitation-code";
             }
         })
+
+        // 新用户上线监听
+        socket.on("userAdd", function(data) {
+            console.log("新用户上线", data)
+            newUserAdd(data)
+            lockUserList.push(data)
+            console.log(lockUserList)
+        })
+
+        // 用户下线监听
+        socket.on("userDisconnect", function(data) {
+            console.log("用户下线", data)
+            removeUser(data)
+        })
+
+        // 接收用户列表
+        socket.on("returnUserList", function(data) {
+            console.log("接收到用户列表", data)
+            initUserList()
+            for (let i = 0; i < data.length; i++) {
+                lockUserList.push(data[i]);
+                newUserAdd(data[i]);
+            }
+            console.log(lockUserList)
+        })
+
+        // 删除下线用户
+        function removeUser(data) {
+            for (let i = 0; i < lockUserList.length; i++) {
+                if (lockUserList[i].userId === data.userId) {
+                    lockUserList.splice(i, 1)
+                }
+            }
+            initUserList()
+            for (let i = 0; i < lockUserList.length; i++) {
+                newUserAdd(lockUserList[i]);
+            }
+            console.log(lockUserList)
+        }
+
+        // 初始化用户列表
+        function initUserList() {
+            let removeEl = document.querySelectorAll(".list-user-name")
+            for (let i = 0; i < removeEl.length; i++) {
+                onlineList.removeChild(removeEl[i]);
+            }
+        }
+
+        // 新用户加入
+        function newUserAdd(userData) {
+            const userEl = document.createElement("div");
+            userEl.className = "user-name list-user-name";
+            userEl.setAttribute("data-user-id", userData.userId)
+            userEl.innerText = userData.name;
+            onlineList.appendChild(userEl);
+            titalNum.innerText = "当前在线:" + document.querySelectorAll(".list-user-name").length + "人";
+        }
+
+        // 登录成功方法
+        function loginSuccess() {
+            console.log("开始请求登录数据");
+            socket.emit("getUserList", { userId: Cookies.get("cookieId") });
+            socket.emit("getHistoricalPath", { userId: Cookies.get("cookieId") });
+            socket.emit("getHistoricalMessage", { userId: Cookies.get("cookieId") });
+        }
+
         // cookie登录
         function cookieLogin(cookieId) {
             socket.emit("cookieLogin", {
                 cookie: cookieId
             });
         }
+
         // 检测名称
         function checkName(name) {
             const reg = new RegExp("^([\u4E00-\uFA29]|[\uE7C7-\uE7F3]|[a-zA-Z0-9_]){1,20}$");
@@ -639,6 +723,7 @@ function initCanvas() {
                 return false;
             }
         }
+
         // 登录按钮监听
         loginBtn.addEventListener("click", function() {
             if (checkName(userName.value)) {
@@ -646,17 +731,24 @@ function initCanvas() {
                     if (userPsw.value.length <= 16) {
                         if (logOrReg) {
                             if (logOrReg === "login") {
-                                infoText.innerText = "正在向大家问好...";
-                            }else{
-                                infoText.innerText = "正在自报家门...";
+                                disableLogin("正在向大家问好...");
+                                socket.emit(logOrReg, {
+                                    name: userName.value,
+                                    psw: userPsw.value
+                                });
+                            } else {
+                                if (invitationCode.value.length) {
+                                    disableLogin("正在自报家门...");
+                                    socket.emit(logOrReg, {
+                                        name: userName.value,
+                                        psw: userPsw.value,
+                                        invitationCode: invitationCode.value
+                                    });
+                                } else {
+                                    initLoginView("注册需要邀请码哦");
+                                }
                             }
-                            socket.emit(logOrReg, {
-                                name: userName.value,
-                                psw: userPsw.value
-                            });
-                            userPsw.setAttribute("disabled", "disabled");
-                            userName.setAttribute("disabled", "disabled");
-                            loginBtn.setAttribute("disabled", "disabled");
+
                         } else {
                             infoText.innerText = "服务器似乎没有理你,再试一下吧~";
                         }
@@ -676,9 +768,30 @@ function initCanvas() {
                 });
             }
         }
+
+        // 初始化登录页面
+        function initLoginView(viewText) {
+            if (viewText) {
+                infoText.innerText = viewText;
+            }
+            userPsw.removeAttribute("disabled");
+            userName.removeAttribute("disabled");
+            loginBtn.removeAttribute("disabled");
+        }
+
+        // 禁用登录页面
+        function disableLogin(viewText) {
+            if (viewText) {
+                infoText.innerText = viewText;
+            }
+            userPsw.setAttribute("disabled", "disabled");
+            userName.setAttribute("disabled", "disabled");
+            loginBtn.setAttribute("disabled", "disabled");
+        }
     }
     initSockit()
 
+    // 检查违禁词
     function checkProhibitedWords(name) {
         for (let i = 0; i < prohibitedWords.length; i++) {
             if (name.includes(prohibitedWords[i])) {
@@ -687,6 +800,8 @@ function initCanvas() {
         };
         return true;
     }
+
+
 };
 
 // 初始化色块
