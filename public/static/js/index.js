@@ -294,6 +294,7 @@ function initCanvas() {
             moveImage();
         } else {
             drenArr(pathArrList);
+            refreshPlayer();
         };
     };
 
@@ -420,6 +421,7 @@ function initCanvas() {
                 lastY = lastY + ((mouseY / afterH) * (afterH - beforeH)) / dZoom;
                 drenArr(pathArrList);
                 emitData();
+                refreshPlayer();
             } else {
                 console.log("最小值")
                 console.log(zoomVal, dZoom)
@@ -429,6 +431,19 @@ function initCanvas() {
             console.log("最大值")
             console.log(zoomVal, dZoom)
             zoomVal = maxZoom
+        }
+    }
+
+    // 刷新其他用户数据
+    function refreshPlayer() {
+        const players = document.querySelectorAll(".player-mouse");
+        for (let i = 0; i < players.length; i++) {
+            let elPintX = players[i].getAttribute("data-brush-x");
+            let elPintY = players[i].getAttribute("data-brush-y");
+            let elBrushSize = players[i].getAttribute("data-brush-size");
+            players[i].style.transform = "translate3d(" + ((1*elPintX + lastX) * dZoom) + "px, " + ((1*elPintY + lastY) * dZoom) + "px, 0px)";
+            players[i].style.width = elBrushSize * dZoom + "px";
+            players[i].style.height = elBrushSize * dZoom + "px";
         }
     }
 
@@ -812,6 +827,9 @@ function initCanvas() {
                 const playerEl = document.createElement("div");
                 playerEl.className = "player-mouse";
                 playerEl.id = `id${data.userId}`;
+                playerEl.setAttribute("data-brush-x","0");
+                playerEl.setAttribute("data-brush-y","0");
+                playerEl.setAttribute("data-brush-size","20");
                 const userNameEl = document.createElement("p");
                 userNameEl.className = "user-name";
                 userNameEl.innerText = data.name;
