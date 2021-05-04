@@ -29,6 +29,7 @@ function initCanvas() {
     const onlineList = document.querySelector(".online-list");
     const msgList = document.querySelector(".top-msg-list");
     const otherPlayerList = document.querySelector(".other-user-mouse");
+    const testEl = document.querySelector(".full-z")
     // 配置项
     let loadOk = 0; // 历史数据加载状态
     let pathArrList = {}; // 路径数组列表
@@ -40,10 +41,14 @@ function initCanvas() {
     let lockUserList = []; // 本地用户统计
     let lastX = 0, // 当前位置
         lastY = 0;
+    let canvasX = 0, // 本地画布坐标
+        canvasY = 0;
     let moveX = 0,
         moveY = 0;
     let tempX = 0, // 临时坐标
         tempY = 0;
+    let burshX = 0, // 笔刷原始坐标
+        burshY = 0;
     let zoom = 1.1, // 缩放步幅
         dZoom = 1, // 初始缩放值
         maxZoom = 150,
@@ -103,6 +108,7 @@ function initCanvas() {
         } else {
             dragStart = false;
         };
+        emitData()
     });
     canvas.addEventListener("mouseup", function(e) {
         dragStart = false;
@@ -123,27 +129,17 @@ function initCanvas() {
         } else {
             alert("出现错误\nNot Found userId");
         }
-
+        emitData()
         // console.log(pathArrList)
     });
     canvas.addEventListener("mousemove", function(e) {
-        const testEl = document.querySelector(".full-z")
         mouseX = e.offsetX;
         mouseY = e.offsetY;
-        let burshX = mouseX - bursh.offsetWidth / 2,
-            burshY = mouseY - bursh.offsetHeight / 2;
+        burshX = mouseX - bursh.offsetWidth / 2;
+        burshY = mouseY - bursh.offsetHeight / 2;
         bursh.style.transform = "translate3d(" + burshX + "px, " + burshY + "px, 0px)";
         let frameX = transX - mouseX,
             frameY = transY - mouseY;
-        const mouseData = {
-            x: (burshX - lastX) / dZoom,
-            y: (burshY - lastY) / dZoom,
-            brushSize: bursh.offsetWidth / dZoom,
-            drag: dragStart,
-            color: brushColor
-        }
-        socket.emit("pointMove", { point: mouseData, cookie: Cookies.get("cookieId") });
-        testEl.innerText = JSON.stringify(mouseData);
         if (dragStart) {
             menuLayer.className = "menus poe";
             // 补间,填充两个坐标之间的空隙
@@ -180,6 +176,7 @@ function initCanvas() {
             menuLayer.className = "menus poe";
             moveCanvas(e);
         };
+        emitData()
     });
 
     // 绘制方法
@@ -290,6 +287,8 @@ function initCanvas() {
         tempY = eY;
         lastX = lastX + moveX / dZoom;
         lastY = lastY + moveY / dZoom;
+        // canvasX = (canvasX + moveX) * dZoom;
+        // canvasY = (canvasY + moveY) * dZoom;
         if (highPerformanceDrag) {
             hipX = hipX + moveX;
             hipY = hipY + moveY;
@@ -366,6 +365,19 @@ function initCanvas() {
         return arrs;
     }
 
+    // 向服务器发送信息
+    function emitData() {
+        const mouseData = {
+            x: (burshX / dZoom - lastX),
+            y: (burshY / dZoom - lastY),
+            brushSize: bursh.offsetWidth / dZoom,
+            drag: dragStart,
+            color: brushColor
+        }
+        socket.emit("pointMove", { point: mouseData, cookie: Cookies.get("cookieId") });
+        testEl.innerText = JSON.stringify(mouseData);
+    }
+
     // 高性能移动
     function moveImage() {
         ctx.clearRect(0, 0, canvas.width / dZoom, canvas.height / dZoom);
@@ -408,6 +420,7 @@ function initCanvas() {
                 lastX = lastX + ((mouseX / afterW) * (afterW - beforeW)) / dZoom;
                 lastY = lastY + ((mouseY / afterH) * (afterH - beforeH)) / dZoom;
                 drenArr(pathArrList);
+                emitData();
             } else {
                 console.log("最小值")
                 console.log(zoomVal, dZoom)
@@ -447,17 +460,24 @@ function initCanvas() {
             });
             r.addEventListener("change", function(e) { if (!n) f(e); });
         }
+        // 监听笔刷大小
         onRangeChange(brushSize, function() {
             bursh.style.width = brushSize.value + "px";
             bursh.style.height = brushSize.value + "px";
             brushSize.setAttribute("title", "当前笔刷大小" + brushSize.value + "px");
+            emitData();
         })
+        // 监听调色盘
         onRangeChange(selectColor, function(e) {
+            document.querySelector(".color-box.select").style.backgroundColor = selectColor.value;
+            brushColor = selectColor.value;
             selectColor.style.backgroundColor = selectColor.value;
             colorInput.setAttribute("placeholder", selectColor.value);
-            overlayColor(selectColor.value);
             bursh.style.backgroundColor = brushColor + "6B";
             zoomIndicator.style.backgroundColor = brushColor + "6B";
+        })
+        selectColor.addEventListener("change", function() {
+            overlayColor(selectColor.value);
         })
         // 绑定色块点击事件
         colorBox.forEach((el, index) => {
@@ -468,10 +488,11 @@ function initCanvas() {
                     brushColor = this.getAttribute("title");
                     colorInput.setAttribute("placeholder", brushColor);
                     colorInput.value = "";
-                    selectColor.setAttribute("style", "background-color: " + brushColor + ";");
+                    selectColor.style.backgroundColor = brushColor;
                     selectColor.value = brushColor;
                     bursh.style.backgroundColor = brushColor + "6B";
                     zoomIndicator.style.backgroundColor = brushColor + "6B";
+                    emitData();
                 };
             });
         });
@@ -482,7 +503,7 @@ function initCanvas() {
                     brushColor = el.getAttribute("title");
                     colorInput.setAttribute("placeholder", brushColor);
                     colorInput.value = "";
-                    selectColor.setAttribute("style", "background-color: " + brushColor + ";");
+                    selectColor.style.backgroundColor = brushColor;
                     selectColor.value = brushColor;
                     bursh.style.backgroundColor = brushColor + "6B";
                     zoomIndicator.style.backgroundColor = brushColor + "6B";
@@ -514,11 +535,12 @@ function initCanvas() {
             colorBox.forEach((el, index) => {
                 if (el.className.indexOf("select") !== -1) {
                     el.setAttribute("title", hex);
-                    el.setAttribute("style", "background-color: " + hex + ";");
+                    el.style.backgroundColor = hex;
                     brushColor = el.getAttribute("title");
                     colorInput.setAttribute("placeholder", brushColor);
-                    selectColor.setAttribute("style", "background-color: " + brushColor + ";")
+                    selectColor.style.backgroundColor = brushColor;
                     selectColor.value = brushColor;
+                    emitData();
                 };
             });
         };
@@ -704,7 +726,12 @@ function initCanvas() {
         socket.on("otherPlayer", function(data) {
             let playerBursh = document.querySelector("#id" + data.userId)
             if (playerBursh) {
-                playerBursh.style.transform = "translate3d(" + (data.point.x) + "px, " + (data.point.y) + "px, 0px)";
+                data.point.x = data.point.x + lastX
+                data.point.y = data.point.y + lastY
+                playerBursh.style.transform = "translate3d(" + (data.point.x * dZoom) + "px, " + (data.point.y * dZoom) + "px, 0px)";
+                playerBursh.style.width = data.point.brushSize * dZoom + "px";
+                playerBursh.style.height = data.point.brushSize * dZoom + "px";
+                playerBursh.style.backgroundColor = data.point.color + "6B";
                 if (!data.point.drag) {
                     playrDrag = false
                 }
@@ -713,6 +740,10 @@ function initCanvas() {
                         playrDrag = true
                         somX = data.point.x;
                         somY = data.point.y;
+                    }
+                    if (autoInterval) {
+                        tweenInterval = Math.pow(data.point.brushSize / 2, 0.6);
+                        tweenStride = 3;
                     }
                     ctx.fillStyle = data.point.color;
                     ctx.beginPath();
