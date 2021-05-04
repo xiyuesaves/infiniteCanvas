@@ -33,7 +33,7 @@ function initCanvas() {
     // 配置项
     let loadOk = 0; // 历史数据加载状态
     let pathArrList = {}; // 路径数组列表
-    let tempPathArr = []; // 临时绘制路径
+    let tempPathArr = {}; // 临时绘制路径
     let disabledPath = []; // 停止绘制id列表
     let userId = null; // 本地玩家id
     let localUserId = null; // 服务器上用户的id
@@ -41,8 +41,6 @@ function initCanvas() {
     let lockUserList = []; // 本地用户统计
     let lastX = 0, // 当前位置
         lastY = 0;
-    let canvasX = 0, // 本地画布坐标
-        canvasY = 0;
     let moveX = 0,
         moveY = 0;
     let tempX = 0, // 临时坐标
@@ -89,6 +87,9 @@ function initCanvas() {
 
     // 监听笔刷位置
     canvas.addEventListener("mousedown", function(e) {
+        if (!tempPathArr[userId]) {
+            tempPathArr[userId] = new Array();
+        };
         if (e.buttons === 1) {
             transX = e.offsetX;
             transY = e.offsetY;
@@ -98,17 +99,17 @@ function initCanvas() {
             if (highPerformanceDrag) {
                 hipX = 0;
                 hipY = 0;
-            }
-            drenArr(pathArrList)
-            tempX = e.offsetX
-            tempY = e.offsetY
+            };
+            drenArr(pathArrList);
+            tempX = e.offsetX;
+            tempY = e.offsetY;
             moveStart = true;
             canvas.className = "move";
             brush.className = "move";
         } else {
             dragStart = false;
         };
-        emitData()
+        emitData();
     });
     canvas.addEventListener("mouseup", function(e) {
         dragStart = false;
@@ -116,21 +117,20 @@ function initCanvas() {
         canvas.className = "";
         brush.className = "";
         if (highPerformanceDrag) {
-            drenArr(pathArrList)
-        }
+            drenArr(pathArrList);
+        };
         if (userId) {
             if (pathArrList[userId] === undefined) {
                 pathArrList[userId] = new Array();
             }
-            if (tempPathArr.length) {
-                pathArrList[userId].push(tempPathArr);
-                tempPathArr = [];
+            if (tempPathArr[userId].length) {
+                pathArrList[userId].push(tempPathArr[userId]);
+                tempPathArr[userId] = [];
             }
         } else {
             alert("出现错误\nNot Found userId");
-        }
-        emitData()
-        // console.log(pathArrList)
+        };
+        emitData();
     });
     canvas.addEventListener("mousemove", function(e) {
         mouseX = e.offsetX;
@@ -147,7 +147,7 @@ function initCanvas() {
                 if (autoInterval) {
                     tweenInterval = Math.pow(bursh.offsetWidth, 0.6);
                     tweenStride = 1;
-                }
+                };
                 if (Math.abs(frameX) > tweenInterval || Math.abs(frameY) > tweenInterval || (Math.abs(frameX) > tweenInterval / 2 && Math.abs(frameY) > tweenInterval / 2)) {
                     let tween = Math.abs(frameX) > Math.abs(frameY) ? Math.abs(frameX) / tweenStride : Math.abs(frameY) / tweenStride;
                     let tweenX = frameX / tween,
@@ -164,7 +164,7 @@ function initCanvas() {
                         stepY += tweenY;
                         dren(point);
                     };
-                }
+                };
             };
             transX = mouseX;
             transY = mouseY;
@@ -176,13 +176,13 @@ function initCanvas() {
             menuLayer.className = "menus poe";
             moveCanvas(e);
         };
-        emitData()
+        emitData();
     });
 
     // 绘制方法
     function dren(e) {
-        if (!tempPathArr.length) {
-            tempPathArr.push({
+        if (!tempPathArr[userId].length) {
+            tempPathArr[userId].push({
                 x: (e.offsetX / dZoom - lastX),
                 y: (e.offsetY / dZoom - lastY),
                 color: brushColor,
@@ -190,7 +190,7 @@ function initCanvas() {
                 tween: e.tween ? true : false
             })
         } else {
-            tempPathArr.push({
+            tempPathArr[userId].push({
                 x: (e.offsetX / dZoom - lastX),
                 y: (e.offsetY / dZoom - lastY),
                 tween: e.tween ? true : false
@@ -208,6 +208,7 @@ function initCanvas() {
         ctx.clearRect(0, 0, canvas.width / dZoom, canvas.height / dZoom);
         // 循环用户数组
         for (let userId in arr) {
+            // 检测是否屏蔽该用户
             if (disabledPath.indexOf(userId) === -1) {
                 // 循环该用户的所有路径
                 for (let path = 0; path < arr[userId].length; path++) {
@@ -219,12 +220,9 @@ function initCanvas() {
                             ctx.beginPath();
                             ctx.lineCap = "round";
                             ctx.lineWidth = arr[userId][path][0].brushSize;
-                            // ctx.lineWidth = 1;
                             ctx.strokeStyle = arr[userId][path][0].color;
-
                             // 新的贝塞尔曲线绘制方法
                             let points = removeTween(arr[userId][path]);
-                            // let points = arr[userId][path];
                             let besselPoints = getBessel(points);
                             let int = 0;
                             for (let i = 0; i < points.length; i++) {
@@ -240,10 +238,11 @@ function initCanvas() {
                                 } else if (i == points.length - 2) {
                                     ctx.moveTo(points[points.length - 2].x + lastX, points[points.length - 2].y + lastY);
                                     ctx.quadraticCurveTo(besselPoints[besselPoints.length - 1].x + lastX, besselPoints[besselPoints.length - 1].y + lastY, points[points.length - 1].x + lastX, points[points.length - 1].y + lastY);
-                                }
-                            }
+                                };
+                            };
                             ctx.stroke();
                         } else {
+                            // 点绘制方法,非常消耗性能,不建议使用
                             for (let point = 0; point < arr[userId][path].length; point++) {
                                 // 如果缩放后笔刷粗细小于阈值则不绘制以提升性能
                                 if (arr[userId][path][point].brushSize * dZoom > minimumThreshold) {
@@ -251,9 +250,9 @@ function initCanvas() {
                                     ctx.fillStyle = arr[userId][path][point].color;
                                     ctx.arc((arr[userId][path][point].x + lastX), (arr[userId][path][point].y + lastY), arr[userId][path][point].brushSize / 2, 0, 2 * Math.PI);
                                     ctx.fill();
-                                }
-                            }
-                        }
+                                };
+                            };
+                        };
                     } else {
                         for (let point = 0; point < arr[userId][path].length; point++) {
                             // 如果缩放后笔刷粗细小于阈值则不绘制以提升性能
@@ -262,20 +261,17 @@ function initCanvas() {
                                 ctx.fillStyle = arr[userId][path][point].color;
                                 ctx.arc((arr[userId][path][point].x + lastX), (arr[userId][path][point].y + lastY), arr[userId][path][point].brushSize / 2, 0, 2 * Math.PI);
                                 ctx.fill();
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        // for (let userId = 0; userId < arr.length; userId++) {
-        //     // 判断是否渲染该用户的数据
-
-        // }
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        // 高性能拖动残留代码
         if (highPerformanceDrag) {
-            imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
-        }
-    }
+            imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        };
+    };
 
     // 计算位移
     function moveCanvas(e) {
@@ -287,8 +283,6 @@ function initCanvas() {
         tempY = eY;
         lastX = lastX + moveX / dZoom;
         lastY = lastY + moveY / dZoom;
-        // canvasX = (canvasX + moveX) * dZoom;
-        // canvasY = (canvasY + moveY) * dZoom;
         if (highPerformanceDrag) {
             hipX = hipX + moveX;
             hipY = hipY + moveY;
@@ -566,9 +560,9 @@ function initCanvas() {
         if (Cookies.get("cookieId")) {
             if (Cookies.get("cookieId").length) {
                 cookieLogin(Cookies.get("cookieId"));
-                disableLogin("啊,我好像记得你...")
-            }
-        }
+                disableLogin("啊,我好像记得你...");
+            };
+        };
 
         // 监听输入
         userName.addEventListener("input", function(e) {
@@ -578,22 +572,22 @@ function initCanvas() {
             checkName(this.value);
         });
         userName.addEventListener("change", function(e) {
-            onlineName(this.value)
+            onlineName(this.value);
         });
 
         // 与服务器建立连接
         socket.on("connect", () => {
-            console.log("服务器已连接")
+            console.log("服务器已连接");
             fullImfo.className = "wating-service disable";
             if (loginStatus) {
-                console.log("重新登录")
+                console.log("重新登录");
                 cookieLogin(Cookies.get("cookieId"));
             };
         });
 
         // 断开与服务器的连接
         socket.on("disconnect", () => {
-            console.log("服务器断开连接")
+            console.log("服务器断开连接");
             fullImfo.className = "wating-service";
             fullImfo.innerText = "与服务器断开通信,正在重新连接...";
         });
@@ -604,53 +598,55 @@ function initCanvas() {
             if (data.status) {
                 Cookies.set("cookieId", data.cookieId, { expires: 365 });
                 infoText.innerText = "登录成功啦~";
-                userId = "id" + data.cookieId;
+                userId = "id" + data.id;
                 localUserId = data.id;
                 loaclUserName = data.name;
                 loginView.className = "login";
                 loginSuccess();
             } else {
-                initLoginView("这个用户名已被使用,或密码错误")
+                initLoginView("这个用户名已被使用,或密码错误");
                 Cookies.remove("cookieId");
-            }
-        })
+            };
+        });
 
         // 返回注册结果
         socket.on("registeredReturn", function(data) {
-            console.log(data)
+            console.log(data);
             if (data.status) {
                 Cookies.set("cookieId", data.cookieId, { expires: 365 });
                 infoText.innerText = "注册成功啦~";
-                loginStatus = true;
-                userId = "id" + data.cookieId;
+                userId = "id" + data.id;
+                localUserId = data.id;
+                loaclUserName = data.name;
                 loginView.className = "login disable";
+                loginSuccess();
             } else {
                 if (data.err === 1) {
-                    initLoginView("注册失败了诶,换个名字试试?")
+                    initLoginView("注册失败了诶,换个名字试试?");
                     Cookies.remove("cookieId");
                 } else if (data.err === 2) {
-                    initLoginView("邀请码填错啦")
+                    initLoginView("邀请码填错啦");
                     Cookies.remove("cookieId");
                 } else {
-                    initLoginView("未知错误诶,重试一下?")
+                    initLoginView("未知错误诶,再试一下?");
                     Cookies.remove("cookieId");
-                }
-            }
-        })
+                };
+            };
+        });
 
         // 返回自动登录结果
         socket.on("autoLoginReturn", function(data) {
             if (!data.status) {
                 fullImfo.className = "wating-service";
                 loginStatus = false;
-                initLoginView("记住登录过期啦")
+                initLoginView("记住登录过期啦");
                 Cookies.remove("cookieId");
-            }
-        })
+            };
+        });
 
         // 在服务器检测用户名结果
         socket.on("checkNameReturn", function(data) {
-            console.log(data)
+            console.log("在服务器中检查用户名" + data);
             if (data.status) { // 存在
                 loginBtn.innerText = "登录";
                 logOrReg = "login";
@@ -659,29 +655,28 @@ function initCanvas() {
                 loginBtn.innerText = "注册";
                 logOrReg = "registered";
                 invitationCode.className = "input-invitation-code";
-            }
-        })
+            };
+        });
 
         // 新用户上线监听
         socket.on("userAdd", function(data) {
-            console.log("新用户上线", data)
-            createBursh(data)
-            newUserAdd(data)
-            lockUserList.push(data)
-            console.log(lockUserList)
-        })
+            console.log("新用户上线", data);
+            createBursh(data);
+            newUserAdd(data);
+            lockUserList.push(data);
+        });
 
         // 用户下线监听
         socket.on("userDisconnect", function(data) {
-            console.log("用户下线", data)
+            console.log("用户下线", data);
             remveUserBrush(data);
             removeUser(data);
-        })
+        });
 
         // 接收用户列表
         socket.on("returnUserList", function(data) {
-            console.log("接收到用户列表", data)
-            loadOk++
+            console.log("接收到用户列表", data);
+            loadOk++;
             initUserList()
             for (let i = 0; i < data.length; i++) {
                 lockUserList.push(data[i]);
@@ -689,24 +684,23 @@ function initCanvas() {
                 createBursh(data[i]);
             }
             isloadOk();
-            console.log(lockUserList)
-        })
+        });
 
         // 返回历史消息
         socket.on("returnHistoricalMessage", function(data) {
-            console.log("接收到历史消息列表", data)
+            console.log("接收到历史消息列表", data);
             for (let i = 0; i < data.length; i++) {
                 if (data[i].type === 1) { // 1为系统消息
                     putSystemMsg(data[i].content);
                 } else if (data[i].type === 0) { // 0为用户消息
                     if (data[i].userId === localUserId) {
-                        putUsMsg(data[i].userName, data[i].content)
+                        putUsMsg(data[i].userName, data[i].content);
                     } else {
-                        putUserMsg(data[i].userName, data[i].content)
-                    }
-                }
-            }
-        })
+                        putUserMsg(data[i].userName, data[i].content);
+                    };
+                };
+            };
+        });
 
         // 新消息接收
         socket.on("newMessage", function(data) {
@@ -714,37 +708,63 @@ function initCanvas() {
                 putSystemMsg(data.content);
             } else if (data.type === 0) { // 0为用户消息
                 if (data.userId === localUserId) {
-                    putUsMsg(data.userName, data.content)
+                    putUsMsg(data.userName, data.content);
                 } else {
-                    putUserMsg(data.userName, data.content)
-                }
-            }
-        })
+                    putUserMsg(data.userName, data.content);
+                };
+            };
+        });
 
         // 接收其他用户的坐标信息
         let somX, somY, playrDrag = false;
         socket.on("otherPlayer", function(data) {
-            let playerBursh = document.querySelector("#id" + data.userId)
+            let playerBursh = document.querySelector("#id" + data.userId);
             if (playerBursh) {
-                data.point.x = data.point.x + lastX
-                data.point.y = data.point.y + lastY
+                if (!tempPathArr["id" + data.userId]) {
+                    tempPathArr["id" + data.userId] = new Array();
+                }
+                if (!pathArrList["id" + data.userId]) {
+                    pathArrList["id" + data.userId] = new Array();
+                }
+                if (data.point.drag) {
+                    if (!tempPathArr["id" + data.userId].length) {
+                        tempPathArr["id" + data.userId].push({
+                            x: data.point.x,
+                            y: data.point.y,
+                            color: data.point.color,
+                            brushSize: data.point.brushSize,
+                            tween: false
+                        })
+                    } else {
+                        tempPathArr["id" + data.userId].push({
+                            x: data.point.x,
+                            y: data.point.y,
+                            tween: false
+                        })
+                    }
+                } else if (tempPathArr["id" + data.userId].length) {
+                    pathArrList["id" + data.userId].push(tempPathArr["id" + data.userId]);
+                    tempPathArr["id" + data.userId] = new Array();
+                }
+                data.point.x = data.point.x + lastX;
+                data.point.y = data.point.y + lastY;
                 playerBursh.style.transform = "translate3d(" + (data.point.x * dZoom) + "px, " + (data.point.y * dZoom) + "px, 0px)";
                 playerBursh.style.width = data.point.brushSize * dZoom + "px";
                 playerBursh.style.height = data.point.brushSize * dZoom + "px";
                 playerBursh.style.backgroundColor = data.point.color + "6B";
-                if (!data.point.drag) {
-                    playrDrag = false
-                }
+                if (!data.point.drag && playrDrag) {
+                    playrDrag = false;
+                };
                 if (data.point.drag) {
                     if (!playrDrag) {
-                        playrDrag = true
+                        playrDrag = true;
                         somX = data.point.x;
                         somY = data.point.y;
-                    }
+                    };
                     if (autoInterval) {
                         tweenInterval = Math.pow(data.point.brushSize / 2, 0.6);
                         tweenStride = 3;
-                    }
+                    };
                     ctx.fillStyle = data.point.color;
                     ctx.beginPath();
                     ctx.arc(data.point.x + (data.point.brushSize / 2), data.point.y + (data.point.brushSize / 2), data.point.brushSize / 2, 0, 2 * Math.PI);
@@ -770,12 +790,12 @@ function initCanvas() {
                             ctx.arc(point.offsetX + (data.point.brushSize / 2), point.offsetY + (data.point.brushSize / 2), data.point.brushSize / 2, 0, 2 * Math.PI);
                             ctx.fill();
                         };
-                    }
-                    somX = data.point.x
-                    somY = data.point.y
-                }
-            }
-        })
+                    };
+                    somX = data.point.x;
+                    somY = data.point.y;
+                };
+            };
+        });
 
         // 创建其他用户笔刷
         function createBursh(data) {
@@ -790,47 +810,47 @@ function initCanvas() {
                 playerEl.appendChild(userNameEl);
                 otherPlayerList.appendChild(playerEl);
             }
-        }
+        };
 
         // 删除下线用户笔刷
         function remveUserBrush(data) {
-            const removeEl = document.querySelector("#id" + data.userId)
-            otherPlayerList.removeChild(removeEl)
-        }
+            const removeEl = document.querySelector("#id" + data.userId);
+            otherPlayerList.removeChild(removeEl);
+        };
 
         // 删除下线用户
         function removeUser(data) {
             for (let i = 0; i < lockUserList.length; i++) {
                 if (lockUserList[i].userId === data.userId) {
-                    lockUserList.splice(i, 1)
-                }
-            }
-            initUserList()
+                    lockUserList.splice(i, 1);
+                };
+            };
+            initUserList();
             for (let i = 0; i < lockUserList.length; i++) {
                 newUserAdd(lockUserList[i]);
-            }
-            console.log(lockUserList)
-        }
+            };
+            console.log(lockUserList);
+        };
 
         // 初始化用户列表
         function initUserList() {
             let removeEl = document.querySelectorAll(".list-user-name")
             for (let i = 0; i < removeEl.length; i++) {
                 onlineList.removeChild(removeEl[i]);
-            }
-        }
+            };
+        };
 
         // 新用户加入
         function newUserAdd(userData) {
             if (!document.querySelector("#listId" + userData.userId)) {
                 const userEl = document.createElement("div");
                 userEl.className = "user-name list-user-name";
-                userEl.id = "listId" + userData.userId
+                userEl.id = "listId" + userData.userId;
                 userEl.innerText = userData.name;
                 onlineList.appendChild(userEl);
                 titalNum.innerText = "当前在线:" + document.querySelectorAll(".list-user-name").length + "人";
-            }
-        }
+            };
+        };
 
         // 登录成功方法
         function loginSuccess() {
@@ -841,24 +861,24 @@ function initCanvas() {
                 socket.emit("getUserList", { userId: Cookies.get("cookieId") });
                 socket.emit("getHistoricalPath", { userId: Cookies.get("cookieId") });
                 socket.emit("getHistoricalMessage", { userId: Cookies.get("cookieId") });
-            }
+            };
             loginView.className = "login disable";
-        }
+        };
 
         // 判断是否加载完成
         function isloadOk() {
             if (loadOk > 1) {
                 infoText.innerText = "数据加载完成.";
                 loginView.className = "login disable";
-            }
-        }
+            };
+        };
 
         // cookie登录
         function cookieLogin(cookieId) {
             socket.emit("cookieLogin", {
                 cookie: cookieId
             });
-        }
+        };
 
         // 检测名称
         function checkName(name) {
@@ -872,23 +892,23 @@ function initCanvas() {
                         } else {
                             infoText.innerText = "不要乱填奇奇怪怪的东西阿喂!";
                             return false;
-                        }
+                        };
                     } else {
                         infoText.innerText = "名字太——长——啦——————";
                         return false;
-                    }
+                    };
                 } else if (name.length > 0) {
                     infoText.innerText = "这也太短了吧(?";
                     return false;
                 } else {
                     infoText.innerText = "加入绘画";
                     return false;
-                }
+                };
             } else {
                 infoText.innerText = "emmmm你这名字似乎不太行...";
                 return false;
-            }
-        }
+            };
+        };
 
         // 在线检查是否已有此用户名
         function onlineName(name) {
@@ -896,37 +916,37 @@ function initCanvas() {
                 socket.emit('checkName', {
                     name: name
                 });
-            }
-        }
+            };
+        };
 
         // 初始化登录页面
         function initLoginView(viewText) {
             if (viewText) {
                 infoText.innerText = viewText;
-            }
+            };
             userPsw.removeAttribute("disabled");
             userName.removeAttribute("disabled");
             loginBtn.removeAttribute("disabled");
-        }
+        };
 
         // 禁用登录页面
         function disableLogin(viewText) {
             if (viewText) {
                 infoText.innerText = viewText;
-            }
+            };
             userPsw.setAttribute("disabled", "disabled");
             userName.setAttribute("disabled", "disabled");
             loginBtn.setAttribute("disabled", "disabled");
-        }
+        };
 
         // 系统消息
         function putSystemMsg(msg) {
             const msgEl = document.createElement("span");
             msgEl.className = "system-info";
             msgEl.innerText = msg;
-            msgList.appendChild(msgEl)
+            msgList.appendChild(msgEl);
             msgList.scrollTop = msgList.scrollHeight;
-        }
+        };
         // 我的消息
         function putUserMsg(userName, msg) {
             const msgEl = document.createElement("span");
@@ -939,9 +959,9 @@ function initCanvas() {
             content.innerText = msg;
             msgEl.appendChild(userNameEl);
             msgEl.appendChild(content);
-            msgList.appendChild(msgEl)
+            msgList.appendChild(msgEl);
             msgList.scrollTop = msgList.scrollHeight;
-        }
+        };
         // 其他用户消息
         function putUsMsg(userName, msg) {
             const msgEl = document.createElement("span");
@@ -954,9 +974,9 @@ function initCanvas() {
             content.innerText = msg;
             msgEl.appendChild(userNameEl);
             msgEl.appendChild(content);
-            msgList.appendChild(msgEl)
+            msgList.appendChild(msgEl);
             msgList.scrollTop = msgList.scrollHeight;
-        }
+        };
 
         // 登录按钮监听
         loginBtn.addEventListener("click", function() {
@@ -980,18 +1000,17 @@ function initCanvas() {
                                     });
                                 } else {
                                     initLoginView("注册需要邀请码哦");
-                                }
-                            }
-
+                                };
+                            };
                         } else {
                             infoText.innerText = "服务器似乎没有理你,再试一下吧~";
-                        }
+                        };
                     } else {
                         infoText.innerText = "密码太—长—啦———";
-                    }
+                    };
                 } else {
                     infoText.innerText = "密码也太短了吧!";
-                }
+                };
             };
         });
 

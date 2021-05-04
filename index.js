@@ -71,8 +71,9 @@ io.on('connection', (socket) => {
                         if (!err) {
                             db.get("SELECT userId FROM user WHERE user.userName = ?", [data.name], function(err, dbData) {
                                 let cookieId = Buffer.from("user" + data.name + new Date().getTime()).toString('base64');
-                                socket.emit("registeredReturn", { status: true, cookieId: cookieId })
                                 updateCookieId(dbData.userId, cookieId);
+                                newUserAdd(data.name, dbData.userId, cookieId);
+                                socket.emit("registeredReturn", { status: true, cookieId: cookieId, name: data.name, id: dbData.userId})
                             })
                         } else {
                             socket.emit("registeredReturn", { status: false })
