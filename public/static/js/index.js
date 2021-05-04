@@ -214,7 +214,7 @@ function initCanvas() {
                 for (let path = 0; path < arr[userId].length; path++) {
                     // 开始绘制路径
                     // 如果路径点少于阈值,使用点绘制,否则根据配置选择点绘制还是线绘制
-                    if (arr[userId][path].length > 1) {
+                    if (arr[userId][path].length > 2) {
                         // 判断绘制方法
                         if (drowLine) {
                             ctx.beginPath();
@@ -225,21 +225,26 @@ function initCanvas() {
                             let points = removeTween(arr[userId][path]);
                             let besselPoints = getBessel(points);
                             let int = 0;
-                            for (let i = 0; i < points.length; i++) {
-                                ctx.lineTo(points[i].x + lastX, points[i].y + lastY);
-                                if (i == 0) {
-                                    ctx.moveTo(points[0].x + lastX, points[0].y + lastY);
-                                    ctx.quadraticCurveTo(besselPoints[0].x + lastX, besselPoints[0].y + lastY, points[1].x + lastX, points[1].y + lastY);
-                                    int = int + 1;
-                                } else if (i < points.length - 2) {
-                                    ctx.moveTo(points[i].x + lastX, points[i].y + lastY);
-                                    ctx.bezierCurveTo(besselPoints[int].x + lastX, besselPoints[int].y + lastY, besselPoints[int + 1].x + lastX, besselPoints[int + 1].y + lastY, points[i + 1].x + lastX, points[i + 1].y + lastY);
-                                    int += 2;
-                                } else if (i == points.length - 2) {
-                                    ctx.moveTo(points[points.length - 2].x + lastX, points[points.length - 2].y + lastY);
-                                    ctx.quadraticCurveTo(besselPoints[besselPoints.length - 1].x + lastX, besselPoints[besselPoints.length - 1].y + lastY, points[points.length - 1].x + lastX, points[points.length - 1].y + lastY);
+                            try {
+                                for (let i = 0; i < points.length; i++) {
+                                    ctx.lineTo(points[i].x + lastX, points[i].y + lastY);
+                                    if (i == 0) {
+                                        ctx.moveTo(points[0].x + lastX, points[0].y + lastY);
+                                        ctx.quadraticCurveTo(besselPoints[0].x + lastX, besselPoints[0].y + lastY, points[1].x + lastX, points[1].y + lastY);
+                                        int = int + 1;
+                                    } else if (i < points.length - 2) {
+                                        ctx.moveTo(points[i].x + lastX, points[i].y + lastY);
+                                        ctx.bezierCurveTo(besselPoints[int].x + lastX, besselPoints[int].y + lastY, besselPoints[int + 1].x + lastX, besselPoints[int + 1].y + lastY, points[i + 1].x + lastX, points[i + 1].y + lastY);
+                                        int += 2;
+                                    } else if (i == points.length - 2) {
+                                        ctx.moveTo(points[points.length - 2].x + lastX, points[points.length - 2].y + lastY);
+                                        ctx.quadraticCurveTo(besselPoints[besselPoints.length - 1].x + lastX, besselPoints[besselPoints.length - 1].y + lastY, points[points.length - 1].x + lastX, points[points.length - 1].y + lastY);
+                                    };
                                 };
-                            };
+                            } catch (error) {
+                                console.error(besselPoints);
+                            }
+
                             ctx.stroke();
                         } else {
                             // 点绘制方法,非常消耗性能,不建议使用
@@ -729,16 +734,16 @@ function initCanvas() {
                 if (data.point.drag) {
                     if (!tempPathArr["id" + data.userId].length) {
                         tempPathArr["id" + data.userId].push({
-                            x: data.point.x,
-                            y: data.point.y,
+                            x: data.point.x + (data.point.brushSize / 2),
+                            y: data.point.y + (data.point.brushSize / 2),
                             color: data.point.color,
                             brushSize: data.point.brushSize,
                             tween: false
                         })
                     } else {
                         tempPathArr["id" + data.userId].push({
-                            x: data.point.x,
-                            y: data.point.y,
+                            x: data.point.x + (data.point.brushSize / 2),
+                            y: data.point.y + (data.point.brushSize / 2),
                             tween: false
                         })
                     }
@@ -746,6 +751,9 @@ function initCanvas() {
                     pathArrList["id" + data.userId].push(tempPathArr["id" + data.userId]);
                     tempPathArr["id" + data.userId] = new Array();
                 }
+                playerBursh.setAttribute("data-brush-size", data.point.brushSize);
+                playerBursh.setAttribute("data-brush-x", data.point.x);
+                playerBursh.setAttribute("data-brush-y", data.point.y);
                 data.point.x = data.point.x + lastX;
                 data.point.y = data.point.y + lastY;
                 playerBursh.style.transform = "translate3d(" + (data.point.x * dZoom) + "px, " + (data.point.y * dZoom) + "px, 0px)";
