@@ -214,6 +214,7 @@ function initCanvas() {
 
     // 绘制数组路径
     function drenArr(arr) {
+        console.log(arr)
         ctx.clearRect(0, 0, canvas.width / dZoom, canvas.height / dZoom);
         let pathArr = []
         // 循环用户数组
@@ -771,6 +772,15 @@ function initCanvas() {
                     };
                 };
             };
+            putSystemMsg(`欢迎进入画布,${loaclUserName} 以下是基础操作`);
+            putSystemMsg(`左键在画布上绘制`);
+            putSystemMsg(`右键拖动画布坐标`);
+            putSystemMsg(`滚轮缩放画布`);
+            putSystemMsg(`鼠标放置在"在线人数"上可显示用户id和在线列表`);
+            putSystemMsg(`在此输入#disable 他人id 可以屏蔽此id绘制的内容`);
+            putSystemMsg(`在此输入#enable 他人id 可以解禁此id绘制的内容`);
+            putSystemMsg(`例如,禁用id1的用户`);
+            putSystemMsg(`#disable id1`);
         });
 
         // 返回历史路径信息
@@ -778,10 +788,10 @@ function initCanvas() {
             console.log("接收到历史路径信息", data);
             for (let i = 0; i < data.length; i++) {
                 let playerId = data[i].userId;
-                if (pathArrList[playerId] === undefined) {
-                    pathArrList[playerId] = new Array();
+                if (pathArrList["id" + playerId] === undefined) {
+                    pathArrList["id" + playerId] = new Array();
                 }
-                pathArrList[playerId].push(data[i].path)
+                pathArrList["id" + playerId].push(data[i].path)
             }
             drenArr(pathArrList)
         })
@@ -965,7 +975,7 @@ function initCanvas() {
                 const userEl = document.createElement("div");
                 userEl.className = "user-name list-user-name";
                 userEl.id = "listId" + userData.userId;
-                userEl.innerText = userData.name;
+                userEl.innerText = "id" + userData.userId + " " + userData.name;
                 onlineList.appendChild(userEl);
                 titalNum.innerText = "当前在线:" + document.querySelectorAll(".list-user-name").length + "人";
             };
@@ -1140,8 +1150,25 @@ function initCanvas() {
         sendBtn.addEventListener("click", function() {
             let tempInputVal = inputMsg.value;
             if (tempInputVal.length) {
-                inputMsg.value = "";
-                socket.emit("sendMsg", { cookie: Cookies.get("cookieId"), content: tempInputVal });
+                if (tempInputVal.includes("#disable")) {
+                    let disableId = tempInputVal.replace("#disable ", "");
+                    disabledPath.push(disableId);
+                    putSystemMsg(`已屏蔽${disableId}用户绘制的图案`);
+                    drenArr(pathArrList);
+                } else if (tempInputVal.includes("#enable")) {
+                    let enableId = tempInputVal.replace("#enable ", "");
+                    if (disabledPath.indexOf(enableId) !== -1) {
+                        disabledPath.splice(disabledPath.indexOf(enableId), 1);
+                        console.log(disabledPath)
+                        drenArr(pathArrList);
+                        putSystemMsg(`已解除屏蔽${enableId}用户绘制的图案`);
+                    } else {
+                        putSystemMsg(`没有在屏蔽列表找到${enableId}`);
+                    }
+                } else {
+                    inputMsg.value = "";
+                    socket.emit("sendMsg", { cookie: Cookies.get("cookieId"), content: tempInputVal });
+                }
             }
         })
     }
