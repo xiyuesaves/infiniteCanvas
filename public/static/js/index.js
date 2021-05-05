@@ -29,7 +29,8 @@ function initCanvas() {
     const onlineList = document.querySelector(".online-list");
     const msgList = document.querySelector(".top-msg-list");
     const otherPlayerList = document.querySelector(".other-user-mouse");
-    const testEl = document.querySelector(".full-z")
+    const zoomList = document.querySelector(".right-zoom-indicator");
+    const testEl = document.querySelector(".full-z");
     // 配置项
     let loadOk = 0; // 历史数据加载状态
     let pathArrList = {}; // 路径数组列表
@@ -391,7 +392,8 @@ function initCanvas() {
             y: (burshY / dZoom - lastY),
             brushSize: bursh.offsetWidth / dZoom,
             drag: dragStart,
-            color: brushColor
+            color: brushColor,
+            zoomSize: zoomVal
         }
         socket.emit("pointMove", { point: mouseData, cookie: Cookies.get("cookieId"), time: new Date().getTime() });
         testEl.innerText = JSON.stringify(mouseData);
@@ -402,7 +404,6 @@ function initCanvas() {
         ctx.clearRect(0, 0, canvas.width / dZoom, canvas.height / dZoom);
         ctx.putImageData(imageData, hipX, hipY)
     }
-    let proportion = 0
     // 鼠标滚轮监听
     canvas.addEventListener('mousewheel', function(e) {
         if (!dragStart) {
@@ -413,7 +414,7 @@ function initCanvas() {
                 zoomVal--
             }
             zoomFun(-delta);
-            proportion = zoomVal / maxZoom * 100
+            let proportion = zoomVal / maxZoom * 100
             zoomIndicator.style.top = `${50 - (proportion / 2)}%`;
         }
     }, false);
@@ -725,8 +726,9 @@ function initCanvas() {
         socket.on("userAdd", function(data) {
             console.log("新用户上线", data);
             if (loginStatus) {
-                createBursh(data);
                 newUserAdd(data);
+                createBursh(data);
+                createZoomBar(data);
                 lockUserList.push(data);
             }
         });
@@ -737,6 +739,7 @@ function initCanvas() {
                 console.log("用户下线", data);
                 remveUserBrush(data);
                 removeUser(data);
+                removeZoomBar(data);
             }
         });
 
@@ -746,9 +749,10 @@ function initCanvas() {
             loadOk++;
             initUserList()
             for (let i = 0; i < data.length; i++) {
-                lockUserList.push(data[i]);
                 newUserAdd(data[i]);
                 createBursh(data[i]);
+                createZoomBar(data[i]);
+                lockUserList.push(data[i]);
             }
             isloadOk();
         });
@@ -800,7 +804,10 @@ function initCanvas() {
         // 接收其他用户的坐标信息
         let somX, somY, playrDrag = false;
         socket.on("otherPlayer", function(data) {
-            let playerBursh = document.querySelector("#id" + data.userId);
+            const playerBursh = document.querySelector(`#id${data.userId}`);
+            const zoomEl = document.querySelector(`#bar-id${data.userId}`);
+            let zoomPercentage = data.point.zoomSize / maxZoom * 100;
+            zoomEl.style.top = `${50 - (zoomPercentage / 2)}%`;
             if (playerBursh) {
                 if (!tempPathArr["id" + data.userId]) {
                     tempPathArr["id" + data.userId] = new Array();
@@ -838,6 +845,7 @@ function initCanvas() {
                 playerBursh.style.width = data.point.brushSize * dZoom + "px";
                 playerBursh.style.height = data.point.brushSize * dZoom + "px";
                 playerBursh.style.backgroundColor = data.point.color + "6B";
+                zoomEl.style.backgroundColor = data.point.color + "6B";
                 if (!data.point.drag && playrDrag) {
                     playrDrag = false;
                 };
@@ -883,6 +891,28 @@ function initCanvas() {
             };
         });
 
+        // 创建其他用户缩放展示条
+        function createZoomBar(data) {
+            console.log("其他用户缩放条", data);
+            if (data.userId !== localUserId && !document.querySelector("#bar-id" + data.userId)) {
+                const zoomEl = document.createElement("div");
+                zoomEl.className = "indicator-tag";
+                zoomEl.id = `bar-id${data.userId}`;
+                const zoomName = document.createElement("p");
+                zoomName.className = "tg-name";
+                zoomName.innerText = data.name;
+                zoomEl.appendChild(zoomName);
+                zoomList.appendChild(zoomEl);
+            };
+        }
+
+        // 删除下线用户缩放条
+        function removeZoomBar(data) {
+            console.log("删除下线用户缩放条", data);
+            const removeEl = document.querySelector(`#bar-id${data.userId}`)
+            zoomList.removeChild(removeEl);
+        }
+
         // 创建其他用户笔刷
         function createBursh(data) {
             console.log("其他用户笔刷", data)
@@ -898,7 +928,7 @@ function initCanvas() {
                 userNameEl.innerText = data.name;
                 playerEl.appendChild(userNameEl);
                 otherPlayerList.appendChild(playerEl);
-            }
+            };
         };
 
         // 删除下线用户笔刷

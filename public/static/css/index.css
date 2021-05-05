@@ -355,7 +355,7 @@ div.move {
 .right-zoom-indicator .indicator-tag {
     width: 22px;
     height: 8px;
-    background-color: rgba(255, 255, 255, 0.4);
+    background-color: rgba(236, 104, 65, 0.4);
     position: absolute;
     top: 50%;
     cursor: pointer;
@@ -364,8 +364,26 @@ div.move {
     border: solid 1px #ffffff;
     transform: translateX(-50%) translateY(0);
 }
-
-
+.right-zoom-indicator .indicator-tag.your-self{
+    z-index: 400;
+}
+.right-zoom-indicator .indicator-tag .tg-name{
+    width: 120px;
+    height: 16px;
+    font-size: 12px;
+    position: absolute;
+    right: 60%;
+    transform: translateY(-50%) scale(0.8);
+    top: 3px;
+    margin: 0;
+    pointer-events: none;
+    text-align: right;
+    margin: 0;
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
 .poe {
     pointer-events: none;
 }
