@@ -187,7 +187,8 @@ function initCanvas() {
                 y: (e.offsetY / dZoom - lastY),
                 color: brushColor,
                 brushSize: bursh.offsetWidth / dZoom,
-                tween: e.tween ? true : false
+                tween: e.tween ? true : false,
+                time: new Date().getTime()
             })
         } else if (!drowLine) { // 如果是点绘制模式则需要这些数据
             tempPathArr[userId].push({
@@ -212,6 +213,7 @@ function initCanvas() {
 
     // 绘制数组路径
     function drenArr(arr) {
+        console.log(arr)
         ctx.clearRect(0, 0, canvas.width / dZoom, canvas.height / dZoom);
         // 循环用户数组
         for (let userId in arr) {
@@ -381,7 +383,7 @@ function initCanvas() {
             drag: dragStart,
             color: brushColor
         }
-        socket.emit("pointMove", { point: mouseData, cookie: Cookies.get("cookieId") });
+        socket.emit("pointMove", { point: mouseData, cookie: Cookies.get("cookieId"), time: new Date().getTime() });
         testEl.innerText = JSON.stringify(mouseData);
     }
 
@@ -627,7 +629,6 @@ function initCanvas() {
                 userId = "id" + data.id;
                 localUserId = data.id;
                 loaclUserName = data.name;
-                loginView.className = "login";
                 loginSuccess();
             } else {
                 switch (data.code) {
@@ -656,7 +657,6 @@ function initCanvas() {
                 userId = "id" + data.id;
                 localUserId = data.id;
                 loaclUserName = data.name;
-                loginView.className = "login disable";
                 loginSuccess();
             } else {
                 if (data.err === 1) {
@@ -759,6 +759,19 @@ function initCanvas() {
             };
         });
 
+        // 返回历史路径信息
+        socket.on("returnHistoricalPath", function(data) {
+            console.log("接收到历史路径信息", data);
+            for (let i = 0; i < data.length; i++) {
+                let playerId = data[i].userId;
+                if (pathArrList[playerId] === undefined) {
+                    pathArrList[playerId] = new Array();
+                }
+                pathArrList[playerId].push(data[i].path)
+            }
+            drenArr(pathArrList)
+        })
+
         // 新消息接收
         socket.on("newMessage", function(data) {
             if (loginStatus) {
@@ -792,6 +805,7 @@ function initCanvas() {
                             y: data.point.y + (data.point.brushSize / 2),
                             color: data.point.color,
                             brushSize: data.point.brushSize,
+                            time: data.time,
                             tween: false
                         })
                     } else {
@@ -923,9 +937,12 @@ function initCanvas() {
                 loginStatus = true;
                 console.log("开始请求登录数据");
                 infoText.innerText = "正在加载历史数据,用户列表...";
-                socket.emit("getUserList", { userId: Cookies.get("cookieId") });
-                socket.emit("getHistoricalPath", { userId: Cookies.get("cookieId") });
-                socket.emit("getHistoricalMessage", { userId: Cookies.get("cookieId") });
+                // 获取在线用户列表
+                socket.emit("getUserList", { cookie: Cookies.get("cookieId") });
+                // 获取历史绘制数据
+                socket.emit("getHistoricalPath", { cookie: Cookies.get("cookieId") });
+                // 获取历史消息
+                socket.emit("getHistoricalMessage", { cookie: Cookies.get("cookieId") });
             };
             loginView.className = "login disable";
         };
@@ -1118,7 +1135,8 @@ function initColorBlock() {
         "#8957a1",
         "#ad5da1",
         "#ea68a2",
-        "#000000"
+        "#000000",
+        "#d9d9d9"
     ];
     const blockNum = colorArr.length >= 32 ? colorArr.length : 32;
     const selectColorBox = document.querySelector(".top-select-color");

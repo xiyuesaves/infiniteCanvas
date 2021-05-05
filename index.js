@@ -4,10 +4,13 @@ app.use(express.static('public'));
 app.use('/cookies.js', express.static('node_modules/js-cookie/src/js.cookie.js'));
 const server = require('http').Server(app);
 const io = require('socket.io')(server);
+const fs = require('fs');
 //sqlite3数据库
 const sqlite3 = require("sqlite3");
 // 链接数据库
 const db = new sqlite3.Database("main.db");
+
+
 // 数据库写入语句
 //  db.run(`INSERT INTO reply_list (key,create_name,create_id,group_id) VALUES (?,?,?,?)`, [textArr[1], msg.sender.memberName, msg.sender.id, msg.sender.group.id], function(err) { if (!err) { resolve(this.lastID) } else { reject(err) } })
 // 数据库查询语句
@@ -16,6 +19,9 @@ const db = new sqlite3.Database("main.db");
 const invitationCode = "xiyue";
 
 const canvasId = 0;
+
+// 储存用户临时路径
+let userPath = {};
 
 const point = 3399;
 console.log(`服务已启动,正在监听${point}`)
@@ -115,9 +121,9 @@ io.on('connection', (socket) => {
         userDisconnect(socket);
     });
     // 登录之后的请求方法
-    // 获取用户列表
+    // 获取用户列表 [未完成多canvas]
     socket.on("getUserList", function(cookie) {
-        if (checkCookie(cookie.userId)) {
+        if (checkCookie(cookie.cookie)) {
             let userListArr = [];
             for (let i = 0; i < userList.length; i++) {
                 userListArr.push({
@@ -127,20 +133,20 @@ io.on('connection', (socket) => {
             }
             socket.emit("returnUserList", userListArr)
         } else {
-            console.log("没有通过检测", cookie.userId)
+            console.log("没有通过检测 getUserList", cookie)
         }
     });
-    // 获取历史消息 刚刚在写这里2021年5月3日21:28:33
+    // 获取历史消息 [未完成多canvas]
     socket.on("getHistoricalMessage", function(cookie) {
-        if (checkCookie(cookie.userId)) {
+        if (checkCookie(cookie.cookie)) {
             db.all("SELECT msgId,userName,content,time,type,userId FROM message WHERE message.canvasId = ?", [0], function(err, dbData) {
                 socket.emit("returnHistoricalMessage", dbData)
             })
         } else {
-            console.log("没有通过检测", cookie.userId)
+            console.log("没有通过检测 getHistoricalMessage", cookie)
         }
     });
-    // 收到信息
+    // 收到信息 [未完成多canvas]
     socket.on("sendMsg", function(data) {
         console.log(data)
         if (checkCookie(data.cookie)) {
@@ -148,31 +154,96 @@ io.on('connection', (socket) => {
             console.log(userData.userName)
             let sendTime = new Date().getTime() + "";
             db.run("INSERT INTO message (userName,userId,content,canvasId,time,type) VALUES (?,?,?,?,?,?)", [userData.userName, userData.userId, data.content, 0, sendTime, 0]);
-            sendMessage({ content: data.content, time: sendTime, type: 0, userId: userData.userId, userName: userData.userName })
+            sendMessage({ content: data.content, time: sendTime, type: 0, userId: userData.userId, userName: userData.userName });
         } else {
             console.log("没有通过检测 sendMsg", data.userId)
         }
     })
-    // 广播移动数据
+    // 广播移动数据 [未完成多canvas]
     socket.on("pointMove", function(data) {
-        let decodeData = {
-            point: data.point,
-            userId: checkCookie(data.cookie).userId
+        if (checkCookie(data.cookie)) {
+            let decodeData = {
+                point: data.point,
+                time: data.time,
+                userId: checkCookie(data.cookie).userId
+            }
+            if (data.point.drag) {
+                let brsuhMove = data.point.brushSize / 2;
+                if (!userPath[`id${decodeData.userId}`].length) {
+                    userPath[`id${decodeData.userId}`].push({
+                        x: data.point.x + brsuhMove,
+                        y: data.point.y + brsuhMove,
+                        time: data.time,
+                        color: data.point.color,
+                        brushSize: data.point.brushSize,
+                        tween: false
+                    });
+                } else {
+                    userPath[`id${decodeData.userId}`].push({
+                        x: data.point.x + brsuhMove,
+                        y: data.point.y + brsuhMove,
+                        tween: false
+                    });
+                };
+            } else {
+                if (userPath[`id${decodeData.userId}`].length) {
+                    let time = userPath[`id${decodeData.userId}`][0].time
+                    fs.writeFile(`path/${canvasId}-${decodeData.userId}-${time}`, JSON.stringify(userPath[`id${decodeData.userId}`]), function(err) {
+                        if (!err) {
+                            db.run("INSERT INTO path_list (userId,userName,pathFile,canvasId) VALUES (?,?,?,?)", [decodeData.userId, checkId(decodeData.userId).userName, `${canvasId}-${decodeData.userId}-${time}`, canvasId], function(err, noInfo) {
+                                if (!err) {} else {
+                                    console.log("写入数据库失败", err);
+                                    sendMessage({ content: "写入数据库失败,请联系管理员", time: 0, type: 1, userId: 0, userName: "root" });
+                                }
+                            })
+                        } else {
+                            console.log("写入失败", err)
+                            sendMessage({ content: "写入路径文件失败,请联系管理员", time: 0, type: 1, userId: 0, userName: "root" });
+                        }
+                    })
+                    userPath[`id${decodeData.userId}`] = new Array();
+                }
+            }
+            socket.broadcast.emit("otherPlayer", decodeData);
+        } else {
+            console.log("没有通过检测 pointMove", data)
         }
-        socket.broadcast.emit("otherPlayer", decodeData);
     })
-    // 广播消息
+    // 获取历画布数据
+    socket.on("getHistoricalPath", function(data) {
+        if (checkCookie(data.cookie)) {
+            db.all("SELECT * FROM path_list WHERE path_list.canvasId = ?", [0], function(err, dbData) {
+                for (let i = 0; i < dbData.length; i++) {
+                    let tempJson = []
+                    try {
+                        tempJson = JSON.parse(fs.readFileSync(`path/${dbData[i].pathFile}`).toString())
+                    } catch (err) {
+                        console.log("读取路径时出现错误", err)
+                        sendMessage({ content: `无法加载路径${dbData[i].pathFile}`, time: 0, type: 1, userId: 0, userName: "root" });
+                    }
+                    dbData[i].path = tempJson;
+                };
+                socket.emit("returnHistoricalPath", dbData)
+            })
+        } else {
+            console.log("没有通过检测 getHistoricalPath", data)
+        }
+    })
+    // 广播消息 [未完成多canvas]
     function sendMessage(msg) {
         socket.emit("newMessage", msg);
         socket.broadcast.emit("newMessage", msg);
     }
-    // 新用户加入
+    // 新用户加入 [未完成多canvas]
     function newUserAdd(userName, userId, userCookie) {
         console.log("用户上线");
         userList.push({ socket: socket, userName: userName, userId: userId, userCookie: userCookie });
         socket.broadcast.emit("userAdd", { name: userName, userId: userId });
+        if (!userPath[`id${userId}`]) {
+            userPath[`id${userId}`] = new Array();
+        };
     };
-    // 用户下线
+    // 用户下线 [未完成多canvas]
     function userDisconnect(userSocket) {
         for (let i = 0; i < userList.length; i++) {
             if (userList[i].socket == userSocket) {
@@ -188,6 +259,7 @@ function updateCookieId(userId, cookieId) {
     db.run("UPDATE user SET cookieId = ? WHERE userId = ?", [cookieId, userId], function(err, data) {});
 };
 
+// 通过cookie判断该用户是否在线 [未完成多canvas]
 function checkCookie(cookie) {
     for (let i = 0; i < userList.length; i++) {
         if (userList[i].userCookie === cookie) {
@@ -196,6 +268,8 @@ function checkCookie(cookie) {
     };
     return false;
 };
+
+// 通过id判断该用户是否在线 [未完成多canvas]
 function checkId(userId) {
     for (let i = 0; i < userList.length; i++) {
         if (userList[i].userId === userId) {
