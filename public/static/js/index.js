@@ -213,73 +213,83 @@ function initCanvas() {
 
     // 绘制数组路径
     function drenArr(arr) {
-        console.log(arr)
         ctx.clearRect(0, 0, canvas.width / dZoom, canvas.height / dZoom);
+        let pathArr = []
         // 循环用户数组
         for (let userId in arr) {
             // 检测是否屏蔽该用户
             if (disabledPath.indexOf(userId) === -1) {
                 // 循环该用户的所有路径
                 for (let path = 0; path < arr[userId].length; path++) {
-                    // 开始绘制路径
-                    // 如果路径点少于阈值,使用点绘制,否则根据配置选择点绘制还是线绘制
-                    if (arr[userId][path].length > 2) {
-                        // 判断绘制方法
-                        if (drowLine) {
-                            ctx.beginPath();
-                            ctx.lineCap = "round";
-                            ctx.lineWidth = arr[userId][path][0].brushSize;
-                            ctx.strokeStyle = arr[userId][path][0].color;
-                            // 新的贝塞尔曲线绘制方法
-                            let points = removeTween(arr[userId][path]);
-                            let besselPoints = getBessel(points);
-                            let int = 0;
-                            try {
-                                for (let i = 0; i < points.length; i++) {
-                                    ctx.lineTo(points[i].x + lastX, points[i].y + lastY);
-                                    if (i == 0) {
-                                        ctx.moveTo(points[0].x + lastX, points[0].y + lastY);
-                                        ctx.quadraticCurveTo(besselPoints[0].x + lastX, besselPoints[0].y + lastY, points[1].x + lastX, points[1].y + lastY);
-                                        int = int + 1;
-                                    } else if (i < points.length - 2) {
-                                        ctx.moveTo(points[i].x + lastX, points[i].y + lastY);
-                                        ctx.bezierCurveTo(besselPoints[int].x + lastX, besselPoints[int].y + lastY, besselPoints[int + 1].x + lastX, besselPoints[int + 1].y + lastY, points[i + 1].x + lastX, points[i + 1].y + lastY);
-                                        int += 2;
-                                    } else if (i == points.length - 2) {
-                                        ctx.moveTo(points[points.length - 2].x + lastX, points[points.length - 2].y + lastY);
-                                        ctx.quadraticCurveTo(besselPoints[besselPoints.length - 1].x + lastX, besselPoints[besselPoints.length - 1].y + lastY, points[points.length - 1].x + lastX, points[points.length - 1].y + lastY);
-                                    };
-                                };
-                            } catch (error) {
-                                console.error(besselPoints);
-                            }
-                            ctx.stroke();
-                        } else {
-                            // 点绘制方法,非常消耗性能,不建议使用
-                            for (let point = 0; point < arr[userId][path].length; point++) {
-                                // 如果缩放后笔刷粗细小于阈值则不绘制以提升性能
-                                if (arr[userId][path][point].brushSize * dZoom > minimumThreshold) {
-                                    ctx.beginPath();
-                                    ctx.fillStyle = arr[userId][path][point].color;
-                                    ctx.arc((arr[userId][path][point].x + lastX), (arr[userId][path][point].y + lastY), arr[userId][path][point].brushSize / 2, 0, 2 * Math.PI);
-                                    ctx.fill();
-                                };
-                            };
-                        };
-                    } else {
-                        for (let point = 0; point < arr[userId][path].length; point++) {
-                            // 如果缩放后笔刷粗细小于阈值则不绘制以提升性能
-                            if (arr[userId][path][point].brushSize * dZoom > minimumThreshold) {
-                                ctx.beginPath();
-                                ctx.fillStyle = arr[userId][path][point].color;
-                                ctx.arc((arr[userId][path][point].x + lastX), (arr[userId][path][point].y + lastY), arr[userId][path][point].brushSize / 2, 0, 2 * Math.PI);
-                                ctx.fill();
-                            };
-                        };
-                    };
+                    // 获取所有的路径
+                    pathArr.push(arr[userId][path])
                 };
             };
         };
+        // 根据路径创建时间排序
+        pathArr.sort(function(a, b) {
+            return a[0].time - b[0].time
+        })
+        // 绘制所有路径
+        for (let path = 0; path < pathArr.length; path++) {
+            // 开始绘制路径
+            // 如果路径点少于阈值,使用点绘制,否则根据配置选择点绘制还是线绘制
+            if (pathArr[path].length > 2) {
+                // 判断绘制方法
+                if (drowLine) {
+                    ctx.beginPath();
+                    ctx.lineCap = "round";
+                    ctx.lineWidth = pathArr[path][0].brushSize;
+                    ctx.strokeStyle = pathArr[path][0].color;
+                    // 新的贝塞尔曲线绘制方法
+                    let points = removeTween(pathArr[path]);
+                    let besselPoints = getBessel(points);
+                    let int = 0;
+                    try {
+                        for (let i = 0; i < points.length; i++) {
+                            ctx.lineTo(points[i].x + lastX, points[i].y + lastY);
+                            if (i == 0) {
+                                ctx.moveTo(points[0].x + lastX, points[0].y + lastY);
+                                ctx.quadraticCurveTo(besselPoints[0].x + lastX, besselPoints[0].y + lastY, points[1].x + lastX, points[1].y + lastY);
+                                int = int + 1;
+                            } else if (i < points.length - 2) {
+                                ctx.moveTo(points[i].x + lastX, points[i].y + lastY);
+                                ctx.bezierCurveTo(besselPoints[int].x + lastX, besselPoints[int].y + lastY, besselPoints[int + 1].x + lastX, besselPoints[int + 1].y + lastY, points[i + 1].x + lastX, points[i + 1].y + lastY);
+                                int += 2;
+                            } else if (i == points.length - 2) {
+                                ctx.moveTo(points[points.length - 2].x + lastX, points[points.length - 2].y + lastY);
+                                ctx.quadraticCurveTo(besselPoints[besselPoints.length - 1].x + lastX, besselPoints[besselPoints.length - 1].y + lastY, points[points.length - 1].x + lastX, points[points.length - 1].y + lastY);
+                            };
+                        };
+                    } catch (error) {
+                        console.error(besselPoints);
+                    }
+                    ctx.stroke();
+                } else {
+                    // 点绘制方法,非常消耗性能,不建议使用
+                    for (let point = 0; point < pathArr[path].length; point++) {
+                        // 如果缩放后笔刷粗细小于阈值则不绘制以提升性能
+                        if (pathArr[path][point].brushSize * dZoom > minimumThreshold) {
+                            ctx.beginPath();
+                            ctx.fillStyle = pathArr[path][point].color;
+                            ctx.arc((pathArr[path][point].x + lastX), (pathArr[path][point].y + lastY), pathArr[path][point].brushSize / 2, 0, 2 * Math.PI);
+                            ctx.fill();
+                        };
+                    };
+                };
+            } else {
+                for (let point = 0; point < pathArr[path].length; point++) {
+                    // 如果缩放后笔刷粗细小于阈值则不绘制以提升性能
+                    if (pathArr[path][point].brushSize * dZoom > minimumThreshold) {
+                        ctx.beginPath();
+                        ctx.fillStyle = pathArr[path][point].color;
+                        ctx.arc((pathArr[path][point].x + lastX), (pathArr[path][point].y + lastY), pathArr[path][point].brushSize / 2, 0, 2 * Math.PI);
+                        ctx.fill();
+                    };
+                };
+            };
+        }
+
         // 高性能拖动残留代码
         if (highPerformanceDrag) {
             imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
