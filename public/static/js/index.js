@@ -189,6 +189,14 @@ function initCanvas() {
                 brushSize: bursh.offsetWidth / dZoom,
                 tween: e.tween ? true : false
             })
+        } else if (!drowLine) { // 如果是点绘制模式则需要这些数据
+            tempPathArr[userId].push({
+                x: (e.offsetX / dZoom - lastX),
+                y: (e.offsetY / dZoom - lastY),
+                color: brushColor,
+                brushSize: bursh.offsetWidth / dZoom,
+                tween: e.tween ? true : false
+            })
         } else {
             tempPathArr[userId].push({
                 x: (e.offsetX / dZoom - lastX),
@@ -196,7 +204,6 @@ function initCanvas() {
                 tween: e.tween ? true : false
             })
         }
-
         ctx.fillStyle = brushColor;
         ctx.beginPath();
         ctx.arc(e.offsetX / dZoom, e.offsetY / dZoom, (bursh.offsetWidth / 2) / dZoom, 0, 2 * Math.PI);
@@ -244,7 +251,6 @@ function initCanvas() {
                             } catch (error) {
                                 console.error(besselPoints);
                             }
-
                             ctx.stroke();
                         } else {
                             // 点绘制方法,非常消耗性能,不建议使用
@@ -336,6 +342,7 @@ function initCanvas() {
         }
     };
 
+    // 贝塞尔控制点计算函数,似乎有bug,坐标会随机返回NaN
     function getBessel(arr) {
         let rt = 0.3;
         let i = 0,
@@ -416,7 +423,6 @@ function initCanvas() {
                 dZoom = dZoom * zooms;
                 let beforeW = canvas.width * dZoom,
                     beforeH = canvas.height * dZoom;
-
                 lastX = lastX + ((mouseX / afterW) * (afterW - beforeW)) / dZoom;
                 lastY = lastY + ((mouseY / afterH) * (afterH - beforeH)) / dZoom;
                 drenArr(pathArrList);
@@ -441,7 +447,7 @@ function initCanvas() {
             let elPintX = players[i].getAttribute("data-brush-x");
             let elPintY = players[i].getAttribute("data-brush-y");
             let elBrushSize = players[i].getAttribute("data-brush-size");
-            players[i].style.transform = "translate3d(" + ((1*elPintX + lastX) * dZoom) + "px, " + ((1*elPintY + lastY) * dZoom) + "px, 0px)";
+            players[i].style.transform = "translate3d(" + ((1 * elPintX + lastX) * dZoom) + "px, " + ((1 * elPintY + lastY) * dZoom) + "px, 0px)";
             players[i].style.width = elBrushSize * dZoom + "px";
             players[i].style.height = elBrushSize * dZoom + "px";
         }
@@ -624,8 +630,20 @@ function initCanvas() {
                 loginView.className = "login";
                 loginSuccess();
             } else {
-                initLoginView("这个用户名已被使用,或密码错误");
-                Cookies.remove("cookieId");
+                switch (data.code) {
+                    case 0:
+                        initLoginView("这个用户名已被使用,或密码错误");
+                        Cookies.remove("cookieId");
+                        break;
+                    case 1:
+                        initLoginView("你已经在其他地方登录啦");
+                        Cookies.remove("cookieId");
+                        break;
+                    default:
+                        initLoginView("未知错误诶,刷新试试?");
+                        Cookies.remove("cookieId");
+                        break;
+                }
             };
         });
 
@@ -648,7 +666,7 @@ function initCanvas() {
                     initLoginView("邀请码填错啦");
                     Cookies.remove("cookieId");
                 } else {
-                    initLoginView("未知错误诶,再试一下?");
+                    initLoginView("未知错误诶,刷新试试?");
                     Cookies.remove("cookieId");
                 };
             };
@@ -657,10 +675,25 @@ function initCanvas() {
         // 返回自动登录结果
         socket.on("autoLoginReturn", function(data) {
             if (!data.status) {
-                fullImfo.className = "wating-service";
                 loginStatus = false;
-                initLoginView("记住登录过期啦");
-                Cookies.remove("cookieId");
+                switch (data.code) {
+                    case 0:
+                        initLoginView("记住登录过期啦");
+                        Cookies.remove("cookieId");
+                        break;
+                    case 1:
+                        initLoginView("服务器出错了QAQ");
+                        Cookies.remove("cookieId");
+                        break;
+                    case 2:
+                        initLoginView("你已经在其他地方登录啦");
+                        break;
+                    default:
+                        initLoginView("未知错误诶,刷新试试?");
+                        Cookies.remove("cookieId");
+                        break;
+                }
+
             };
         });
 
@@ -681,16 +714,20 @@ function initCanvas() {
         // 新用户上线监听
         socket.on("userAdd", function(data) {
             console.log("新用户上线", data);
-            createBursh(data);
-            newUserAdd(data);
-            lockUserList.push(data);
+            if (loginStatus) {
+                createBursh(data);
+                newUserAdd(data);
+                lockUserList.push(data);
+            }
         });
 
         // 用户下线监听
         socket.on("userDisconnect", function(data) {
-            console.log("用户下线", data);
-            remveUserBrush(data);
-            removeUser(data);
+            if (loginStatus) {
+                console.log("用户下线", data);
+                remveUserBrush(data);
+                removeUser(data);
+            }
         });
 
         // 接收用户列表
@@ -724,15 +761,17 @@ function initCanvas() {
 
         // 新消息接收
         socket.on("newMessage", function(data) {
-            if (data.type === 1) { // 1为系统消息
-                putSystemMsg(data.content);
-            } else if (data.type === 0) { // 0为用户消息
-                if (data.userId === localUserId) {
-                    putUsMsg(data.userName, data.content);
-                } else {
-                    putUserMsg(data.userName, data.content);
+            if (loginStatus) {
+                if (data.type === 1) { // 1为系统消息
+                    putSystemMsg(data.content);
+                } else if (data.type === 0) { // 0为用户消息
+                    if (data.userId === localUserId) {
+                        putUsMsg(data.userName, data.content);
+                    } else {
+                        putUserMsg(data.userName, data.content);
+                    };
                 };
-            };
+            }
         });
 
         // 接收其他用户的坐标信息
@@ -827,9 +866,9 @@ function initCanvas() {
                 const playerEl = document.createElement("div");
                 playerEl.className = "player-mouse";
                 playerEl.id = `id${data.userId}`;
-                playerEl.setAttribute("data-brush-x","0");
-                playerEl.setAttribute("data-brush-y","0");
-                playerEl.setAttribute("data-brush-size","20");
+                playerEl.setAttribute("data-brush-x", "0");
+                playerEl.setAttribute("data-brush-y", "0");
+                playerEl.setAttribute("data-brush-size", "20");
                 const userNameEl = document.createElement("p");
                 userNameEl.className = "user-name";
                 userNameEl.innerText = data.name;

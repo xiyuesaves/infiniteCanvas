@@ -30,13 +30,18 @@ io.on('connection', (socket) => {
         console.log("用户登录");
         db.get("SELECT userName,password,userId FROM user WHERE user.userName = ?", [data.name], function(err, dbData) {
             if (data.name === dbData.userName && data.psw === dbData.password) {
-                let cookieId = Buffer.from("user" + data.name + new Date().getTime() + "time").toString('base64');
-                socket.emit("loginReturn", { status: true, cookieId: cookieId, name: data.name, id: dbData.userId });
-                updateCookieId(dbData.userId, cookieId);
-                newUserAdd(dbData.userName, dbData.userId, cookieId);
+                if (!checkId(dbData.userId)) {
+                    let cookieId = Buffer.from("user" + data.name + new Date().getTime() + "time").toString('base64');
+                    socket.emit("loginReturn", { status: true, cookieId: cookieId, name: data.name, id: dbData.userId });
+                    updateCookieId(dbData.userId, cookieId);
+                    newUserAdd(dbData.userName, dbData.userId, cookieId);
+                } else {
+                    console.log("登录失败,该账号已被登录");
+                    socket.emit("loginReturn", { status: false, code: 1 })
+                }
             } else {
-                console.log("登录失败");
-                socket.emit("loginReturn", { status: false })
+                console.log("登录失败,账号密码错误");
+                socket.emit("loginReturn", { status: false, code: 0 })
             }
         })
     })
@@ -45,16 +50,22 @@ io.on('connection', (socket) => {
         console.log("cookie登录", data.cookie)
         db.get("SELECT userName,userId,cookieId FROM user WHERE user.cookieId = ?", [data.cookie], function(err, dbData) {
             if (dbData) {
+                // 这条判断是不会出错的
                 if (data.cookie === dbData.cookieId) {
-                    socket.emit("loginReturn", { status: true, cookieId: data.cookie, name: dbData.userName, id: dbData.userId });
-                    newUserAdd(dbData.userName, dbData.userId, data.cookie);
+                    if (!checkCookie(data.cookie)) {
+                        socket.emit("loginReturn", { status: true, cookieId: data.cookie, name: dbData.userName, id: dbData.userId });
+                        newUserAdd(dbData.userName, dbData.userId, data.cookie);
+                    } else {
+                        console.log("cookie登录失败, 已经在其他地方登录");
+                        socket.emit("autoLoginReturn", { status: false, code: 2 })
+                    }
                 } else {
                     console.log("cookie登录失败, 数据库错误");
-                    socket.emit("autoLoginReturn", { status: false })
+                    socket.emit("autoLoginReturn", { status: false, code: 1 })
                 }
             } else {
-                console.log("cookie登录失败, 没有找到对应用户");
-                socket.emit("autoLoginReturn", { status: false })
+                console.log("cookie已过期,登录失败");
+                socket.emit("autoLoginReturn", { status: false, code: 0 })
             }
         })
     })
@@ -73,7 +84,7 @@ io.on('connection', (socket) => {
                                 let cookieId = Buffer.from("user" + data.name + new Date().getTime()).toString('base64');
                                 updateCookieId(dbData.userId, cookieId);
                                 newUserAdd(data.name, dbData.userId, cookieId);
-                                socket.emit("registeredReturn", { status: true, cookieId: cookieId, name: data.name, id: dbData.userId})
+                                socket.emit("registeredReturn", { status: true, cookieId: cookieId, name: data.name, id: dbData.userId })
                             })
                         } else {
                             socket.emit("registeredReturn", { status: false })
@@ -105,7 +116,7 @@ io.on('connection', (socket) => {
     });
     // 登录之后的请求方法
     // 获取用户列表
-    socket.on("getUserList", function (cookie) {
+    socket.on("getUserList", function(cookie) {
         if (checkCookie(cookie.userId)) {
             let userListArr = [];
             for (let i = 0; i < userList.length; i++) {
@@ -115,35 +126,35 @@ io.on('connection', (socket) => {
                 })
             }
             socket.emit("returnUserList", userListArr)
-        }else{
-            console.log("没有通过检测",cookie.userId)
+        } else {
+            console.log("没有通过检测", cookie.userId)
         }
     });
     // 获取历史消息 刚刚在写这里2021年5月3日21:28:33
-    socket.on("getHistoricalMessage", function (cookie) {
+    socket.on("getHistoricalMessage", function(cookie) {
         if (checkCookie(cookie.userId)) {
-            db.all("SELECT msgId,userName,content,time,type,userId FROM message WHERE message.canvasId = ?", [0], function (err, dbData) {
+            db.all("SELECT msgId,userName,content,time,type,userId FROM message WHERE message.canvasId = ?", [0], function(err, dbData) {
                 socket.emit("returnHistoricalMessage", dbData)
             })
-        }else{
-            console.log("没有通过检测",cookie.userId)
+        } else {
+            console.log("没有通过检测", cookie.userId)
         }
     });
     // 收到信息
-    socket.on("sendMsg", function (data) {
+    socket.on("sendMsg", function(data) {
         console.log(data)
         if (checkCookie(data.cookie)) {
             let userData = checkCookie(data.cookie)
             console.log(userData.userName)
             let sendTime = new Date().getTime() + "";
-            db.run("INSERT INTO message (userName,userId,content,canvasId,time,type) VALUES (?,?,?,?,?,?)",[userData.userName, userData.userId, data.content, 0, sendTime, 0]);
-            sendMessage({content: data.content, time: sendTime, type: 0, userId: userData.userId, userName: userData.userName})
+            db.run("INSERT INTO message (userName,userId,content,canvasId,time,type) VALUES (?,?,?,?,?,?)", [userData.userName, userData.userId, data.content, 0, sendTime, 0]);
+            sendMessage({ content: data.content, time: sendTime, type: 0, userId: userData.userId, userName: userData.userName })
         } else {
-            console.log("没有通过检测 sendMsg",data.userId)
+            console.log("没有通过检测 sendMsg", data.userId)
         }
     })
     // 广播移动数据
-    socket.on("pointMove", function (data) {
+    socket.on("pointMove", function(data) {
         let decodeData = {
             point: data.point,
             userId: checkCookie(data.cookie).userId
@@ -158,16 +169,16 @@ io.on('connection', (socket) => {
     // 新用户加入
     function newUserAdd(userName, userId, userCookie) {
         console.log("用户上线");
-        userList.push({ socket: socket, userName: userName, userId: userId, userCookie: userCookie});
+        userList.push({ socket: socket, userName: userName, userId: userId, userCookie: userCookie });
         socket.broadcast.emit("userAdd", { name: userName, userId: userId });
     };
     // 用户下线
     function userDisconnect(userSocket) {
         for (let i = 0; i < userList.length; i++) {
             if (userList[i].socket == userSocket) {
-                console.log("用户下线",userList[i].userName);
+                console.log("用户下线", userList[i].userName);
                 socket.broadcast.emit("userDisconnect", { userName: userList[i].userName, userId: userList[i].userId });
-                userList.splice(i,1);
+                userList.splice(i, 1);
             };
         };
     };
@@ -180,6 +191,14 @@ function updateCookieId(userId, cookieId) {
 function checkCookie(cookie) {
     for (let i = 0; i < userList.length; i++) {
         if (userList[i].userCookie === cookie) {
+            return userList[i]
+        };
+    };
+    return false;
+};
+function checkId(userId) {
+    for (let i = 0; i < userList.length; i++) {
+        if (userList[i].userId === userId) {
             return userList[i]
         };
     };
