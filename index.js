@@ -72,7 +72,7 @@ function clearPathFile() {
                 for (let i = 0; i < pathFile.length; i++) {
                     fs.unlinkSync(`path/${pathFile[i]}`);
                 };
-            }else{
+            } else {
                 console.log("当前没有无索引路径文件");
             };
         };
@@ -160,26 +160,33 @@ io.on('connection', (socket) => {
         console.log("用户注册", data.name)
         db.get("SELECT userName FROM user WHERE user.userName = ?", [data.name], function(err, name) {
             if (!name) {
-                // let invitationCode = getInvitationCode()
                 if (data.invitationCode === invitationCode) {
                     let createTime = new Date().getTime() + "";
                     console.log(createTime);
                     db.run("INSERT INTO user (userName,createTime,password) VALUES (?,?,?)", [data.name, createTime, data.psw], function(err, noInfo) {
                         if (!err) {
                             db.get("SELECT userId FROM user WHERE user.userName = ?", [data.name], function(err, dbData) {
-                                let cookieId = Buffer.from("user" + data.name + new Date().getTime()).toString('base64');
-                                updateCookieId(dbData.userId, cookieId);
-                                newUserAdd(data.name, dbData.userId, cookieId);
-                                socket.emit("registeredReturn", { status: true, cookieId: cookieId, name: data.name, id: dbData.userId });
+                                if (!err) {
+                                    let cookieId = Buffer.from("user" + data.name + new Date().getTime()).toString('base64');
+                                    updateCookieId(dbData.userId, cookieId);
+                                    newUserAdd(data.name, dbData.userId, cookieId);
+                                    socket.emit("registeredReturn", { status: true, cookieId: cookieId, name: data.name, id: dbData.userId });
+                                } else {
+                                    console.log("注册失败,数据库读取错误");
+                                    socket.emit("registeredReturn", { status: false });
+                                }
                             })
                         } else {
+                            console.log("注册失败,数据库写入错误");
                             socket.emit("registeredReturn", { status: false });
                         };
                     });
                 } else {
+                    console.log("注册失败,邀请码错误");
                     socket.emit("registeredReturn", { status: false, err: 2 });
                 };
             } else {
+                console.log("注册失败,重名");
                 socket.emit("registeredReturn", { status: false, err: 1 });
             };
         });
