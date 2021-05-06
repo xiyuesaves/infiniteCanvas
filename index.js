@@ -19,13 +19,13 @@ db.all("SELECT name FROM sqlite_master", function(err, data) {
         "invitationCode",
         "message",
         "path_list"
-    ]
+    ];
     if (!err) {
         for (let i = data.length - 1; i >= 0; i--) {
             if (tableArr.indexOf(data[i].name) !== -1) {
                 tableArr.splice(tableArr.indexOf(data[i].name), 1);
-            }
-        }
+            };
+        };
         if (tableArr.length) {
             console.log("数据库不完整,缺少", tableArr);
             console.log("正在修复");
@@ -49,24 +49,47 @@ db.all("SELECT name FROM sqlite_master", function(err, data) {
                     case "path_list":
                         sqlRun(`CREATE TABLE "path_list" (  "userId" integer,  "userName" TEXT,  "pathFile" TEXT,  "canvasId" INTEGER);`);
                         break;
-                }
-            }
+                };
+            };
         } else {
-            console.log("数据库验证完成")
-        }
-    }
-})
+            console.log("数据库验证完成");
+        };
+    };
+});
+
+// 整理路径数据
+function clearPathFile() {
+    db.all("SELECT pathFile FROM path_list", function(err, data) {
+        if (!err) {
+            let pathFile = fs.readdirSync("path/");
+            for (let i = 0; i < data.length; i++) {
+                if (pathFile.indexOf(data[i].pathFile) !== -1) {
+                    pathFile.splice(pathFile.indexOf(data[i].pathFile), 1);
+                };
+            };
+            if (pathFile.length) {
+                console.log(`清理无索引的路径文件，共${pathFile.length}条`);
+                for (let i = 0; i < pathFile.length; i++) {
+                    fs.unlinkSync(`path/${pathFile[i]}`);
+                };
+            }else{
+                console.log("当前没有无索引路径文件");
+            };
+        };
+    });
+};
+clearPathFile();
 
 // 封装run方法
 function sqlRun(sql) {
     db.run(sql, function(err) {
         if (err) {
-            console.error("创建表出现错误", err);
-        }else{
-            console.log("成功执行",sql)
-        }
-    })
-}
+            console.error("sql执行失败", err);
+        } else {
+            console.log("成功执行", sql);
+        };
+    });
+};
 
 // 数据库写入语句
 //  db.run(`INSERT INTO reply_list (key,create_name,create_id,group_id) VALUES (?,?,?,?)`, [textArr[1], msg.sender.memberName, msg.sender.id, msg.sender.group.id], function(err) { if (!err) { resolve(this.lastID) } else { reject(err) } })
@@ -100,14 +123,14 @@ io.on('connection', (socket) => {
                     newUserAdd(dbData.userName, dbData.userId, cookieId);
                 } else {
                     console.log("登录失败,该账号已被登录");
-                    socket.emit("loginReturn", { status: false, code: 1 })
-                }
+                    socket.emit("loginReturn", { status: false, code: 1 });
+                };
             } else {
                 console.log("登录失败,账号密码错误");
-                socket.emit("loginReturn", { status: false, code: 0 })
-            }
-        })
-    })
+                socket.emit("loginReturn", { status: false, code: 0 });
+            };
+        });
+    });
     // cookie登录请求
     socket.on("cookieLogin", function(data) {
         console.log("cookie登录", data.cookie)
@@ -120,18 +143,18 @@ io.on('connection', (socket) => {
                         newUserAdd(dbData.userName, dbData.userId, data.cookie);
                     } else {
                         console.log("cookie登录失败, 已经在其他地方登录");
-                        socket.emit("autoLoginReturn", { status: false, code: 2 })
+                        socket.emit("autoLoginReturn", { status: false, code: 2 });
                     }
                 } else {
                     console.log("cookie登录失败, 数据库错误");
-                    socket.emit("autoLoginReturn", { status: false, code: 1 })
+                    socket.emit("autoLoginReturn", { status: false, code: 1 });
                 }
             } else {
                 console.log("cookie已过期,登录失败");
-                socket.emit("autoLoginReturn", { status: false, code: 0 })
-            }
-        })
-    })
+                socket.emit("autoLoginReturn", { status: false, code: 0 });
+            };
+        });
+    });
     // 注册
     socket.on("registered", function(data) {
         console.log("用户注册", data.name)
@@ -140,39 +163,39 @@ io.on('connection', (socket) => {
                 // let invitationCode = getInvitationCode()
                 if (data.invitationCode === invitationCode) {
                     let createTime = new Date().getTime() + "";
-                    console.log(createTime)
+                    console.log(createTime);
                     db.run("INSERT INTO user (userName,createTime,password) VALUES (?,?,?)", [data.name, createTime, data.psw], function(err, noInfo) {
                         if (!err) {
                             db.get("SELECT userId FROM user WHERE user.userName = ?", [data.name], function(err, dbData) {
                                 let cookieId = Buffer.from("user" + data.name + new Date().getTime()).toString('base64');
                                 updateCookieId(dbData.userId, cookieId);
                                 newUserAdd(data.name, dbData.userId, cookieId);
-                                socket.emit("registeredReturn", { status: true, cookieId: cookieId, name: data.name, id: dbData.userId })
+                                socket.emit("registeredReturn", { status: true, cookieId: cookieId, name: data.name, id: dbData.userId });
                             })
                         } else {
-                            socket.emit("registeredReturn", { status: false })
-                        }
-                    })
+                            socket.emit("registeredReturn", { status: false });
+                        };
+                    });
                 } else {
-                    socket.emit("registeredReturn", { status: false, err: 2 })
-                }
+                    socket.emit("registeredReturn", { status: false, err: 2 });
+                };
             } else {
-                socket.emit("registeredReturn", { status: false, err: 1 })
-            }
-        })
-    })
+                socket.emit("registeredReturn", { status: false, err: 1 });
+            };
+        });
+    });
     // 判断用户名是否存在
     socket.on("checkName", function(data) {
         console.log("判断用户名是否存在", data)
         db.get("SELECT userName FROM user WHERE user.userName = ?", [data.name], function(err, data) {
-            console.log(data)
+            console.log(data);
             if (data) {
-                socket.emit("checkNameReturn", { status: true })
+                socket.emit("checkNameReturn", { status: true });
             } else {
-                socket.emit("checkNameReturn", { status: false })
-            }
-        })
-    })
+                socket.emit("checkNameReturn", { status: false });
+            };
+        });
+    });
     // 断开连接
     socket.on("disconnect", function(data) {
         userDisconnect(socket);
@@ -186,36 +209,36 @@ io.on('connection', (socket) => {
                 userListArr.push({
                     name: userList[i].userName,
                     userId: userList[i].userId
-                })
-            }
-            socket.emit("returnUserList", userListArr)
+                });
+            };
+            socket.emit("returnUserList", userListArr);
         } else {
-            console.log("没有通过检测 getUserList", cookie)
-        }
+            console.log("没有通过检测 getUserList", cookie);
+        };
     });
     // 获取历史消息 [未完成多canvas]
     socket.on("getHistoricalMessage", function(cookie) {
         if (checkCookie(cookie.cookie)) {
             db.all("SELECT msgId,userName,content,time,type,userId FROM message WHERE message.canvasId = ?", [0], function(err, dbData) {
-                socket.emit("returnHistoricalMessage", dbData)
-            })
+                socket.emit("returnHistoricalMessage", dbData);
+            });
         } else {
-            console.log("没有通过检测 getHistoricalMessage", cookie)
-        }
+            console.log("没有通过检测 getHistoricalMessage", cookie);
+        };
     });
     // 收到信息 [未完成多canvas]
     socket.on("sendMsg", function(data) {
         console.log(data)
         if (checkCookie(data.cookie)) {
-            let userData = checkCookie(data.cookie)
-            console.log(userData.userName)
+            let userData = checkCookie(data.cookie);
+            console.log(userData.userName);
             let sendTime = new Date().getTime() + "";
             db.run("INSERT INTO message (userName,userId,content,canvasId,time,type) VALUES (?,?,?,?,?,?)", [userData.userName, userData.userId, data.content, 0, sendTime, 0]);
             sendMessage({ content: data.content, time: sendTime, type: 0, userId: userData.userId, userName: userData.userName });
         } else {
-            console.log("没有通过检测 sendMsg", data.userId)
-        }
-    })
+            console.log("没有通过检测 sendMsg", data.userId);
+        };
+    });
     // 广播移动数据 [未完成多canvas]
     socket.on("pointMove", function(data) {
         if (checkCookie(data.cookie)) {
@@ -223,7 +246,7 @@ io.on('connection', (socket) => {
                 point: data.point,
                 time: data.time,
                 userId: checkCookie(data.cookie).userId
-            }
+            };
             if (data.point.drag) {
                 let brsuhMove = data.point.brushSize / 2;
                 if (!userPath[`id${decodeData.userId}`].length) {
@@ -246,55 +269,55 @@ io.on('connection', (socket) => {
                 if (userPath[`id${decodeData.userId}`].length) {
                     let time = userPath[`id${decodeData.userId}`][0].time
                     if (!fs.existsSync('path/')) {
-                        console.log("创建路径存储目录")
-                        fs.mkdirSync('path')
-                    }
+                        console.log("创建路径存储目录");
+                        fs.mkdirSync('path');
+                    };
                     fs.writeFile(`path/${canvasId}-${decodeData.userId}-${time}`, JSON.stringify(userPath[`id${decodeData.userId}`]), function(err) {
                         if (!err) {
                             db.run("INSERT INTO path_list (userId,userName,pathFile,canvasId) VALUES (?,?,?,?)", [decodeData.userId, checkId(decodeData.userId).userName, `${canvasId}-${decodeData.userId}-${time}`, canvasId], function(err, noInfo) {
                                 if (!err) {} else {
                                     console.log("写入数据库失败", err);
                                     sendMessage({ content: "写入数据库失败,请联系管理员", time: 0, type: 1, userId: 0, userName: "root" });
-                                }
-                            })
+                                };
+                            });
                         } else {
-                            console.log("写入失败", err)
+                            console.log("写入失败", err);
                             sendMessage({ content: "写入路径文件失败,请联系管理员", time: 0, type: 1, userId: 0, userName: "root" });
-                        }
-                    })
+                        };
+                    });
                     userPath[`id${decodeData.userId}`] = new Array();
-                }
-            }
+                };
+            };
             socket.broadcast.emit("otherPlayer", decodeData);
         } else {
-            console.log("没有通过检测 pointMove", data)
-        }
-    })
+            console.log("没有通过检测 pointMove", data);
+        };
+    });
     // 获取历画布数据
     socket.on("getHistoricalPath", function(data) {
         if (checkCookie(data.cookie)) {
             db.all("SELECT * FROM path_list WHERE path_list.canvasId = ?", [0], function(err, dbData) {
                 for (let i = 0; i < dbData.length; i++) {
-                    let tempJson = []
+                    let tempJson = [];
                     try {
-                        tempJson = JSON.parse(fs.readFileSync(`path/${dbData[i].pathFile}`).toString())
+                        tempJson = JSON.parse(fs.readFileSync(`path/${dbData[i].pathFile}`).toString());
                     } catch (err) {
-                        console.log("读取路径时出现错误", err)
+                        console.log("读取路径时出现错误", err);
                         sendMessage({ content: `无法加载路径${dbData[i].pathFile}`, time: 0, type: 1, userId: 0, userName: "root" });
-                    }
+                    };
                     dbData[i].path = tempJson;
                 };
-                socket.emit("returnHistoricalPath", dbData)
-            })
+                socket.emit("returnHistoricalPath", dbData);
+            });
         } else {
-            console.log("没有通过检测 getHistoricalPath", data)
-        }
-    })
+            console.log("没有通过检测 getHistoricalPath", data);
+        };
+    });
     // 广播消息 [未完成多canvas]
     function sendMessage(msg) {
         socket.emit("newMessage", msg);
         socket.broadcast.emit("newMessage", msg);
-    }
+    };
     // 新用户加入 [未完成多canvas]
     function newUserAdd(userName, userId, userCookie) {
         console.log("用户上线");
@@ -324,7 +347,7 @@ function updateCookieId(userId, cookieId) {
 function checkCookie(cookie) {
     for (let i = 0; i < userList.length; i++) {
         if (userList[i].userCookie === cookie) {
-            return userList[i]
+            return userList[i];
         };
     };
     return false;
@@ -334,7 +357,7 @@ function checkCookie(cookie) {
 function checkId(userId) {
     for (let i = 0; i < userList.length; i++) {
         if (userList[i].userId === userId) {
-            return userList[i]
+            return userList[i];
         };
     };
     return false;

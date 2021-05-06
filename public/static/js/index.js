@@ -40,6 +40,7 @@ function initCanvas() {
     let localUserId = null; // 服务器上用户的id
     let loaclUserName = null; // 本地玩家名称
     let lockUserList = []; // 本地用户统计
+    let canvasBGC = "#d9d9d9";
     let lastX = 0, // 当前位置
         lastY = 0;
     let moveX = 0,
@@ -75,6 +76,7 @@ function initCanvas() {
     let brushDefaultSize = 20; // 初始笔刷直径
     let zoomVal = 0; // 记录用缩放值
     let prohibitedWords = ["测试"]; // 违禁词
+    let f1Num = 0; // 切换ui展示状态保存值
     // 宽度变化监听
     window.onresize = function() {
         canvas.width = window.innerWidth;
@@ -85,6 +87,50 @@ function initCanvas() {
     // 初始化大小
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
+
+    // 监听快捷键
+    document.addEventListener("keydown", function(e) {
+        console.log(e.key)
+        switch (e.key) {
+            case "F7":
+                event.preventDefault();
+                const msgBox = document.querySelector(".omMsg");
+                const onlineEl = document.querySelector(".online");
+                const rightZoomIndicator = document.querySelector(".right-zoom-indicator");
+                const leftMenu = document.querySelector(".left-menu");
+                f1Num++
+                switch (f1Num) {
+                    case 1:
+                        msgBox.style.display = "none";
+                        break;
+                    case 2:
+                        onlineEl.style.display = "none";
+                        break;
+                    case 3:
+                        rightZoomIndicator.style.display = "none";
+                        break;
+                    case 4:
+                        leftMenu.style.display = "none";
+                        break;
+                    case 5:
+                        msgBox.style.display = "";
+                        onlineEl.style.display = "";
+                        rightZoomIndicator.style.display = "";
+                        leftMenu.style.display = "";
+                        f1Num = 0;
+                        break;
+                }
+                break;
+            case "F8":
+                event.preventDefault();
+                let dataUrl = canvas.toDataURL("image/png")
+                let tempA = document.createElement("a");
+                tempA.setAttribute("href",dataUrl);
+                tempA.setAttribute("download","downImg");
+                tempA.click();
+                break;
+        }
+    })
 
     // 监听笔刷位置
     canvas.addEventListener("mousedown", function(e) {
@@ -214,8 +260,11 @@ function initCanvas() {
 
     // 绘制数组路径
     function drenArr(arr) {
-        console.log(arr)
+        // console.log(arr)
         ctx.clearRect(0, 0, canvas.width / dZoom, canvas.height / dZoom);
+        ctx.fillStyle = canvasBGC;
+        ctx.fillRect(0, 0, canvas.width / dZoom, canvas.height / dZoom)
+        ctx.fill();
         let pathArr = []
         // 循环用户数组
         for (let userId in arr) {
@@ -774,15 +823,14 @@ function initCanvas() {
                     };
                 };
             };
+            putSystemMsg(`----------------以上是历史消息----------------`);
             putSystemMsg(`欢迎进入画布,${loaclUserName} 以下是基础操作`);
-            putSystemMsg(`左键在画布上绘制`);
-            putSystemMsg(`右键拖动画布坐标`);
-            putSystemMsg(`滚轮缩放画布`);
+            putSystemMsg(`左键绘制,右键拖动,滚轮缩放`);
             putSystemMsg(`鼠标放置在"在线人数"上可显示用户id和在线列表`);
-            putSystemMsg(`在此输入#disable 他人id 可以屏蔽此id绘制的内容`);
-            putSystemMsg(`在此输入#enable 他人id 可以解禁此id绘制的内容`);
-            putSystemMsg(`例如,禁用id1的用户`);
-            putSystemMsg(`#disable id1`);
+            putSystemMsg(`输入#disable 他人id 可以屏蔽此id绘制的内容`);
+            putSystemMsg(`输入#enable 他人id 可以解禁此id绘制的内容`);
+            putSystemMsg(`例如,禁用id1的用户 #disable id1`);
+            putSystemMsg(`快捷键,f7切换ui展示,f8保存当前视图`);
         });
 
         // 返回历史路径信息
@@ -869,38 +917,41 @@ function initCanvas() {
                         somY = data.point.y;
                     };
                     if (autoInterval) {
-                        tweenInterval = data.point.brushSize / 2;
-                        tweenStride = 2;
+                        console.log(data.point.brushSize)
+                        tweenInterval = data.point.brushSize / 3;
+                        tweenStride = tweenInterval;
                     };
+                    // if (true) {}
                     ctx.fillStyle = data.point.color;
                     ctx.beginPath();
                     ctx.arc(data.point.x + (data.point.brushSize / 2), data.point.y + (data.point.brushSize / 2), data.point.brushSize / 2, 0, 2 * Math.PI);
                     ctx.fill();
+                    // 临时写入绘制数组内,在更新时替换数组内容
+
                     // 对其他用户的补间
                     let tempX = somX - data.point.x;
                     let tempY = somY - data.point.y;
-                    
-                    // if (Math.abs(tempX) > tweenInterval || Math.abs(tempY) > tweenInterval || (Math.abs(tempX) > tweenInterval / 2 && Math.abs(tempY) > tweenInterval / 2)) {
-                    //     let tween = Math.abs(tempX) > Math.abs(tempY) ? Math.abs(tempX) / tweenStride : Math.abs(tempY) / tweenStride;
-                    //     let tweenX = tempX / tween,
-                    //         tweenY = tempY / tween;
-                    //     let stepX = tweenX,
-                    //         stepY = tweenY;
-                    //     for (let i = tween - 1; i >= 0; i--) {
-                    //         let point = {
-                    //             offsetX: data.point.x + stepX,
-                    //             offsetY: data.point.y + stepY
-                    //         };
-                    //         stepX += tweenX;
-                    //         stepY += tweenY;
-                    //         ctx.fillStyle = data.point.color;
-                    //         ctx.beginPath();
-                    //         ctx.arc(point.offsetX + (data.point.brushSize / 2), point.offsetY + (data.point.brushSize / 2), data.point.brushSize / 2, 0, 2 * Math.PI);
-                    //         ctx.fill();
-                    //     };
-                    // };
-                    // somX = data.point.x;
-                    // somY = data.point.y;
+                    if (Math.abs(tempX) > tweenInterval || Math.abs(tempY) > tweenInterval || (Math.abs(tempX) > tweenInterval / 2 && Math.abs(tempY) > tweenInterval / 2)) {
+                        let tween = Math.abs(tempX) > Math.abs(tempY) ? Math.abs(tempX) / tweenStride : Math.abs(tempY) / tweenStride;
+                        let tweenX = tempX / tween,
+                            tweenY = tempY / tween;
+                        let stepX = tweenX,
+                            stepY = tweenY;
+                        for (let i = tween - 1; i >= 0; i--) {
+                            let point = {
+                                offsetX: data.point.x + stepX,
+                                offsetY: data.point.y + stepY
+                            };
+                            stepX += tweenX;
+                            stepY += tweenY;
+                            ctx.fillStyle = data.point.color;
+                            ctx.beginPath();
+                            ctx.arc(point.offsetX + (data.point.brushSize / 2), point.offsetY + (data.point.brushSize / 2), data.point.brushSize / 2, 0, 2 * Math.PI);
+                            ctx.fill();
+                        };
+                    };
+                    somX = data.point.x;
+                    somY = data.point.y;
                 };
             };
         });
@@ -1083,6 +1134,7 @@ function initCanvas() {
             msgList.appendChild(msgEl);
             msgList.scrollTop = msgList.scrollHeight;
         };
+
         // 我的消息
         function putUserMsg(userName, msg) {
             const msgEl = document.createElement("span");
@@ -1098,6 +1150,7 @@ function initCanvas() {
             msgList.appendChild(msgEl);
             msgList.scrollTop = msgList.scrollHeight;
         };
+
         // 其他用户消息
         function putUsMsg(userName, msg) {
             const msgEl = document.createElement("span");
@@ -1139,7 +1192,7 @@ function initCanvas() {
                                 };
                             };
                         } else {
-                            infoText.innerText = "服务器似乎没有理你,再试一下吧~";
+                            infoText.innerText = "服务器似乎没有理你,再试一下吧";
                         };
                     } else {
                         infoText.innerText = "密码太—长—啦———";
