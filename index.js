@@ -10,6 +10,63 @@ const sqlite3 = require("sqlite3");
 // 链接数据库
 const db = new sqlite3.Database("main.db");
 
+// 检查数据库是否需要初始化
+db.all("SELECT name FROM sqlite_master", function(err, data) {
+    let tableArr = [
+        "canvas",
+        "canvas_data",
+        "user",
+        "invitationCode",
+        "message",
+        "path_list"
+    ]
+    if (!err) {
+        for (let i = data.length - 1; i >= 0; i--) {
+            if (tableArr.indexOf(data[i].name) !== -1) {
+                tableArr.splice(tableArr.indexOf(data[i].name), 1);
+            }
+        }
+        if (tableArr.length) {
+            console.log("数据库不完整,缺少", tableArr);
+            console.log("正在修复");
+            for (let i = 0; i < tableArr.length; i++) {
+                switch (tableArr[i]) {
+                    case "canvas":
+                        sqlRun(`CREATE TABLE "canvas" ("canvasName" TEXT,"canvasId" INTEGER,"createTime" TEXT,"isPrivate" TEXT);`);
+                        break;
+                    case "canvas_data":
+                        sqlRun(`CREATE TABLE "canvas_data" ("canvasId" TEXT,"userId" INTEGER);`);
+                        break;
+                    case "user":
+                        sqlRun(`CREATE TABLE "user" (  "userId" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,  "userName" text,  "createTime" TEXT,  "cookieId" TEXT,  "password" TEXT,  "invitePeople" TEXT,  "invitationCode" TEXT);`);
+                        break;
+                    case "invitationCode":
+                        sqlRun(`CREATE TABLE "invitationCode" ("invitationCode" TEXT,"createUserId" TEXT,"usingUserId" TEXT);`);
+                        break;
+                    case "message":
+                        sqlRun(`CREATE TABLE "message" (  "msgId" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,  "userName" TEXT,  "userId" INTEGER,  "content" TEXT,  "canvasId" INTEGER,  "time" TEXT,  "type" integer);`);
+                        break;
+                    case "path_list":
+                        sqlRun(`CREATE TABLE "path_list" (  "userId" integer,  "userName" TEXT,  "pathFile" TEXT,  "canvasId" INTEGER);`);
+                        break;
+                }
+            }
+        } else {
+            console.log("数据库验证完成")
+        }
+    }
+})
+
+// 封装run方法
+function sqlRun(sql) {
+    db.run(sql, function(err) {
+        if (err) {
+            console.error("创建表出现错误", err);
+        }else{
+            console.log("成功执行",sql)
+        }
+    })
+}
 
 // 数据库写入语句
 //  db.run(`INSERT INTO reply_list (key,create_name,create_id,group_id) VALUES (?,?,?,?)`, [textArr[1], msg.sender.memberName, msg.sender.id, msg.sender.group.id], function(err) { if (!err) { resolve(this.lastID) } else { reject(err) } })
@@ -226,7 +283,7 @@ io.on('connection', (socket) => {
                         sendMessage({ content: `无法加载路径${dbData[i].pathFile}`, time: 0, type: 1, userId: 0, userName: "root" });
                     }
                     dbData[i].path = tempJson;
-                }; 
+                };
                 socket.emit("returnHistoricalPath", dbData)
             })
         } else {
