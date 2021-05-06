@@ -188,6 +188,10 @@ io.on('connection', (socket) => {
             } else {
                 if (userPath[`id${decodeData.userId}`].length) {
                     let time = userPath[`id${decodeData.userId}`][0].time
+                    if (!fs.existsSync('path/')) {
+                        console.log("创建路径存储目录")
+                        fs.mkdirSync('path')
+                    }
                     fs.writeFile(`path/${canvasId}-${decodeData.userId}-${time}`, JSON.stringify(userPath[`id${decodeData.userId}`]), function(err) {
                         if (!err) {
                             db.run("INSERT INTO path_list (userId,userName,pathFile,canvasId) VALUES (?,?,?,?)", [decodeData.userId, checkId(decodeData.userId).userName, `${canvasId}-${decodeData.userId}-${time}`, canvasId], function(err, noInfo) {
