@@ -30,7 +30,7 @@ function initCanvas() {
     const msgList = document.querySelector(".top-msg-list");
     const otherPlayerList = document.querySelector(".other-user-mouse");
     const zoomList = document.querySelector(".right-zoom-indicator");
-    const testEl = document.querySelector(".full-z");
+    // const testEl = document.querySelector(".full-z");
     // 配置项
     let loadOk = 0; // 历史数据加载状态
     let pathArrList = {}; // 路径数组列表
@@ -446,7 +446,7 @@ function initCanvas() {
             zoomSize: zoomVal
         }
         socket.emit("pointMove", { point: mouseData, cookie: Cookies.get("cookieId"), time: new Date().getTime() });
-        testEl.innerText = JSON.stringify(mouseData);
+        // testEl.innerText = JSON.stringify(mouseData);
     }
 
     // 高性能移动
