@@ -222,7 +222,7 @@ io.on('connection', (socket) => {
                         sendMessage({ content: `无法加载路径${dbData[i].pathFile}`, time: 0, type: 1, userId: 0, userName: "root" });
                     }
                     dbData[i].path = tempJson;
-                };
+                }; 
                 socket.emit("returnHistoricalPath", dbData)
             })
         } else {

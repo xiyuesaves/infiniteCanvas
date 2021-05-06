@@ -607,13 +607,15 @@ function initCanvas() {
         // 监听输入
         userName.addEventListener("input", function(e) {
             checkName(this.value);
+            onlineName(this.value)
         });
         userName.addEventListener("propertychange", function(e) {
             checkName(this.value);
+            onlineName(this.value)
         });
-        userName.addEventListener("change", function(e) {
-            onlineName(this.value);
-        });
+        // userName.addEventListener("change", function(e) {
+        //     onlineName(this.value);
+        // });
 
         // 与服务器建立连接
         socket.on("connect", () => {
@@ -711,7 +713,7 @@ function initCanvas() {
 
         // 在服务器检测用户名结果
         socket.on("checkNameReturn", function(data) {
-            console.log("在服务器中检查用户名" + data);
+            console.log("在服务器中检查用户名", data);
             if (data.status) { // 存在
                 loginBtn.innerText = "登录";
                 logOrReg = "login";
@@ -817,8 +819,8 @@ function initCanvas() {
             const playerBursh = document.querySelector(`#id${data.userId}`);
             const zoomEl = document.querySelector(`#bar-id${data.userId}`);
             let zoomPercentage = data.point.zoomSize / maxZoom * 100;
-            zoomEl.style.top = `${50 - (zoomPercentage / 2)}%`;
             if (playerBursh) {
+                zoomEl.style.top = `${50 - (zoomPercentage / 2)}%`;
                 if (!tempPathArr["id" + data.userId]) {
                     tempPathArr["id" + data.userId] = new Array();
                 }
@@ -845,6 +847,7 @@ function initCanvas() {
                 } else if (tempPathArr["id" + data.userId].length) {
                     pathArrList["id" + data.userId].push(tempPathArr["id" + data.userId]);
                     tempPathArr["id" + data.userId] = new Array();
+                    drenArr(pathArrList);
                 }
                 playerBursh.setAttribute("data-brush-size", data.point.brushSize);
                 playerBursh.setAttribute("data-brush-x", data.point.x);
@@ -866,8 +869,8 @@ function initCanvas() {
                         somY = data.point.y;
                     };
                     if (autoInterval) {
-                        tweenInterval = Math.pow(data.point.brushSize / 2, 0.6);
-                        tweenStride = 3;
+                        tweenInterval = data.point.brushSize / 2;
+                        tweenStride = 2;
                     };
                     ctx.fillStyle = data.point.color;
                     ctx.beginPath();
@@ -876,27 +879,28 @@ function initCanvas() {
                     // 对其他用户的补间
                     let tempX = somX - data.point.x;
                     let tempY = somY - data.point.y;
-                    if (Math.abs(tempX) > tweenInterval || Math.abs(tempY) > tweenInterval || (Math.abs(tempX) > tweenInterval / 2 && Math.abs(tempY) > tweenInterval / 2)) {
-                        let tween = Math.abs(tempX) > Math.abs(tempY) ? Math.abs(tempX) / tweenStride : Math.abs(tempY) / tweenStride;
-                        let tweenX = tempX / tween,
-                            tweenY = tempY / tween;
-                        let stepX = tweenX,
-                            stepY = tweenY;
-                        for (let i = tween - 1; i >= 0; i--) {
-                            let point = {
-                                offsetX: data.point.x + stepX,
-                                offsetY: data.point.y + stepY
-                            };
-                            stepX += tweenX;
-                            stepY += tweenY;
-                            ctx.fillStyle = data.point.color;
-                            ctx.beginPath();
-                            ctx.arc(point.offsetX + (data.point.brushSize / 2), point.offsetY + (data.point.brushSize / 2), data.point.brushSize / 2, 0, 2 * Math.PI);
-                            ctx.fill();
-                        };
-                    };
-                    somX = data.point.x;
-                    somY = data.point.y;
+                    
+                    // if (Math.abs(tempX) > tweenInterval || Math.abs(tempY) > tweenInterval || (Math.abs(tempX) > tweenInterval / 2 && Math.abs(tempY) > tweenInterval / 2)) {
+                    //     let tween = Math.abs(tempX) > Math.abs(tempY) ? Math.abs(tempX) / tweenStride : Math.abs(tempY) / tweenStride;
+                    //     let tweenX = tempX / tween,
+                    //         tweenY = tempY / tween;
+                    //     let stepX = tweenX,
+                    //         stepY = tweenY;
+                    //     for (let i = tween - 1; i >= 0; i--) {
+                    //         let point = {
+                    //             offsetX: data.point.x + stepX,
+                    //             offsetY: data.point.y + stepY
+                    //         };
+                    //         stepX += tweenX;
+                    //         stepY += tweenY;
+                    //         ctx.fillStyle = data.point.color;
+                    //         ctx.beginPath();
+                    //         ctx.arc(point.offsetX + (data.point.brushSize / 2), point.offsetY + (data.point.brushSize / 2), data.point.brushSize / 2, 0, 2 * Math.PI);
+                    //         ctx.fill();
+                    //     };
+                    // };
+                    // somX = data.point.x;
+                    // somY = data.point.y;
                 };
             };
         });
