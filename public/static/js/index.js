@@ -126,19 +126,19 @@ function initCanvas() {
                 break;
             case 13:
                 document.querySelector(".send-msg").click();
-            break;
+                break;
         };
-        if (e.ctrlKey == true && e.keyCode == 90) { //Ctrl+Z
+        if (e.ctrlKey == true && e.keyCode == 90) {
             e.preventDefault();
             withdraw();
             console.log("撤回指令");
         };
-        if (e.ctrlKey == true && e.keyCode == 89) { //Ctrl+Z
+        if (e.ctrlKey == true && e.keyCode == 89) {
             e.preventDefault();
             redo();
             console.log("重做指令");
         };
-        if (e.ctrlKey == true && e.keyCode == 83) { //Ctrl+Z
+        if (e.ctrlKey == true && e.keyCode == 83) {
             e.preventDefault();
             downloadImage();
             console.log("保存指令");
@@ -315,7 +315,7 @@ function initCanvas() {
         ctx.fillStyle = canvasBGC;
         ctx.fillRect(0, 0, canvas.width / dZoom, canvas.height / dZoom)
         ctx.fill();
-        let pathArr = []
+        let pathArr = [];
         // 循环用户数组
         for (let userId in arr) {
             // 检测是否屏蔽该用户
@@ -324,15 +324,15 @@ function initCanvas() {
                 for (let path = 0; path < arr[userId].length; path++) {
                     if (arr[userId][path]) {
                         // 获取所有的路径
-                        pathArr.push(arr[userId][path])
-                    }
+                        pathArr.push(arr[userId][path]);
+                    };
                 };
             };
         };
         // 根据路径创建时间排序
         pathArr.sort(function(a, b) {
-            return a[0].time - b[0].time
-        })
+            return a[0].time - b[0].time;
+        });
         // 绘制所有路径
         for (let path = 0; path < pathArr.length; path++) {
             // 开始绘制路径
@@ -369,6 +369,7 @@ function initCanvas() {
                         console.error(besselPoints);
                     }
                     ctx.stroke();
+                    ctx.closePath();
                 } else {
                     // 点绘制方法,非常消耗性能,不建议使用
                     for (let point = 0; point < pathArr[path].length; point++) {
@@ -392,7 +393,7 @@ function initCanvas() {
                     };
                 };
             };
-        }
+        };
 
         // 高性能拖动残留代码
         if (highPerformanceDrag) {
@@ -996,38 +997,17 @@ function initCanvas() {
                         somY = data.point.y;
                     };
                     if (autoInterval) {
-                        console.log(data.point.brushSize)
                         tweenInterval = data.point.brushSize / 3;
                         tweenStride = tweenInterval;
                     };
-                    ctx.fillStyle = data.point.color;
                     ctx.beginPath();
-                    ctx.arc(data.point.x + (data.point.brushSize / 2), data.point.y + (data.point.brushSize / 2), data.point.brushSize / 2, 0, 2 * Math.PI);
-                    ctx.fill();
-                    // 临时写入绘制数组内,在更新时替换数组内容
-
-                    // 对其他用户的补间
-                    let tempX = somX - data.point.x;
-                    let tempY = somY - data.point.y;
-                    if (Math.abs(tempX) > tweenInterval || Math.abs(tempY) > tweenInterval || (Math.abs(tempX) > tweenInterval / 2 && Math.abs(tempY) > tweenInterval / 2)) {
-                        let tween = Math.abs(tempX) > Math.abs(tempY) ? Math.abs(tempX) / tweenStride : Math.abs(tempY) / tweenStride;
-                        let tweenX = tempX / tween,
-                            tweenY = tempY / tween;
-                        let stepX = tweenX,
-                            stepY = tweenY;
-                        for (let i = tween - 1; i >= 0; i--) {
-                            let point = {
-                                offsetX: data.point.x + stepX,
-                                offsetY: data.point.y + stepY
-                            };
-                            stepX += tweenX;
-                            stepY += tweenY;
-                            ctx.fillStyle = data.point.color;
-                            ctx.beginPath();
-                            ctx.arc(point.offsetX + (data.point.brushSize / 2), point.offsetY + (data.point.brushSize / 2), data.point.brushSize / 2, 0, 2 * Math.PI);
-                            ctx.fill();
-                        };
-                    };
+                    ctx.lineCap = "round";
+                    ctx.lineWidth = data.point.brushSize;
+                    ctx.strokeStyle = data.point.color;
+                    ctx.moveTo(somX + (data.point.brushSize / 2), somY + (data.point.brushSize / 2));
+                    ctx.lineTo(data.point.x + (data.point.brushSize / 2), data.point.y + (data.point.brushSize / 2));
+                    ctx.stroke();
+                    ctx.closePath();
                     somX = data.point.x;
                     somY = data.point.y;
                 };
