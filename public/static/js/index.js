@@ -30,11 +30,17 @@ function initCanvas() {
     const msgList = document.querySelector(".top-msg-list");
     const otherPlayerList = document.querySelector(".other-user-mouse");
     const zoomList = document.querySelector(".right-zoom-indicator");
+    const msgBox = document.querySelector(".omMsg");
+    const onlineEl = document.querySelector(".online");
+    const rightZoomIndicator = document.querySelector(".right-zoom-indicator");
+    const leftMenu = document.querySelector(".left-menu");
     // const testEl = document.querySelector(".full-z");
     // 配置项
+    let runTime = new Date().getTime(); // 运行时钟
     let loadOk = 0; // 历史数据加载状态
     let pathArrList = {}; // 路径数组列表
     let tempPathArr = {}; // 临时绘制路径
+    let withdrawArr = []; // 撤回记录
     let disabledPath = []; // 停止绘制id列表
     let userId = null; // 本地玩家id
     let localUserId = null; // 服务器上用户的id
@@ -59,23 +65,22 @@ function initCanvas() {
         transY = 0;
     let hipX = 0, // 高性能移动坐标
         hipY = 0;
-    let drowLine = true; // 更改绘制模式为线条,可大幅度提高性能,但小几率出现线条扭曲
+    let drowLine = true; // 更改绘制模式为贝塞尔曲线,可大幅度提高性能,但小几率出现线条扭曲
     let imageData; // 图片数据
     let minimumThreshold = 0.1; // 画布最低绘制宽度
     let brushColor = "#000000"; // 笔刷颜色
     let dragStart = false;
     let moveStart = false;
-    let enableTween = true; // 是否启用补间
+    let enableTween = true; // 是否启用补间[已优化,目前此选项几乎不会造成卡顿]
     let autoInterval = true; // 根据当前笔刷大小自动计算补间间隔,开启时"tweenInterval","tweenStride"将无效
     let tweenInterval = 6; // 启用补间的间隔
     let tweenStride = 5; // 补间步幅
-    let highPerformanceDrag = false; // 是否启用高性能拖动
+    let highPerformanceDrag = false; // 是否启用高性能拖动[已优化,不建议启用]
     let loginStatus = false; // 登录状态
     let brushMinSize = 5; // 笔刷最小直径
     let brushMaxSize = 120;
     let brushDefaultSize = 20; // 初始笔刷直径
     let zoomVal = 0; // 记录用缩放值
-    let prohibitedWords = ["测试"]; // 违禁词
     let f1Num = 0; // 切换ui展示状态保存值
     // 宽度变化监听
     window.onresize = function() {
@@ -90,15 +95,10 @@ function initCanvas() {
 
     // 监听快捷键
     document.addEventListener("keydown", function(e) {
-        console.log(e.key)
-        switch (e.key) {
-            case "F7":
+        switch (e.keyCode) {
+            case 118:
                 event.preventDefault();
-                const msgBox = document.querySelector(".omMsg");
-                const onlineEl = document.querySelector(".online");
-                const rightZoomIndicator = document.querySelector(".right-zoom-indicator");
-                const leftMenu = document.querySelector(".left-menu");
-                f1Num++
+                f1Num++;
                 switch (f1Num) {
                     case 1:
                         msgBox.style.display = "none";
@@ -119,24 +119,73 @@ function initCanvas() {
                         leftMenu.style.display = "";
                         f1Num = 0;
                         break;
-                }
+                };
                 break;
-            case "F8":
-                event.preventDefault();
-                let dataUrl = canvas.toDataURL("image/png")
-                let tempA = document.createElement("a");
-                tempA.setAttribute("href",dataUrl);
-                tempA.setAttribute("download","downImg");
-                tempA.click();
+            case 119:
+                downloadImage();
                 break;
-        }
-    })
+        };
+        if (e.ctrlKey == true && e.keyCode == 90) { //Ctrl+Z
+            e.preventDefault();
+            withdraw();
+            console.log("撤回指令");
+        };
+        if (e.ctrlKey == true && e.keyCode == 89) { //Ctrl+Z
+            e.preventDefault();
+            redo();
+            console.log("重做指令");
+        };
+        if (e.ctrlKey == true && e.keyCode == 83) { //Ctrl+Z
+            e.preventDefault();
+            downloadImage();
+            console.log("保存指令");
+        };
+    });
+
+    // 保存画布
+    function downloadImage() {
+        event.preventDefault();
+        let dataUrl = canvas.toDataURL("image/png")
+        let tempA = document.createElement("a");
+        tempA.setAttribute("href", dataUrl);
+        tempA.setAttribute("download", "downImg");
+        tempA.click();
+    }
+
+    // 撤回操作
+    function withdraw() {
+        if (pathArrList[userId].length) {
+            let withdrawPath = pathArrList[userId].pop()
+            console.log("撤回",withdrawPath[0].time)
+            withdrawArr.push(withdrawPath);
+            socket.emit("withdraw", { cookie: Cookies.get("cookieId"), time: withdrawPath[0].time});
+            drenArr(pathArrList);
+        } else {
+            console.log("没有能撤回的步数了");
+        };
+    };
+
+    // 重做上一步
+    function redo() {
+        if (withdrawArr.length) {
+            let redoPath = withdrawArr.pop()
+            pathArrList[userId].push(redoPath);
+            socket.emit("redo", { cookie: Cookies.get("cookieId"), time: redoPath[0].time });
+            drenArr(pathArrList);
+        } else {
+            console.log("没有能重做的步数了");
+        };
+    };
 
     // 监听笔刷位置
     canvas.addEventListener("mousedown", function(e) {
         if (!tempPathArr[userId]) {
             tempPathArr[userId] = new Array();
         };
+        // 清除重做步数
+        if (withdrawArr.length) {
+            withdrawArr = new Array();
+        }
         if (e.buttons === 1) {
             transX = e.offsetX;
             transY = e.offsetY;
@@ -167,9 +216,6 @@ function initCanvas() {
             drenArr(pathArrList);
         };
         if (userId) {
-            if (pathArrList[userId] === undefined) {
-                pathArrList[userId] = new Array();
-            }
             if (tempPathArr[userId].length) {
                 pathArrList[userId].push(tempPathArr[userId]);
                 tempPathArr[userId] = [];
@@ -180,6 +226,7 @@ function initCanvas() {
         emitData();
     });
     canvas.addEventListener("mousemove", function(e) {
+        runTime = new Date().getTime();
         mouseX = e.offsetX;
         mouseY = e.offsetY;
         burshX = mouseX - bursh.offsetWidth / 2;
@@ -235,7 +282,7 @@ function initCanvas() {
                 color: brushColor,
                 brushSize: bursh.offsetWidth / dZoom,
                 tween: e.tween ? true : false,
-                time: new Date().getTime()
+                time: runTime
             })
         } else if (!drowLine) { // 如果是点绘制模式则需要这些数据
             tempPathArr[userId].push({
@@ -272,8 +319,10 @@ function initCanvas() {
             if (disabledPath.indexOf(userId) === -1) {
                 // 循环该用户的所有路径
                 for (let path = 0; path < arr[userId].length; path++) {
-                    // 获取所有的路径
-                    pathArr.push(arr[userId][path])
+                    if (arr[userId][path]) {
+                        // 获取所有的路径
+                        pathArr.push(arr[userId][path])
+                    }
                 };
             };
         };
@@ -292,8 +341,9 @@ function initCanvas() {
                     ctx.lineCap = "round";
                     ctx.lineWidth = pathArr[path][0].brushSize;
                     ctx.strokeStyle = pathArr[path][0].color;
-                    // 新的贝塞尔曲线绘制方法
+                    // 移除补间帧
                     let points = removeTween(pathArr[path]);
+                    // 新的贝塞尔曲线绘制方法
                     let besselPoints = getBessel(points);
                     let int = 0;
                     try {
@@ -445,8 +495,7 @@ function initCanvas() {
             color: brushColor,
             zoomSize: zoomVal
         }
-        socket.emit("pointMove", { point: mouseData, cookie: Cookies.get("cookieId"), time: new Date().getTime() });
-        // testEl.innerText = JSON.stringify(mouseData);
+        socket.emit("pointMove", { point: mouseData, cookie: Cookies.get("cookieId"), time: runTime });
     }
 
     // 高性能移动
@@ -662,9 +711,6 @@ function initCanvas() {
             checkName(this.value);
             onlineName(this.value)
         });
-        // userName.addEventListener("change", function(e) {
-        //     onlineName(this.value);
-        // });
 
         // 与服务器建立连接
         socket.on("connect", () => {
@@ -824,7 +870,7 @@ function initCanvas() {
                 };
             };
             putSystemMsg(`----------------以上是历史消息----------------`);
-            putSystemMsg(`欢迎进入画布,${loaclUserName} 以下是基础操作`);
+            putSystemMsg(`操作介绍`);
             putSystemMsg(`左键绘制,右键拖动,滚轮缩放`);
             putSystemMsg(`鼠标放置在"在线人数"上可显示用户id和在线列表`);
             putSystemMsg(`输入#disable 他人id 可以屏蔽此id绘制的内容`);
@@ -860,6 +906,39 @@ function initCanvas() {
                 };
             }
         });
+
+        // 接收服务器错误信息
+        socket.on("errorCode", function(data) {
+            switch (data.code) {
+                case 0:
+                    // 强制刷新页面
+                case 1:
+                    // 清除cookie记录值
+            }
+        })
+
+        // 接收服务器端保存的重做列表
+        socket.on("returnRedoPath", function(data) {
+            console.log("获取到在线重做列表", data)
+            data.sort(function(a, b) {
+                return b[0].time - a[0].time
+            })
+            withdrawArr = data
+        })
+
+        // 其他用户的撤回操作
+        socket.on("userWithdraw", function (data) {
+            console.log("其他用户的撤回操作", data)
+            pathArrList["id" + data.userId].pop();
+            drenArr(pathArrList);
+        })
+
+        // 其他用户的重做操作
+        socket.on("userRedo", function (data) {
+            console.log("其他用户的重做操作", data)
+            pathArrList["id" + data.userId].push(data.path);
+            drenArr(pathArrList);
+        })
 
         // 接收其他用户的坐标信息
         let somX, somY, playrDrag = false;
@@ -1039,6 +1118,10 @@ function initCanvas() {
         // 登录成功方法
         function loginSuccess() {
             if (!loginStatus) {
+                // 初始化本地路径
+                if (pathArrList[userId] === undefined) {
+                    pathArrList[userId] = new Array();
+                }
                 loginStatus = true;
                 console.log("开始请求登录数据");
                 infoText.innerText = "正在加载历史数据,用户列表...";
@@ -1048,6 +1131,8 @@ function initCanvas() {
                 socket.emit("getHistoricalPath", { cookie: Cookies.get("cookieId") });
                 // 获取历史消息
                 socket.emit("getHistoricalMessage", { cookie: Cookies.get("cookieId") });
+                // 获取重做列表
+                socket.emit("getRedoPath", { cookie: Cookies.get("cookieId") });
             };
             loginView.className = "login disable";
         };
@@ -1230,49 +1315,4 @@ function initCanvas() {
         })
     }
     initSockit()
-
-    // 检查违禁词
-    function checkProhibitedWords(name) {
-        for (let i = 0; i < prohibitedWords.length; i++) {
-            if (name.includes(prohibitedWords[i])) {
-                return false;
-            };
-        };
-        return true;
-    }
-};
-
-// 初始化色块
-function initColorBlock() {
-    const colorArr = [
-        "#ec6841",
-        "#f19149",
-        "#f7b551",
-        "#fff45c",
-        "#b3d465",
-        "#7fc269",
-        "#31b16c",
-        "#12b4b1",
-        "#448ac9",
-        "#556fb5",
-        "#5f52a0",
-        "#8957a1",
-        "#ad5da1",
-        "#ea68a2",
-        "#000000",
-        "#d9d9d9"
-    ];
-    const blockNum = colorArr.length >= 32 ? colorArr.length : 32;
-    const selectColorBox = document.querySelector(".top-select-color");
-    for (let i = 0; i < blockNum; i++) {
-        const colorValue = colorArr[i] || "#ffffff";
-        const colorEl = document.createElement("div");
-        colorEl.setAttribute("title", colorValue);
-        colorEl.setAttribute("style", "background-color: " + colorValue + ";");
-        colorEl.className = "color-box";
-        if (i === 0) {
-            colorEl.className = "color-box select";
-        };
-        selectColorBox.appendChild(colorEl);
-    };
 };
