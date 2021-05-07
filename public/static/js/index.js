@@ -1308,9 +1308,9 @@ function initCanvas() {
                         putSystemMsg(`没有在屏蔽列表找到${enableId}`);
                     }
                 } else {
-                    inputMsg.value = "";
                     socket.emit("sendMsg", { cookie: Cookies.get("cookieId"), content: tempInputVal });
                 }
+                inputMsg.value = "";
             }
         })
     }
