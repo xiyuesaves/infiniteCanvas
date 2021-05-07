@@ -156,9 +156,9 @@ function initCanvas() {
     function withdraw() {
         if (pathArrList[userId].length) {
             let withdrawPath = pathArrList[userId].pop()
-            console.log("撤回",withdrawPath[0].time)
+            console.log("撤回", withdrawPath[0].time)
             withdrawArr.push(withdrawPath);
-            socket.emit("withdraw", { cookie: Cookies.get("cookieId"), time: withdrawPath[0].time});
+            socket.emit("withdraw", { cookie: Cookies.get("cookieId"), time: withdrawPath[0].time });
             drenArr(pathArrList);
         } else {
             console.log("没有能撤回的步数了");
@@ -616,7 +616,7 @@ function initCanvas() {
             el.addEventListener("click", function() {
                 if (this.className.indexOf("select") === -1) {
                     cleanSelect();
-                    this.setAttribute("class", "color-box select");
+                    this.className = "color-box select";
                     brushColor = this.getAttribute("title");
                     colorInput.setAttribute("placeholder", brushColor);
                     colorInput.value = "";
@@ -630,17 +630,14 @@ function initCanvas() {
         });
 
         function getBrushColor() {
-            colorBox.forEach((el, index) => {
-                if (el.className.indexOf("select") !== -1) {
-                    brushColor = el.getAttribute("title");
-                    colorInput.setAttribute("placeholder", brushColor);
-                    colorInput.value = "";
-                    selectColor.style.backgroundColor = brushColor;
-                    selectColor.value = brushColor;
-                    bursh.style.backgroundColor = brushColor + "6B";
-                    zoomIndicator.style.backgroundColor = brushColor + "6B";
-                };
-            });
+            const el = document.querySelector(".color-box.select");
+            brushColor = el.getAttribute("title");
+            colorInput.setAttribute("placeholder", brushColor);
+            colorInput.value = "";
+            selectColor.style.backgroundColor = brushColor;
+            selectColor.value = brushColor;
+            bursh.style.backgroundColor = brushColor + "6B";
+            zoomIndicator.style.backgroundColor = brushColor + "6B";
         };
         // 获取笔刷颜色
         getBrushColor();
@@ -927,14 +924,14 @@ function initCanvas() {
         })
 
         // 其他用户的撤回操作
-        socket.on("userWithdraw", function (data) {
+        socket.on("userWithdraw", function(data) {
             console.log("其他用户的撤回操作", data)
             pathArrList["id" + data.userId].pop();
             drenArr(pathArrList);
         })
 
         // 其他用户的重做操作
-        socket.on("userRedo", function (data) {
+        socket.on("userRedo", function(data) {
             console.log("其他用户的重做操作", data)
             pathArrList["id" + data.userId].push(data.path);
             drenArr(pathArrList);
@@ -1000,7 +997,6 @@ function initCanvas() {
                         tweenInterval = data.point.brushSize / 3;
                         tweenStride = tweenInterval;
                     };
-                    // if (true) {}
                     ctx.fillStyle = data.point.color;
                     ctx.beginPath();
                     ctx.arc(data.point.x + (data.point.brushSize / 2), data.point.y + (data.point.brushSize / 2), data.point.brushSize / 2, 0, 2 * Math.PI);
@@ -1092,7 +1088,6 @@ function initCanvas() {
             for (let i = 0; i < lockUserList.length; i++) {
                 newUserAdd(lockUserList[i]);
             };
-            console.log(lockUserList);
         };
 
         // 初始化用户列表
@@ -1162,22 +1157,22 @@ function initCanvas() {
                         if (reg.test(name)) {
                             return true;
                         } else {
-                            infoText.innerText = "不要乱填奇奇怪怪的东西阿喂!";
+                            infoText.innerText = "含有不允许的字符";
                             return false;
                         };
                     } else {
-                        infoText.innerText = "名字太——长——啦——————";
+                        infoText.innerText = "用户名过长";
                         return false;
                     };
                 } else if (name.length > 0) {
-                    infoText.innerText = "这也太短了吧(?";
+                    infoText.innerText = "用户名过短";
                     return false;
                 } else {
                     infoText.innerText = "加入绘画";
                     return false;
                 };
             } else {
-                infoText.innerText = "emmmm你这名字似乎不太行...";
+                infoText.innerText = "含有屏蔽词";
                 return false;
             };
         };
@@ -1259,31 +1254,31 @@ function initCanvas() {
                     if (userPsw.value.length <= 16) {
                         if (logOrReg) {
                             if (logOrReg === "login") {
-                                disableLogin("正在向大家问好...");
+                                disableLogin("正在登录...");
                                 socket.emit(logOrReg, {
                                     name: userName.value,
                                     psw: userPsw.value
                                 });
                             } else {
                                 if (invitationCode.value.length) {
-                                    disableLogin("正在自报家门...");
+                                    disableLogin("正在注册...");
                                     socket.emit(logOrReg, {
                                         name: userName.value,
                                         psw: userPsw.value,
                                         invitationCode: invitationCode.value
                                     });
                                 } else {
-                                    initLoginView("注册需要邀请码哦");
+                                    initLoginView("请填写邀请码");
                                 };
                             };
                         } else {
-                            infoText.innerText = "服务器似乎没有理你,再试一下吧";
+                            infoText.innerText = "服务器未响应,请尝试刷新页面";
                         };
                     } else {
-                        infoText.innerText = "密码太—长—啦———";
+                        infoText.innerText = "密码过长";
                     };
                 } else {
-                    infoText.innerText = "密码也太短了吧!";
+                    infoText.innerText = "密码过短";
                 };
             };
         });
@@ -1301,7 +1296,6 @@ function initCanvas() {
                     let enableId = tempInputVal.replace("#enable ", "");
                     if (disabledPath.indexOf(enableId) !== -1) {
                         disabledPath.splice(disabledPath.indexOf(enableId), 1);
-                        console.log(disabledPath)
                         drenArr(pathArrList);
                         putSystemMsg(`已解除屏蔽${enableId}用户绘制的图案`);
                     } else {
