@@ -124,6 +124,9 @@ function initCanvas() {
             case 119:
                 downloadImage();
                 break;
+            case 13:
+                document.querySelector(".send-msg").click();
+            break;
         };
         if (e.ctrlKey == true && e.keyCode == 90) { //Ctrl+Z
             e.preventDefault();
