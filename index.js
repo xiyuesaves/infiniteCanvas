@@ -1,7 +1,5 @@
 const express = require('express');
-let app = express();
-app.use(express.static('public'));
-app.use('/cookies.js', express.static('node_modules/js-cookie/src/js.cookie.js'));
+const app = express();
 const server = require('http').Server(app);
 const io = require('socket.io')(server);
 const fs = require('fs');
@@ -9,86 +7,104 @@ const fs = require('fs');
 const sqlite3 = require("sqlite3");
 // 链接数据库
 const db = new sqlite3.Database("main.db");
+// 封装异步sql方法
+db.runSync = function(sql) {
+    return new Promise((resolve, reject) => {
+        db.run(sql, function(err) {
+            resolve(err);
+        });
+    });
+}
+db.getSync = function(sql) {
+    return new Promise((resolve, reject) => {
+        db.get(sql, function(err, data) {
+            resolve({ err: err, data: data });
+        });
+    });
+}
+db.allSync = function(sql) {
+    return new Promise((resolve, reject) => {
+        db.all(sql, function(err, data) {
+            resolve({ err: err, data: data });
+        });
+    });
+}
 
 // 检查数据库是否需要初始化
-db.all("SELECT name FROM sqlite_master", function(err, data) {
-    let tableArr = [
-        "canvas",
-        "canvas_data",
-        "user",
-        "invitationCode",
-        "message",
-        "path_list"
-    ];
-    if (!err) {
+async function initDatabase() {
+    const dbData = await db.allSync('SELECT name FROM sqlite_master');
+    if (!dbData.err) {
+        const data = dbData.data;
+        let tableArr = [
+            "canvas",
+            "canvas_data",
+            "user",
+            "invitationCode",
+            "message",
+            "path_list"
+        ];
+        // 剔除已存在的数据库
         for (let i = data.length - 1; i >= 0; i--) {
             if (tableArr.indexOf(data[i].name) !== -1) {
                 tableArr.splice(tableArr.indexOf(data[i].name), 1);
             };
         };
+        // 恢复出错数据库
         if (tableArr.length) {
             console.log("数据库不完整,缺少", tableArr);
             console.log("正在修复");
             for (let i = 0; i < tableArr.length; i++) {
                 switch (tableArr[i]) {
                     case "canvas":
-                        sqlRun(`CREATE TABLE "canvas" ("canvasName" TEXT,"canvasId" INTEGER,"createTime" TEXT,"isPrivate" TEXT);`);
+                        db.runSync(`CREATE TABLE "canvas" ("canvasName" TEXT,"canvasId" INTEGER,"createTime" TEXT,"isPrivate" TEXT);`);
                         break;
                     case "canvas_data":
-                        sqlRun(`CREATE TABLE "canvas_data" ("canvasId" TEXT,"userId" INTEGER);`);
+                        db.runSync(`CREATE TABLE "canvas_data" ("canvasId" TEXT,"userId" INTEGER);`);
                         break;
                     case "user":
-                        sqlRun(`CREATE TABLE "user" (  "userId" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,  "userName" text,  "createTime" TEXT,  "cookieId" TEXT,  "password" TEXT,  "invitePeople" TEXT,  "invitationCode" TEXT);`);
+                        db.runSync(`CREATE TABLE "user" (  "userId" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,  "userName" text,  "createTime" TEXT,  "cookieId" TEXT,  "password" TEXT,  "invitePeople" TEXT,  "invitationCode" TEXT);`);
                         break;
                     case "invitationCode":
-                        sqlRun(`CREATE TABLE "invitationCode" ("invitationCode" TEXT,"createUserId" TEXT,"usingUserId" TEXT);`);
+                        db.runSync(`CREATE TABLE "invitationCode" ("invitationCode" TEXT,"createUserId" TEXT,"usingUserId" TEXT);`);
                         break;
                     case "message":
-                        sqlRun(`CREATE TABLE "message" (  "msgId" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,  "userName" TEXT,  "userId" INTEGER,  "content" TEXT,  "canvasId" INTEGER,  "time" TEXT,  "type" integer);`);
+                        db.runSync(`CREATE TABLE "message" (  "msgId" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,  "userName" TEXT,  "userId" INTEGER,  "content" TEXT,  "canvasId" INTEGER,  "time" TEXT,  "type" integer);`);
                         break;
                     case "path_list":
-                        sqlRun(`CREATE TABLE "path_list" (  "userId" integer,  "userName" TEXT,  "pathFile" TEXT,  "canvasId" INTEGER,  "disable" integer DEFAULT 0);`);
+                        db.runSync(`CREATE TABLE "path_list" (  "userId" integer,  "userName" TEXT,  "pathFile" TEXT,  "canvasId" INTEGER,  "disable" integer DEFAULT 0);`);
                         break;
                 };
             };
+            console.log("修复完成");
         } else {
             console.log("数据库验证完成");
         };
-    };
-});
+        clearPathFile();
+    } else {
+        console.error("验证数据库出现错误", dbData.err);
+    }
+}
+initDatabase()
 
 // 整理路径数据
-function clearPathFile() {
-    db.all("SELECT pathFile FROM path_list", function(err, data) {
-        if (!err) {
-            let pathFile = fs.readdirSync("path/");
-            for (let i = 0; i < data.length; i++) {
-                if (pathFile.indexOf(data[i].pathFile) !== -1) {
-                    pathFile.splice(pathFile.indexOf(data[i].pathFile), 1);
-                };
-            };
-            if (pathFile.length) {
-                console.log(`清理无索引的路径文件，共${pathFile.length}条`);
-                for (let i = 0; i < pathFile.length; i++) {
-                    fs.unlinkSync(`path/${pathFile[i]}`);
-                };
-            } else {
-                console.log("当前没有无索引路径文件");
+async function clearPathFile() {
+    const dbData = await db.allSync('SELECT pathFile FROM path_list');
+    if (!dbData.err) {
+        let pathFile = fs.readdirSync("path/");
+        for (let i = 0; i < dbData.data.length; i++) {
+            if (pathFile.indexOf(dbData.data[i].pathFile) !== -1) {
+                pathFile.splice(pathFile.indexOf(dbData.data[i].pathFile), 1);
             };
         };
-    });
-};
-clearPathFile();
-
-// 封装run方法[无意义]
-function sqlRun(sql) {
-    db.run(sql, function(err) {
-        if (err) {
-            console.error("sql执行失败", err);
+        if (pathFile.length) {
+            console.log(`清理无索引的路径文件，共${pathFile.length}条`);
+            for (let i = 0; i < pathFile.length; i++) {
+                fs.unlinkSync(`path/${pathFile[i]}`);
+            };
         } else {
-            console.log("成功执行", sql);
+            console.log("当前没有无索引路径文件");
         };
-    });
+    };
 };
 
 // 临时邀请码
@@ -100,9 +116,42 @@ const canvasId = 0;
 // 储存用户临时路径
 let userPath = {};
 
+// 处理http服务
+
+// 返回正确文件地址
+app.get('/cookies.js', function(req, res) {
+    res.sendFile(`${__dirname}/node_modules/js-cookie/src/js.cookie.js`);
+});
+// 处理错误地址
+app.get('/room', function(req, res) {
+    res.redirect(302, '/');
+});
+// 使用内置中间键托管静态文件
+app.use(express.static('public'));
+// 处理错误地址
+app.get('/room/*/*', function(req, res) {
+    res.redirect(302, '/');
+});
+// 进入绘画房间
+app.get('/room/*', function(req, res) {
+    const roomName = req.path.replace(/\/room\//, "");
+    const roomList = ["xiyue", "test"];
+    if (roomList.indexOf(roomName) !== -1) {
+        console.log(`进入房间${roomName}`)
+        res.sendFile(`${__dirname}/public/room/index.html`);
+    } else {
+        console.log(`没有找到房间${roomName}`)
+        res.sendFile(`${__dirname}/public/errPage/notFoundRoom.html`);
+    }
+});
+// 处理错误地址
+app.get('/*', function(req, res) {
+    res.redirect(302, '/');
+});
+
 const point = 3399;
-console.log(`服务已启动,正在监听${point}`)
 server.listen(point);
+console.log(`服务已启动,正在监听${point}`)
 
 let userList = [];
 
@@ -133,7 +182,7 @@ io.on('connection', (socket) => {
         console.log("cookie登录", data.cookie)
         db.get("SELECT userName,userId,cookieId FROM user WHERE user.cookieId = ?", [data.cookie], function(err, dbData) {
             if (dbData) {
-                // 这条判断是不会出错的
+                // 这条判断是不会出错的[我也不知道为什么要写...]
                 if (data.cookie === dbData.cookieId) {
                     if (!checkCookie(data.cookie)) {
                         socket.emit("loginReturn", { status: true, cookieId: data.cookie, name: dbData.userName, id: dbData.userId });
@@ -331,7 +380,7 @@ io.on('connection', (socket) => {
             console.log(`撤回${pathFile}`);
             db.run("UPDATE path_list SET disable = ? WHERE pathFile = ?", [1, pathFile], function(err, dbData) {
                 if (!err) {
-                    socket.broadcast.emit("userWithdraw", {userId: checkCookie(data.cookie).userId});
+                    socket.broadcast.emit("userWithdraw", { userId: checkCookie(data.cookie).userId });
                 } else {
                     console.log("撤回出错", err)
                     sendMessage({ content: "撤回失败,没有进行任何操作", time: 0, type: 1, userId: 0, userName: "root", only: true });
@@ -349,7 +398,7 @@ io.on('connection', (socket) => {
             db.run("UPDATE path_list SET disable = ? WHERE pathFile = ?", [0, pathFile], function(err, dbData) {
                 if (!err) {
                     let pathList = JSON.parse(fs.readFileSync(`path/${pathFile}`).toString());
-                    socket.broadcast.emit("userRedo", {userId: checkCookie(data.cookie).userId, path:pathList} );
+                    socket.broadcast.emit("userRedo", { userId: checkCookie(data.cookie).userId, path: pathList });
                 } else {
                     sendMessage({ content: "重做失败,没有进行任何操作", time: 0, type: 1, userId: 0, userName: "root", only: true });
                 }
@@ -412,6 +461,7 @@ io.on('connection', (socket) => {
     };
 });
 
+// 更新用户cookie值
 function updateCookieId(userId, cookieId) {
     db.run("UPDATE user SET cookieId = ? WHERE userId = ?", [cookieId, userId], function(err, data) {});
 };
