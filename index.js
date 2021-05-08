@@ -105,8 +105,8 @@ console.log(`服务已启动,正在监听${point}`)
 server.listen(point);
 
 let userList = [];
-let userNum = 0;
 
+// socketio
 io.on('connection', (socket) => {
     // 登录请求
     socket.on("login", function(data) {
