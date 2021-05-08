@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>没有此房间</title>
+</head>
+
+<body>
+    <h1>没有此房间,3秒后返回首页</h1>
+</body>
+<style type="text/css">
+	h1{
+		width: 100%;
+		font-size: 34px;
+		text-align: center;
+		margin-top: 60px;
+		color: #666666;
+		font-weight: lighter;
+	}
+</style>
+<script type="text/javascript">
+let times = 3;
+
+function time() {
+    times--;
+    setTimeout(function() {
+        document.querySelector("h1").innerText = `没有此房间,${times}秒后返回首页`;
+        if (times === 0) {
+            window.location = "/";
+        } else {
+            time();
+        };
+    }, 1000);
+};
+time();
+</script>
+
+</html>

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>无限画布-测试</title>
+    <script src='../socket.io/socket.io.js'></script>
+    <script src='../cookies.js'></script>
+    <script src='static/js/checkProhibitedWords.js'></script>
+    <script src='static/js/initColorBlock.js'></script>
+    <script src='static/js/index.js'></script>
+    <link rel='stylesheet' type='text/css' href='static/css/index.css'>
+    <meta name="viewport" content="width=device-width, user-scalable=no,initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+</head>
+
+<body>
+    <!-- 连接服务器 -->
+    <div class="wating-service">
+        连接服务器中...
+    </div>
+    <div class="login">
+        <p class="login-info">加入绘画</p>
+        <input class="input-user-name" type="text" placeholder="写上别人对你的称呼?" name="">
+        <input class="input-user-psw" type="password" placeholder="密码可别忘了" name="">
+        <input class="input-invitation-code disable" type="text" placeholder="第一次来可是需要带路人的哦" name="">
+        <button class="login-btn">
+            注册
+        </button>
+    </div>
+    <!-- 菜单 -->
+    <div class="menus">
+        <!-- <p class="full-z"></p> -->
+        <!-- 左侧菜单 -->
+        <div class="left-menu">
+            <div class="top-select-color"></div>
+            <div class="input-color-value">
+                <input onkeydown="" class="input-color" maxlength="7" type="text" placeholder="#ffffff" name="">
+                <input title="点击选取颜色" class="color-view" style="background-color: #ffffff;" type="color"  name="">
+            </div>
+            <input title="调整笔刷大小" class="brush-size-range" type="range" value="0" min="0" max="100" step="1"/>
+        </div>
+        <!-- 人数显示 -->
+        <div class="online">
+            <p class="total-num">当前在线:0人</p>
+            <div class="online-list">
+            </div>
+        </div>
+        <!-- 聊天框 -->
+        <div class="omMsg">
+            <div class="top-msg-list">
+                <!-- <span class="msg-text">
+                    <p class="user-name">曦月</p>
+                    <p class="content">测试测试啦</p>
+                </span>
+                <span class="msg-text your-self">
+                    <p class="user-name">曦月</p>
+                    <p class="content">123123123123123123123</p>
+                </span>
+                <span class="system-info">
+                    你已经上线啦
+                </span> -->
+            </div>
+            <div class="bottom-msg-input">
+                <input class="input-msg" placeholder="click this" type="texts" name="">
+                <button class="send-msg">send</button>
+            </div>
+        </div>
+        <!-- 右侧缩放条 -->
+        <div class="right-zoom-indicator">
+            <!-- <div class="indicator-tag">
+                <p class="tg-name">测试名称</p>
+            </div> -->
+            <div class="indicator-tag your-self">
+            </div>
+        </div>
+    </div>
+    <!-- 笔刷显示 -->
+    <div id="brush"></div>
+    <div class="other-user-mouse">
+        <!-- <div id="player-id" class="player-mouse">
+            <p class="user-name">测试id测试id测试id测试id</p>
+        </div> -->
+    </div>
+    <canvas id="canvas">
+    </canvas>
+</body>
+
+</html>
