@@ -80,7 +80,7 @@ function clearPathFile() {
 };
 clearPathFile();
 
-// 封装run方法
+// 封装run方法[无意义]
 function sqlRun(sql) {
     db.run(sql, function(err) {
         if (err) {
@@ -91,8 +91,10 @@ function sqlRun(sql) {
     });
 };
 
+// 临时邀请码
 const invitationCode = "xiyue";
 
+// 临时画布id
 const canvasId = 0;
 
 // 储存用户临时路径
