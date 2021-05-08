@@ -7,6 +7,7 @@ const fs = require('fs');
 const sqlite3 = require("sqlite3");
 // 链接数据库
 const db = new sqlite3.Database("main.db");
+
 // 封装异步sql方法
 db.runSync = function(sql) {
     return new Promise((resolve, reject) => {
@@ -51,7 +52,7 @@ async function initDatabase() {
         };
         // 恢复出错数据库
         if (tableArr.length) {
-            console.log("数据库不完整,缺少", tableArr);
+            console.log("数据库缺失", tableArr);
             console.log("正在修复");
             for (let i = 0; i < tableArr.length; i++) {
                 switch (tableArr[i]) {
@@ -76,15 +77,13 @@ async function initDatabase() {
                 };
             };
             console.log("修复完成");
-        } else {
-            console.log("数据库验证完成");
-        };
+        }
         clearPathFile();
     } else {
         console.error("验证数据库出现错误", dbData.err);
     }
 }
-initDatabase()
+initDatabase();
 
 // 整理路径数据
 async function clearPathFile() {
@@ -97,24 +96,36 @@ async function clearPathFile() {
             };
         };
         if (pathFile.length) {
-            console.log(`清理无索引的路径文件，共${pathFile.length}条`);
+            console.log(`清理无用路径文件，共${pathFile.length}条`);
             for (let i = 0; i < pathFile.length; i++) {
                 fs.unlinkSync(`path/${pathFile[i]}`);
             };
-        } else {
-            console.log("当前没有无索引路径文件");
-        };
-    };
+        }
+        startHttpServer()
+    } else {
+        console.error("获取路径文件出错", dbData.err)
+    }
 };
 
-// 临时邀请码
+// 邀请码[测试用]
 const invitationCode = "xiyue";
 
-// 临时画布id
+// 画布id[测试用]
 const canvasId = 0;
+
+// 房间列表[测试用]
+const roomList = ["xiyue", "test"];
 
 // 储存用户临时路径
 let userPath = {};
+
+// http服务端口
+const point = 3399;
+
+function startHttpServer() {
+    server.listen(point);
+    console.log(`服务已启动,正在监听${point}`)
+}
 
 // 处理http服务
 
@@ -124,18 +135,18 @@ app.get('/cookies.js', function(req, res) {
 });
 // 处理错误地址
 app.get('/room', function(req, res) {
-    res.redirect(302, '/');
+    // res.redirect(302, '/');
+    res.sendFile(`${__dirname}/public/errPage/errImg/404.png`)
 });
 // 使用内置中间键托管静态文件
 app.use(express.static('public'));
 // 处理错误地址
 app.get('/room/*/*', function(req, res) {
-    res.redirect(302, '/');
+    res.sendFile(`${__dirname}/public/errPage/errImg/404.png`)
 });
 // 进入绘画房间
 app.get('/room/*', function(req, res) {
     const roomName = req.path.replace(/\/room\//, "");
-    const roomList = ["xiyue", "test"];
     if (roomList.indexOf(roomName) !== -1) {
         console.log(`进入房间${roomName}`)
         res.sendFile(`${__dirname}/public/room/index.html`);
@@ -146,12 +157,8 @@ app.get('/room/*', function(req, res) {
 });
 // 处理错误地址
 app.get('/*', function(req, res) {
-    res.redirect(302, '/');
+    res.sendFile(`${__dirname}/public/errPage/errImg/404.png`)
 });
-
-const point = 3399;
-server.listen(point);
-console.log(`服务已启动,正在监听${point}`)
 
 let userList = [];
 
@@ -163,7 +170,7 @@ io.on('connection', (socket) => {
         db.get("SELECT userName,password,userId FROM user WHERE user.userName = ?", [data.name], function(err, dbData) {
             if (data.name === dbData.userName && data.psw === dbData.password) {
                 if (!checkId(dbData.userId)) {
-                    let cookieId = Buffer.from("user" + data.name + new Date().getTime() + "time").toString('base64');
+                    let cookieId = Buffer.from(data.name + new Date().getTime()).toString('base64');
                     socket.emit("loginReturn", { status: true, cookieId: cookieId, name: data.name, id: dbData.userId });
                     updateCookieId(dbData.userId, cookieId);
                     newUserAdd(dbData.userName, dbData.userId, cookieId);
@@ -432,6 +439,7 @@ io.on('connection', (socket) => {
             console.log("没有通过检测 getRedoPath", data)
         }
     })
+
     // 广播消息 [未完成多canvas]
     function sendMessage(msg) {
         let only = msg.only || false
@@ -453,7 +461,7 @@ io.on('connection', (socket) => {
     function userDisconnect(userSocket) {
         for (let i = 0; i < userList.length; i++) {
             if (userList[i].socket == userSocket) {
-                console.log("用户下线", userList[i].userName);
+                console.log("用户离开房间", userList[i].userName);
                 socket.broadcast.emit("userDisconnect", { userName: userList[i].userName, userId: userList[i].userId });
                 userList.splice(i, 1);
             };
