@@ -887,14 +887,7 @@ function initCanvas() {
                     };
                 };
             };
-            putSystemMsg(`----------------以上是历史消息----------------`);
-            putSystemMsg(`操作介绍`);
-            putSystemMsg(`左键绘制,右键拖动,滚轮缩放`);
-            putSystemMsg(`鼠标放置在"在线人数"上可显示用户id和在线列表`);
-            putSystemMsg(`输入#disable 他人id 可以屏蔽此id绘制的内容`);
-            putSystemMsg(`输入#enable 他人id 可以解禁此id绘制的内容`);
-            putSystemMsg(`例如,禁用id1的用户 #disable id1`);
-            putSystemMsg(`快捷键,f7切换ui展示,f8保存当前视图`);
+            putSystemMsg(`----------------/help 查看帮助----------------`);
         });
 
         // 返回历史路径信息
@@ -1286,20 +1279,42 @@ function initCanvas() {
         // 监听发送消息按钮
         sendBtn.addEventListener("click", function() {
             let tempInputVal = inputMsg.value;
+            let reg = new RegExp('^/')
             if (tempInputVal.length) {
-                if (tempInputVal.includes("#disable")) {
-                    let disableId = tempInputVal.replace("#disable ", "");
-                    disabledPath.push(disableId);
-                    putSystemMsg(`已屏蔽${disableId}用户绘制的图案`);
-                    drenArr(pathArrList);
-                } else if (tempInputVal.includes("#enable")) {
-                    let enableId = tempInputVal.replace("#enable ", "");
-                    if (disabledPath.indexOf(enableId) !== -1) {
-                        disabledPath.splice(disabledPath.indexOf(enableId), 1);
-                        drenArr(pathArrList);
-                        putSystemMsg(`已解除屏蔽${enableId}用户绘制的图案`);
+                // 判断是不是命令
+                if (reg.test(tempInputVal)) {
+                    if (/^\/disable/.test(tempInputVal)) {
+                        let str2arr = tempInputVal.split(" ");
+                        if (str2arr.length === 2) {
+                            disabledPath.push(str2arr[1]);
+                            putSystemMsg(`已屏蔽 ${str2arr[1]} 绘制的内容`);
+                            drenArr(pathArrList);
+                        } else {
+                            putSystemMsg(`命令或参数错误`);
+                        }
+                    } else if (/^\/enable/.test(tempInputVal)) {
+                        let str2arr = tempInputVal.split(" ");
+                        if (str2arr.length === 2) {
+                            if (disabledPath.indexOf(str2arr[1]) !== -1) {
+                                disabledPath.splice(disabledPath.indexOf(str2arr[1]), 1);
+                                drenArr(pathArrList);
+                                putSystemMsg(`已解除屏蔽 ${str2arr[1]} 绘制的内容`);
+                            } else {
+                                putSystemMsg(`没有在屏蔽列表找到 ${str2arr[1]}`);
+                            }
+                        } else {
+                            putSystemMsg(`命令或参数错误`);
+                        }
+                    } else if (/^\/help/.test(tempInputVal)) {
+                        putSystemMsg(`操作介绍`);
+                        putSystemMsg(`左键绘制,右键拖动,滚轮缩放`);
+                        putSystemMsg(`鼠标放置在"在线人数"上可显示用户id和在线列表`);
+                        putSystemMsg(`输入/disable 他人id 可以屏蔽此id绘制的内容`);
+                        putSystemMsg(`输入/enable 他人id 可以解禁此id绘制的内容`);
+                        putSystemMsg(`例如,禁用id1的用户 /disable id1`);
+                        putSystemMsg(`快捷键,f7切换ui展示,ctrl + s/f8保存当前视图`);
                     } else {
-                        putSystemMsg(`没有在屏蔽列表找到${enableId}`);
+                        putSystemMsg(`命令错误`);
                     }
                 } else {
                     socket.emit("sendMsg", { cookie: Cookies.get("cookieId"), content: tempInputVal });
