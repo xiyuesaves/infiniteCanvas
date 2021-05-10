@@ -3,7 +3,7 @@
 // 取消浏览器默认右键菜单
 window.oncontextmenu = function(e) {
     e.preventDefault();
-}
+};
 
 window.onload = function() {
     // 初始化色块
@@ -14,6 +14,7 @@ window.onload = function() {
 
 // 初始化画布
 function initCanvas() {
+    // 通信库
     const socket = io();
     // 主要操作元素
     const canvas = document.querySelector("#canvas");
@@ -76,11 +77,10 @@ function initCanvas() {
     let brushColor = "#000000"; // 笔刷颜色
     let dragStart = false;
     let moveStart = false;
-    let enableTween = true; // 是否启用补间[已优化,目前此选项几乎不会造成卡顿]
+    let enableTween = true; // 是否启用补间[如果启用drowLine则几乎不会造成卡顿]
     let autoInterval = true; // 根据当前笔刷大小自动计算补间间隔,开启时"tweenInterval","tweenStride"将无效
     let tweenInterval = 6; // 启用补间的间隔
     let tweenStride = 5; // 补间步幅
-    let highPerformanceDrag = false; // 是否启用高性能拖动[已优化,不建议启用]
     let loginStatus = false; // 登录状态
     let brushMinSize = 5; // 笔刷最小直径
     let brushMaxSize = 120;
@@ -93,7 +93,7 @@ function initCanvas() {
         canvas.height = window.innerHeight;
         ctx.scale(dZoom, dZoom);
         drenArr(pathArrList);
-    }
+    };
     // 初始化大小
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
@@ -153,18 +153,18 @@ function initCanvas() {
     // 保存画布
     function downloadImage() {
         event.preventDefault();
-        let dataUrl = canvas.toDataURL("image/png")
+        let dataUrl = canvas.toDataURL("image/png");
         let tempA = document.createElement("a");
         tempA.setAttribute("href", dataUrl);
         tempA.setAttribute("download", "downImg");
         tempA.click();
-    }
+    };
 
     // 撤回操作
     function withdraw() {
         if (pathArrList[userId].length) {
-            let withdrawPath = pathArrList[userId].pop()
-            console.log("撤回", withdrawPath[0].time)
+            let withdrawPath = pathArrList[userId].pop();
+            console.log("撤回", withdrawPath[0].time);
             withdrawArr.push(withdrawPath);
             socket.emit("withdraw", { cookie: Cookies.get("cookieId"), time: withdrawPath[0].time });
             drenArr(pathArrList);
@@ -176,7 +176,7 @@ function initCanvas() {
     // 重做上一步
     function redo() {
         if (withdrawArr.length) {
-            let redoPath = withdrawArr.pop()
+            let redoPath = withdrawArr.pop();
             pathArrList[userId].push(redoPath);
             socket.emit("redo", { cookie: Cookies.get("cookieId"), time: redoPath[0].time });
             drenArr(pathArrList);
@@ -193,17 +193,13 @@ function initCanvas() {
         // 清除重做步数
         if (withdrawArr.length) {
             withdrawArr = new Array();
-        }
+        };
         if (e.buttons === 1) {
             transX = e.offsetX;
             transY = e.offsetY;
             dragStart = true;
             dren(e);
         } else if (e.buttons === 2) {
-            if (highPerformanceDrag) {
-                hipX = 0;
-                hipY = 0;
-            };
             drenArr(pathArrList);
             tempX = e.offsetX;
             tempY = e.offsetY;
@@ -289,8 +285,8 @@ function initCanvas() {
         }
         setTimeout(function() {
             throttling();
-        }, 16.7)
-    }
+        }, 16.7);
+    };
     throttling();
 
     // 绘制方法
@@ -301,7 +297,7 @@ function initCanvas() {
                 y: (e.offsetY / dZoom - lastY),
                 color: brushColor,
                 brushSize: bursh.offsetWidth / dZoom,
-                tween: e.tween ? true : false,
+                tween: e.tween,
                 time: runTime
             })
         } else if (!drowLine) { // 如果是点绘制模式则需要这些数据
@@ -310,7 +306,7 @@ function initCanvas() {
                 y: (e.offsetY / dZoom - lastY),
                 color: brushColor,
                 brushSize: bursh.offsetWidth / dZoom,
-                tween: e.tween ? true : false
+                tween: e.tween
             })
         } else {
             tempPathArr[userId].push({
@@ -353,42 +349,57 @@ function initCanvas() {
         // 绘制所有路径
         for (let path = 0; path < pathArr.length; path++) {
             // 开始绘制路径
-            // 如果路径点少于阈值,使用点绘制,否则根据配置选择点绘制还是线绘制
-            if (pathArr[path].length > 2) {
-                // 判断绘制方法
-                if (drowLine) {
-                    ctx.beginPath();
-                    ctx.lineCap = "round";
-                    ctx.lineWidth = pathArr[path][0].brushSize;
-                    ctx.strokeStyle = pathArr[path][0].color;
-                    // 移除补间帧
-                    let points = removeTween(pathArr[path]);
-                    // 新的贝塞尔曲线绘制方法
-                    let besselPoints = getBessel(points);
-                    let int = 0;
-                    try {
-                        for (let i = 0; i < points.length; i++) {
-                            ctx.lineTo(points[i].x + lastX, points[i].y + lastY);
-                            if (i == 0) {
-                                ctx.moveTo(points[0].x + lastX, points[0].y + lastY);
-                                ctx.quadraticCurveTo(besselPoints[0].x + lastX, besselPoints[0].y + lastY, points[1].x + lastX, points[1].y + lastY);
-                                int = int + 1;
-                            } else if (i < points.length - 2) {
-                                ctx.moveTo(points[i].x + lastX, points[i].y + lastY);
-                                ctx.bezierCurveTo(besselPoints[int].x + lastX, besselPoints[int].y + lastY, besselPoints[int + 1].x + lastX, besselPoints[int + 1].y + lastY, points[i + 1].x + lastX, points[i + 1].y + lastY);
-                                int += 2;
-                            } else if (i == points.length - 2) {
-                                ctx.moveTo(points[points.length - 2].x + lastX, points[points.length - 2].y + lastY);
-                                ctx.quadraticCurveTo(besselPoints[besselPoints.length - 1].x + lastX, besselPoints[besselPoints.length - 1].y + lastY, points[points.length - 1].x + lastX, points[points.length - 1].y + lastY);
+            // 判断是否已缓存路径
+            if (pathArr[path][0].imageData) {
+
+            } else {
+                // 如果路径点少于阈值,使用点绘制,否则根据配置选择点绘制还是线绘制
+                if (pathArr[path].length > 2) {
+                    // 判断绘制方法
+                    if (drowLine) {
+                        ctx.beginPath();
+                        ctx.lineCap = "round";
+                        ctx.lineWidth = pathArr[path][0].brushSize;
+                        ctx.strokeStyle = pathArr[path][0].color;
+                        // 移除补间帧
+                        let points = removeTween(pathArr[path]);
+                        // 新的贝塞尔曲线绘制方法
+                        let besselPoints = getBessel(points);
+                        let int = 0;
+                        try {
+                            for (let i = 0; i < points.length; i++) {
+                                ctx.lineTo(points[i].x + lastX, points[i].y + lastY);
+                                if (i == 0) {
+                                    ctx.moveTo(points[0].x + lastX, points[0].y + lastY);
+                                    ctx.quadraticCurveTo(besselPoints[0].x + lastX, besselPoints[0].y + lastY, points[1].x + lastX, points[1].y + lastY);
+                                    int = int + 1;
+                                } else if (i < points.length - 2) {
+                                    ctx.moveTo(points[i].x + lastX, points[i].y + lastY);
+                                    ctx.bezierCurveTo(besselPoints[int].x + lastX, besselPoints[int].y + lastY, besselPoints[int + 1].x + lastX, besselPoints[int + 1].y + lastY, points[i + 1].x + lastX, points[i + 1].y + lastY);
+                                    int += 2;
+                                } else if (i == points.length - 2) {
+                                    ctx.moveTo(points[points.length - 2].x + lastX, points[points.length - 2].y + lastY);
+                                    ctx.quadraticCurveTo(besselPoints[besselPoints.length - 1].x + lastX, besselPoints[besselPoints.length - 1].y + lastY, points[points.length - 1].x + lastX, points[points.length - 1].y + lastY);
+                                };
+                            };
+                        } catch (error) {
+                            console.error(besselPoints);
+                        }
+                        ctx.stroke();
+                        ctx.closePath();
+                    } else {
+                        // 点绘制方法,非常消耗性能,不建议使用
+                        for (let point = 0; point < pathArr[path].length; point++) {
+                            // 如果缩放后笔刷粗细小于阈值则不绘制以提升性能
+                            if (pathArr[path][point].brushSize * dZoom > minimumThreshold) {
+                                ctx.beginPath();
+                                ctx.fillStyle = pathArr[path][point].color;
+                                ctx.arc((pathArr[path][point].x + lastX), (pathArr[path][point].y + lastY), pathArr[path][point].brushSize / 2, 0, 2 * Math.PI);
+                                ctx.fill();
                             };
                         };
-                    } catch (error) {
-                        console.error(besselPoints);
-                    }
-                    ctx.stroke();
-                    ctx.closePath();
+                    };
                 } else {
-                    // 点绘制方法,非常消耗性能,不建议使用
                     for (let point = 0; point < pathArr[path].length; point++) {
                         // 如果缩放后笔刷粗细小于阈值则不绘制以提升性能
                         if (pathArr[path][point].brushSize * dZoom > minimumThreshold) {
@@ -399,22 +410,7 @@ function initCanvas() {
                         };
                     };
                 };
-            } else {
-                for (let point = 0; point < pathArr[path].length; point++) {
-                    // 如果缩放后笔刷粗细小于阈值则不绘制以提升性能
-                    if (pathArr[path][point].brushSize * dZoom > minimumThreshold) {
-                        ctx.beginPath();
-                        ctx.fillStyle = pathArr[path][point].color;
-                        ctx.arc((pathArr[path][point].x + lastX), (pathArr[path][point].y + lastY), pathArr[path][point].brushSize / 2, 0, 2 * Math.PI);
-                        ctx.fill();
-                    };
-                };
-            };
-        };
-
-        // 高性能拖动残留代码
-        if (highPerformanceDrag) {
-            imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            }
         };
     };
 
@@ -428,14 +424,8 @@ function initCanvas() {
         tempY = eY;
         lastX = lastX + moveX / dZoom;
         lastY = lastY + moveY / dZoom;
-        if (highPerformanceDrag) {
-            hipX = hipX + moveX;
-            hipY = hipY + moveY;
-            moveImage();
-        } else {
-            drenArr(pathArrList);
-            refreshPlayer();
-        };
+        drenArr(pathArrList);
+        refreshPlayer();
     };
 
     // 移除补间坐标
@@ -843,8 +833,6 @@ function initCanvas() {
             console.log("新用户上线", data);
             if (loginStatus) {
                 newUserAdd(data);
-                createBursh(data);
-                createZoomBar(data);
                 lockUserList.push(data);
             }
         });
@@ -853,9 +841,7 @@ function initCanvas() {
         socket.on("userDisconnect", function(data) {
             if (loginStatus) {
                 console.log("用户下线", data);
-                remveUserBrush(data);
                 removeUser(data);
-                removeZoomBar(data);
             }
         });
 
@@ -866,9 +852,7 @@ function initCanvas() {
             initUserList()
             for (let i = 0; i < data.length; i++) {
                 newUserAdd(data[i]);
-                createBursh(data[i]);
-                createZoomBar(data[i]);
-                lockUserList.push(data[i]);
+                lockUserList.push(data);
             }
             isloadOk();
         });
@@ -1029,11 +1013,11 @@ function initCanvas() {
             console.log("其他用户缩放条", data);
             if (data.userId !== localUserId && !document.querySelector("#bar-id" + data.userId)) {
                 const zoomEl = document.createElement("div");
-                zoomEl.className = "indicator-tag";
-                zoomEl.id = `bar-id${data.userId}`;
                 const zoomName = document.createElement("p");
                 zoomName.className = "tg-name";
                 zoomName.innerText = data.name;
+                zoomEl.className = "indicator-tag";
+                zoomEl.id = `bar-id${data.userId}`;
                 zoomEl.appendChild(zoomName);
                 zoomList.appendChild(zoomEl);
             };
@@ -1051,14 +1035,14 @@ function initCanvas() {
             console.log("其他用户笔刷", data)
             if (data.userId !== localUserId && !document.querySelector("#id" + data.userId)) {
                 const playerEl = document.createElement("div");
+                const userNameEl = document.createElement("p");
+                userNameEl.className = "user-name";
+                userNameEl.innerText = data.name;
                 playerEl.className = "player-mouse";
                 playerEl.id = `id${data.userId}`;
                 playerEl.setAttribute("data-brush-x", "0");
                 playerEl.setAttribute("data-brush-y", "0");
                 playerEl.setAttribute("data-brush-size", "20");
-                const userNameEl = document.createElement("p");
-                userNameEl.className = "user-name";
-                userNameEl.innerText = data.name;
                 playerEl.appendChild(userNameEl);
                 otherPlayerList.appendChild(playerEl);
             };
@@ -1072,6 +1056,8 @@ function initCanvas() {
 
         // 删除下线用户
         function removeUser(data) {
+            remveUserBrush(data);
+            removeZoomBar(data);
             for (let i = 0; i < lockUserList.length; i++) {
                 if (lockUserList[i].userId === data.userId) {
                     lockUserList.splice(i, 1);
@@ -1100,6 +1086,8 @@ function initCanvas() {
                 userEl.innerText = "id" + userData.userId + " " + userData.name;
                 onlineList.appendChild(userEl);
                 titalNum.innerText = "当前在线:" + document.querySelectorAll(".list-user-name").length + "人";
+                createBursh(userData);
+                createZoomBar(userData);
             };
         };
 
@@ -1170,12 +1158,16 @@ function initCanvas() {
             };
         };
 
+        let timeOut
         // 在线检查是否已有此用户名
         function onlineName(name) {
             if (checkName(name)) {
-                socket.emit('checkName', {
-                    name: name
-                });
+                clearTimeout(timeOut);
+                timeOut = setTimeout(function() {
+                    socket.emit('checkName', {
+                        name: name
+                    });
+                }, 300);
             };
         };
 
@@ -1211,11 +1203,11 @@ function initCanvas() {
         // 我的消息
         function putUserMsg(userName, msg) {
             const msgEl = document.createElement("span");
-            msgEl.className = "msg-text";
             const userNameEl = document.createElement("p");
+            const content = document.createElement("p");
+            msgEl.className = "msg-text";
             userNameEl.className = "user-name";
             userNameEl.innerText = userName;
-            const content = document.createElement("p");
             content.className = "content";
             content.innerText = msg;
             msgEl.appendChild(userNameEl);

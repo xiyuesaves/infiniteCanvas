@@ -295,6 +295,7 @@ io.on('connection', (socket) => {
             };
             if (data.point.drag) {
                 let brsuhMove = data.point.brushSize / 2;
+                // 测试用修改
                 if (!userPath[`id${decodeData.userId}`].length) {
                     userPath[`id${decodeData.userId}`].push({
                         x: data.point.x + brsuhMove,
