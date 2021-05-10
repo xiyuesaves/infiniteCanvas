@@ -9,23 +9,29 @@ const sqlite3 = require("sqlite3");
 const db = new sqlite3.Database("main.db");
 
 // 封装异步sql方法
-db.runSync = function(sql) {
+db.runSync = function(sql,arr) {
     return new Promise((resolve, reject) => {
-        db.run(sql, function(err) {
+        let param = arr || [];
+        console.log(sql,param)
+        db.run(sql,param, function(err) {
             resolve(err);
         });
     });
 }
-db.getSync = function(sql) {
+db.getSync = function(sql,arr) {
     return new Promise((resolve, reject) => {
-        db.get(sql, function(err, data) {
+        let param = arr || [];
+        console.log(sql,param)
+        db.get(sql,param, function(err, data) {
             resolve({ err: err, data: data });
         });
     });
 }
-db.allSync = function(sql) {
+db.allSync = function(sql,arr) {
     return new Promise((resolve, reject) => {
-        db.all(sql, function(err, data) {
+        let param = arr || [];
+        console.log(sql,param)
+        db.all(sql,param, function(err, data) {
             resolve({ err: err, data: data });
         });
     });
@@ -165,8 +171,9 @@ let userList = [];
 // socketio
 io.on('connection', (socket) => {
     // 登录请求
-    socket.on("login", function(data) {
+    socket.on("login", async function(data) {
         console.log("用户登录");
+        console.log(await db.getSync("SELECT userName,password,userId FROM user WHERE user.userName = ?", [data.name]))
         db.get("SELECT userName,password,userId FROM user WHERE user.userName = ?", [data.name], function(err, dbData) {
             if (data.name === dbData.userName && data.psw === dbData.password) {
                 if (!checkId(dbData.userId)) {

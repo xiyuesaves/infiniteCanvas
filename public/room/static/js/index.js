@@ -46,6 +46,11 @@ function initCanvas() {
     let localUserId = null; // 服务器上用户的id
     let loaclUserName = null; // 本地玩家名称
     let lockUserList = []; // 本地用户统计
+    let moveMouse = false; // 增加节流算法,同步用户间的差异
+    let moveObj = {
+        x: 0,
+        y: 0
+    };
     let canvasBGC = "#d9d9d9";
     let lastX = 0, // 当前位置
         lastY = 0;
@@ -215,9 +220,6 @@ function initCanvas() {
         moveStart = false;
         canvas.className = "";
         brush.className = "";
-        if (highPerformanceDrag) {
-            drenArr(pathArrList);
-        };
         if (userId) {
             if (tempPathArr[userId].length) {
                 pathArrList[userId].push(tempPathArr[userId]);
@@ -226,55 +228,70 @@ function initCanvas() {
         } else {
             alert("出现错误\nNot Found userId");
         };
+        drenArr(pathArrList);
         emitData();
     });
     canvas.addEventListener("mousemove", function(e) {
+        moveMouse = true;
+        moveObj = e;
+    });
+
+    // 增加节流算法,同步用户间的差异
+    function throttling() {
+        // 页面统一时钟
         runTime = new Date().getTime();
-        mouseX = e.offsetX;
-        mouseY = e.offsetY;
-        burshX = mouseX - bursh.offsetWidth / 2;
-        burshY = mouseY - bursh.offsetHeight / 2;
-        bursh.style.transform = "translate3d(" + burshX + "px, " + burshY + "px, 0px)";
-        let frameX = transX - mouseX,
-            frameY = transY - mouseY;
-        if (dragStart) {
-            menuLayer.className = "menus poe";
-            // 补间,填充两个坐标之间的空隙
-            if (enableTween) {
-                if (autoInterval) {
-                    tweenInterval = Math.pow(bursh.offsetWidth, 0.6);
-                    tweenStride = 1;
-                };
-                if (Math.abs(frameX) > tweenInterval || Math.abs(frameY) > tweenInterval || (Math.abs(frameX) > tweenInterval / 2 && Math.abs(frameY) > tweenInterval / 2)) {
-                    let tween = Math.abs(frameX) > Math.abs(frameY) ? Math.abs(frameX) / tweenStride : Math.abs(frameY) / tweenStride;
-                    let tweenX = frameX / tween,
-                        tweenY = frameY / tween;
-                    let stepX = tweenX,
-                        stepY = tweenY;
-                    for (let i = tween - 1; i >= 0; i--) {
-                        let point = {
-                            offsetX: mouseX + stepX,
-                            offsetY: mouseY + stepY,
-                            tween: true
+        if (moveMouse) {
+            moveMouse = false;
+            mouseX = moveObj.offsetX;
+            mouseY = moveObj.offsetY;
+            burshX = mouseX - bursh.offsetWidth / 2;
+            burshY = mouseY - bursh.offsetHeight / 2;
+            bursh.style.transform = "translate3d(" + burshX + "px, " + burshY + "px, 0px)";
+            let frameX = transX - mouseX,
+                frameY = transY - mouseY;
+            if (dragStart) {
+                menuLayer.className = "menus poe";
+                // 补间,填充两个坐标之间的空隙
+                if (enableTween) {
+                    if (autoInterval) {
+                        tweenInterval = Math.pow(bursh.offsetWidth, 0.6);
+                        tweenStride = 1;
+                    };
+                    if (Math.abs(frameX) > tweenInterval || Math.abs(frameY) > tweenInterval || (Math.abs(frameX) > tweenInterval / 2 && Math.abs(frameY) > tweenInterval / 2)) {
+                        let tween = Math.abs(frameX) > Math.abs(frameY) ? Math.abs(frameX) / tweenStride : Math.abs(frameY) / tweenStride;
+                        let tweenX = frameX / tween,
+                            tweenY = frameY / tween;
+                        let stepX = tweenX,
+                            stepY = tweenY;
+                        for (let i = tween - 1; i >= 0; i--) {
+                            let point = {
+                                offsetX: mouseX + stepX,
+                                offsetY: mouseY + stepY,
+                                tween: true
+                            };
+                            stepX += tweenX;
+                            stepY += tweenY;
+                            dren(point);
                         };
-                        stepX += tweenX;
-                        stepY += tweenY;
-                        dren(point);
                     };
                 };
+                transX = mouseX;
+                transY = mouseY;
+                dren(moveObj);
+            } else {
+                menuLayer.className = "menus";
             };
-            transX = mouseX;
-            transY = mouseY;
-            dren(e);
-        } else {
-            menuLayer.className = "menus";
-        };
-        if (moveStart) {
-            menuLayer.className = "menus poe";
-            moveCanvas(e);
-        };
-        emitData();
-    });
+            if (moveStart) {
+                menuLayer.className = "menus poe";
+                moveCanvas(moveObj);
+            };
+            emitData();
+        }
+        setTimeout(function() {
+            throttling();
+        }, 16.7)
+    }
+    throttling();
 
     // 绘制方法
     function dren(e) {
