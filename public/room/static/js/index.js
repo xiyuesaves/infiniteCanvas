@@ -46,7 +46,6 @@ function initCanvas() {
     let localUserId = null; // 服务器上用户的id
     let loaclUserName = null; // 本地玩家名称
     let lockUserList = []; // 本地用户统计
-    let prohibitedWords = ["测试"]; // 违禁词列表
     let moveMouse = false; // 增加节流算法,同步用户间的差异
     let moveObj = {
         x: 0,
@@ -1327,6 +1326,7 @@ function initCanvas() {
     initSockit()
 };
 
+let prohibitedWords = ["测试"]; // 违禁词列表
 // 检查违禁词
 function checkProhibitedWords(name) {
     for (let i = 0; i < prohibitedWords.length; i++) {
