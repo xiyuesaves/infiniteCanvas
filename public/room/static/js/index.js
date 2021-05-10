@@ -46,6 +46,7 @@ function initCanvas() {
     let localUserId = null; // 服务器上用户的id
     let loaclUserName = null; // 本地玩家名称
     let lockUserList = []; // 本地用户统计
+    let prohibitedWords = ["测试"]; // 违禁词列表
     let moveMouse = false; // 增加节流算法,同步用户间的差异
     let moveObj = {
         x: 0,
@@ -1227,13 +1228,13 @@ function initCanvas() {
         // 其他用户消息
         function putUsMsg(userName, msg) {
             const msgEl = document.createElement("span");
-            msgEl.className = "msg-text your-self";
             const userNameEl = document.createElement("p");
+            const content = document.createElement("p");
             userNameEl.className = "user-name";
             userNameEl.innerText = userName;
-            const content = document.createElement("p");
             content.className = "content";
             content.innerText = msg;
+            msgEl.className = "msg-text your-self";
             msgEl.appendChild(userNameEl);
             msgEl.appendChild(content);
             msgList.appendChild(msgEl);
@@ -1324,4 +1325,49 @@ function initCanvas() {
         })
     }
     initSockit()
+};
+
+// 检查违禁词
+function checkProhibitedWords(name) {
+    for (let i = 0; i < prohibitedWords.length; i++) {
+        if (name.includes(prohibitedWords[i])) {
+            return false;
+        };
+    };
+    return true;
+}
+
+// 初始化色块
+function initColorBlock() {
+    const colorArr = [
+        "#ec6841",
+        "#f19149",
+        "#f7b551",
+        "#fff45c",
+        "#b3d465",
+        "#7fc269",
+        "#31b16c",
+        "#12b4b1",
+        "#448ac9",
+        "#556fb5",
+        "#5f52a0",
+        "#8957a1",
+        "#ad5da1",
+        "#ea68a2",
+        "#000000",
+        "#d9d9d9"
+    ];
+    const blockNum = colorArr.length >= 32 ? colorArr.length : 32;
+    const selectColorBox = document.querySelector(".top-select-color");
+    for (let i = 0; i < blockNum; i++) {
+        const colorValue = colorArr[i] || "#ffffff";
+        const colorEl = document.createElement("div");
+        colorEl.setAttribute("title", colorValue);
+        colorEl.setAttribute("style", "background-color: " + colorValue + ";");
+        colorEl.className = "color-box";
+        if (i === 0) {
+            colorEl.className = "color-box select";
+        };
+        selectColorBox.appendChild(colorEl);
+    };
 };
