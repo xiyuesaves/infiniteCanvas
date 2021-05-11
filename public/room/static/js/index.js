@@ -18,10 +18,9 @@ function initCanvas() {
     const socket = io();
     // 主要操作元素
     const canvas = document.querySelector("#canvas"); // 画布
-    const bursh = document.querySelector("#brush"); // 本地用户笔刷
+    // const brush = document.querySelector("#brush"); // 本地用户笔刷
     const ctx = canvas.getContext("2d"); // canvas2d对象
     const menuLayer = document.querySelector(".menus"); // 菜单
-    const zoomIndicator = document.querySelector(".indicator-tag.your-self"); // 本地用户缩放比
     const fullImfo = document.querySelector(".wating-service"); // 等待服务器响应界面
     const userName = document.querySelector(".input-user-name"); // 输入用户名
     const userPsw = document.querySelector(".input-user-psw"); // 输入密码
@@ -42,8 +41,9 @@ function initCanvas() {
     let disabledPath = []; // 禁用id列表
     let userId = null; // 本地玩家id
 
-    let localUserId = null; // 服务器上用户的id[即将淘汰]
+    let localUser; // 本地玩家对象
 
+    let localUserId = null; // 服务器上用户的id[即将淘汰]
 
     let loaclUserName = null; // 本地玩家名称
     let lockUserList = []; // 本地用户统计
@@ -66,8 +66,8 @@ function initCanvas() {
         moveY = 0;
     let tempX = 0, // 临时坐标
         tempY = 0;
-    let burshX = 0, // 笔刷原始坐标
-        burshY = 0;
+    let brushX = 0, // 笔刷原始坐标
+        brushY = 0;
     let zoom = 1.1, // 缩放步幅
         dZoom = 1, // 初始缩放值
         maxZoom = 150,
@@ -96,40 +96,42 @@ function initCanvas() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
-    // 创建用户构造函数
+    // 用户构造函数
     const Player = class {
         // 用户对象,目标元素
         constructor(data, target) {
             this.name = data.name;
-            this.id = data.userId;
+            this.id = data.id;
             this.isOnline = data.isOnline || false;
             this.pontX = 0;
             this.pontY = 0;
-            this.bursh = {
+            this.brush = {
                 size: 20,
                 color: "#ffffff"
             };
             this.element = {};
-            this.target = {
-                userList: target.userList || ".online-list",
-                playerMouse: target.playerMouse || "other-user-mouse"
-            }
         }
         create() {
             this.element.userItem = document.createElement("div");
             this.element.userItem.className = "user-name list-user-name";
             this.element.userItem.id = "listId" + this.id;
             this.element.userItem.innerText = "id" + this.id + " " + this.name;
-            this.element.userBrush = document.createElement("div");
             this.element.userNameEl = document.createElement("p");
             this.element.userNameEl.className = "user-name";
             this.element.userNameEl.innerText = this.name;
+            this.element.userBrush = document.createElement("div");
             this.element.userBrush.className = "player-mouse";
-            this.element.userBrush.id = `id${this.userId}`;
             this.element.userBrush.appendChild(this.element.userNameEl);
-            this.setBrush(this.bursh.size, this.bursh.color);
-            document.querySelector(this.target.userList).appendChild(this.element.userItem);
-            document.querySelector(this.target.playerMouse).appendChild(this.element.userBrush);
+            this.element.zoomName = document.createElement("p");
+            this.element.zoomName.innerText = this.name;
+            this.element.zoomName.className = "tg-name";
+            this.element.zoomEl = document.createElement("div");
+            this.element.zoomEl.className = "indicator-tag";
+            this.element.zoomEl.appendChild(this.element.zoomName);
+            document.querySelector(".right-zoom-indicator").appendChild(this.element.zoomEl)
+            document.querySelector(".online-list").appendChild(this.element.userItem);
+            document.querySelector(".user-mouse").appendChild(this.element.userBrush);
+            this.brushSize(this.brush.size);
             if (this.isOnline) {
                 this.online();
             };
@@ -146,19 +148,26 @@ function initCanvas() {
         move(x, y) {
             this.pontX = x;
             this.pontY = y;
-            this.element.userBrush.style.transform = "translate3d(" + x + "px, " + y + "px, 0px)";
+            this.element.userBrush.style.transform = `translate3d(${x}px, ${y}px, 0px)`;
         }
-        setBrush(size, color) {
-            this.bursh.size = size;
-            this.bursh.color = color;
-            this.element.userBrush.style.backgroundColor = color;
+        brushSize(size) {
+            this.brush.size = size;
             this.element.userBrush.style.width = `${size}px`;
             this.element.userBrush.style.height = `${size}px`;
+        }
+        brushColor(color) {
+            this.brush.color = color;
+            this.element.userBrush.style.backgroundColor = `${color}6b`;
+            this.element.zoomEl.style.backgroundColor = `${color}6b`;
+        }
+        zoomValue(zoomVal) {
+            console.log(this.element.zoomEl.offsetHeight)
+            this.element.zoomEl.style.top = `calc(${zoomVal}% - ${this.element.zoomEl.offsetHeight * (zoomVal/100)}px)`;
         }
     }
 
     // 创建其他用户笔刷
-    function createBursh(data) {
+    function createbrush(data) {
         console.log("其他用户笔刷", data)
         console.log(data)
         if (data.userId !== localUserId && checkUser(data)) {
@@ -264,6 +273,8 @@ function initCanvas() {
         };
         if (e.buttons === 1) {
             dragStart = true;
+            beforeX = e.offsetX;
+            beforeY = e.offsetY;
             dren(e);
         } else if (e.buttons === 2) {
             drenArr(pathArrList);
@@ -271,7 +282,8 @@ function initCanvas() {
             tempY = e.offsetY;
             moveStart = true;
             canvas.className = "move";
-            brush.className = "move";
+            // brush.className = "move";
+            localUser.element.userBrush.className = "player-mouse move";
         } else {
             dragStart = false;
         };
@@ -281,7 +293,8 @@ function initCanvas() {
         dragStart = false;
         moveStart = false;
         canvas.className = "";
-        brush.className = "";
+        // brush.className = "";
+        localUser.element.userBrush.className = "player-mouse";
         if (userId) {
             if (tempPathArr[userId].length) {
                 pathArrList[userId].push(tempPathArr[userId]);
@@ -296,6 +309,11 @@ function initCanvas() {
     canvas.addEventListener("mousemove", function(e) {
         moveMouse = true;
         moveObj = e;
+
+        // 笔刷位置
+        brushX = e.offsetX - localUser.brush.size / 2;
+        brushY = e.offsetY - localUser.brush.size / 2;
+        localUser.move(brushX, brushY)
     });
 
     // 增加节流算法,同步用户间的差异
@@ -306,11 +324,9 @@ function initCanvas() {
             moveMouse = false;
             mouseX = moveObj.offsetX;
             mouseY = moveObj.offsetY;
-            burshX = mouseX - bursh.offsetWidth / 2;
-            burshY = mouseY - bursh.offsetHeight / 2;
-            bursh.style.transform = "translate3d(" + burshX + "px, " + burshY + "px, 0px)";
             if (dragStart) {
                 menuLayer.className = "menus poe";
+                // 画直线用
                 dren(moveObj);
             } else {
                 menuLayer.className = "menus";
@@ -320,8 +336,8 @@ function initCanvas() {
                 moveCanvas(moveObj);
             };
             emitData();
-        }
-        // 画直线用
+        };
+
         beforeX = moveObj.offsetX;
         beforeY = moveObj.offsetY;
         // 稳定鼠标捕获率在60帧
@@ -338,7 +354,7 @@ function initCanvas() {
                 x: (e.offsetX / dZoom - lastX),
                 y: (e.offsetY / dZoom - lastY),
                 color: brushColor,
-                brushSize: bursh.offsetWidth / dZoom,
+                brushSize: localUser.brush.size / dZoom,
                 time: runTime
             })
         } else {
@@ -350,10 +366,10 @@ function initCanvas() {
         // 绘制线条
         ctx.beginPath();
         ctx.lineCap = "round";
-        ctx.lineWidth = bursh.offsetWidth;
+        ctx.lineWidth = localUser.brush.size / dZoom;
         ctx.strokeStyle = brushColor;
-        ctx.moveTo(beforeX, beforeY);
-        ctx.lineTo(e.offsetX, e.offsetY);
+        ctx.moveTo(beforeX / dZoom, beforeY / dZoom);
+        ctx.lineTo(e.offsetX / dZoom, e.offsetY / dZoom);
         ctx.stroke();
         ctx.closePath();
     }
@@ -396,7 +412,6 @@ function initCanvas() {
                     ctx.lineCap = "round";
                     ctx.lineWidth = pathArr[path][0].brushSize;
                     ctx.strokeStyle = pathArr[path][0].color;
-                    // 移除补间帧[去除]
                     let points = pathArr[path];
                     // 贝塞尔曲线绘制方法
                     let besselPoints = getBessel(points);
@@ -421,8 +436,8 @@ function initCanvas() {
                 } else {
                     for (let point = 0; point < pathArr[path].length; point++) {
                         ctx.beginPath();
-                        ctx.fillStyle = pathArr[path][point].color;
-                        ctx.arc((pathArr[path][point].x + lastX), (pathArr[path][point].y + lastY), pathArr[path][point].brushSize / 2, 0, 2 * Math.PI);
+                        ctx.fillStyle = pathArr[path][0].color;
+                        ctx.arc((pathArr[path][point].x + lastX), (pathArr[path][point].y + lastY), pathArr[path][0].brushSize / 2, 0, 2 * Math.PI);
                         ctx.fill();
                     };
                 };
@@ -450,23 +465,23 @@ function initCanvas() {
         this.y = y;
     };
     Vector2.prototype = {
-        "length": function() {
+        length: function() {
             return Math.sqrt(this.x * this.x + this.y * this.y);
         },
-        "normalize": function() {
+        normalize: function() {
             let inv = 1 / this.length();
             return new Vector2(this.x * inv, this.y * inv);
         },
-        "add": function(v) {
+        add: function(v) {
             return new Vector2(this.x + v.x, this.y + v.y);
         },
-        "multiply": function(f) {
+        multiply: function(f) {
             return new Vector2(this.x * f, this.y * f);
         },
-        "dot": function(v) {
+        dot: function(v) {
             return this.x * v.x + this.y * v.y;
         },
-        "angle": function(v) {
+        angle: function(v) {
             return Math.acos(this.dot(v) / (this.length() * v.length())) * 180 / Math.PI;
         }
     };
@@ -503,9 +518,9 @@ function initCanvas() {
     // 向服务器发送信息
     function emitData() {
         const mouseData = {
-            x: (burshX / dZoom - lastX),
-            y: (burshY / dZoom - lastY),
-            brushSize: bursh.offsetWidth / dZoom,
+            x: (brushX / dZoom - lastX),
+            y: (brushY / dZoom - lastY),
+            brushSize: localUser.brush.size / dZoom,
             drag: dragStart,
             color: brushColor,
             zoomSize: zoomVal
@@ -524,7 +539,8 @@ function initCanvas() {
             }
             zoomFun(-delta);
             let proportion = zoomVal / maxZoom * 100
-            zoomIndicator.style.top = `${50 - (proportion / 2)}%`;
+            localUser.zoomValue(50 - (proportion / 2));
+            // zoomIndicator.style.top = `${50 - (proportion / 2)}%`;
         }
     }, false);
 
@@ -564,15 +580,15 @@ function initCanvas() {
 
     // 刷新其他用户数据[待重写]
     function refreshPlayer() {
-        const players = document.querySelectorAll(".player-mouse");
-        for (let i = 0; i < players.length; i++) {
-            let elPintX = players[i].getAttribute("data-brush-x");
-            let elPintY = players[i].getAttribute("data-brush-y");
-            let elBrushSize = players[i].getAttribute("data-brush-size");
-            players[i].style.transform = "translate3d(" + ((1 * elPintX + lastX) * dZoom) + "px, " + ((1 * elPintY + lastY) * dZoom) + "px, 0px)";
-            players[i].style.width = elBrushSize * dZoom + "px";
-            players[i].style.height = elBrushSize * dZoom + "px";
-        }
+        // const players = document.querySelectorAll(".player-mouse");
+        // for (let i = 0; i < players.length; i++) {
+        //     let elPintX = players[i].getAttribute("data-brush-x");
+        //     let elPintY = players[i].getAttribute("data-brush-y");
+        //     let elBrushSize = players[i].getAttribute("data-brush-size");
+        //     players[i].style.transform = "translate3d(" + ((1 * elPintX + lastX) * dZoom) + "px, " + ((1 * elPintY + lastY) * dZoom) + "px, 0px)";
+        //     players[i].style.width = elBrushSize * dZoom + "px";
+        //     players[i].style.height = elBrushSize * dZoom + "px";
+        // }
     }
 
     // 笔刷菜单功能
@@ -583,9 +599,6 @@ function initCanvas() {
         const selectColor = document.querySelector(".color-view");
         let clickSlider = false;
 
-        // 初始化笔刷直径
-        bursh.style.width = brushDefaultSize + "px";
-        bursh.style.height = brushDefaultSize + "px";
         // 初始化笔刷控制器默认值
         brushSize.setAttribute("min", brushMinSize);
         brushSize.setAttribute("max", brushMaxSize);
@@ -604,8 +617,7 @@ function initCanvas() {
         }
         // 监听笔刷大小
         onRangeChange(brushSize, function() {
-            bursh.style.width = brushSize.value + "px";
-            bursh.style.height = brushSize.value + "px";
+            localUser.brushSize(brushSize.value);
             brushSize.setAttribute("title", "当前笔刷大小" + brushSize.value + "px");
             emitData();
         })
@@ -615,8 +627,7 @@ function initCanvas() {
             brushColor = selectColor.value;
             selectColor.style.backgroundColor = selectColor.value;
             colorInput.setAttribute("placeholder", selectColor.value);
-            bursh.style.backgroundColor = brushColor + "6B";
-            zoomIndicator.style.backgroundColor = brushColor + "6B";
+            localUser.brushColor(brushColor)
         })
         selectColor.addEventListener("change", function() {
             overlayColor(selectColor.value);
@@ -632,25 +643,23 @@ function initCanvas() {
                     colorInput.value = "";
                     selectColor.style.backgroundColor = brushColor;
                     selectColor.value = brushColor;
-                    bursh.style.backgroundColor = brushColor + "6B";
-                    zoomIndicator.style.backgroundColor = brushColor + "6B";
+                    localUser.brushColor(brushColor)
                     emitData();
                 };
             });
         });
 
-        function getBrushColor() {
+        // 初始化笔刷颜色
+        function initBrushColor() {
             const el = document.querySelector(".color-box.select");
             brushColor = el.getAttribute("title");
             colorInput.setAttribute("placeholder", brushColor);
             colorInput.value = "";
             selectColor.style.backgroundColor = brushColor;
             selectColor.value = brushColor;
-            bursh.style.backgroundColor = brushColor + "6B";
-            zoomIndicator.style.backgroundColor = brushColor + "6B";
+            localUser.brushColor(brushColor);
         };
-        // 获取笔刷颜色
-        getBrushColor();
+        initBrushColor()
 
         // 监听输入框输入值
         colorInput.addEventListener("input", function(e) {
@@ -690,7 +699,6 @@ function initCanvas() {
             });
         };
     };
-    brushMenu();
 
     // 开始初始化与服务器的连接
     function initSockit() {
@@ -745,7 +753,7 @@ function initCanvas() {
                 userId = "id" + data.id;
                 localUserId = data.id;
                 loaclUserName = data.name;
-                loginSuccess();
+                loginSuccess(data);
             } else {
                 switch (data.code) {
                     case 0:
@@ -770,10 +778,11 @@ function initCanvas() {
             if (data.status) {
                 Cookies.set("cookieId", data.cookieId, { expires: 365 });
                 infoText.innerText = "注册成功啦~";
+
                 userId = "id" + data.id;
                 localUserId = data.id;
                 loaclUserName = data.name;
-                loginSuccess();
+                loginSuccess(data);
             } else {
                 if (data.err === 1) {
                     initLoginView("注册失败了诶,换个名字试试?");
@@ -937,10 +946,10 @@ function initCanvas() {
         // 接收其他用户的坐标信息
         let somX, somY, playrDrag = false;
         socket.on("otherPlayer", function(data) {
-            const playerBursh = document.querySelector(`#id${data.userId}`);
+            const playerbrush = document.querySelector(`#id${data.userId}`);
             const zoomEl = document.querySelector(`#bar-id${data.userId}`);
             let zoomPercentage = data.point.zoomSize / maxZoom * 100;
-            if (playerBursh) {
+            if (playerbrush) {
                 zoomEl.style.top = `${50 - (zoomPercentage / 2)}%`;
                 if (!tempPathArr["id" + data.userId]) {
                     tempPathArr["id" + data.userId] = new Array();
@@ -970,15 +979,15 @@ function initCanvas() {
                     tempPathArr["id" + data.userId] = new Array();
                     drenArr(pathArrList);
                 }
-                playerBursh.setAttribute("data-brush-size", data.point.brushSize);
-                playerBursh.setAttribute("data-brush-x", data.point.x);
-                playerBursh.setAttribute("data-brush-y", data.point.y);
+                playerbrush.setAttribute("data-brush-size", data.point.brushSize);
+                playerbrush.setAttribute("data-brush-x", data.point.x);
+                playerbrush.setAttribute("data-brush-y", data.point.y);
                 data.point.x = data.point.x + lastX;
                 data.point.y = data.point.y + lastY;
-                playerBursh.style.transform = "translate3d(" + (data.point.x * dZoom) + "px, " + (data.point.y * dZoom) + "px, 0px)";
-                playerBursh.style.width = data.point.brushSize * dZoom + "px";
-                playerBursh.style.height = data.point.brushSize * dZoom + "px";
-                playerBursh.style.backgroundColor = data.point.color + "6B";
+                playerbrush.style.transform = "translate3d(" + (data.point.x * dZoom) + "px, " + (data.point.y * dZoom) + "px, 0px)";
+                playerbrush.style.width = data.point.brushSize * dZoom + "px";
+                playerbrush.style.height = data.point.brushSize * dZoom + "px";
+                playerbrush.style.backgroundColor = data.point.color + "6B";
                 zoomEl.style.backgroundColor = data.point.color + "6B";
                 if (!data.point.drag && playrDrag) {
                     playrDrag = false;
@@ -1026,7 +1035,7 @@ function initCanvas() {
         }
 
         // 创建其他用户笔刷
-        function createBursh(data) {
+        function createbrush(data) {
             console.log("其他用户笔刷", data)
             if (data.userId !== localUserId && !document.querySelector("#id" + data.userId)) {
                 const playerEl = document.createElement("div");
@@ -1081,18 +1090,22 @@ function initCanvas() {
                 userEl.innerText = "id" + userData.userId + " " + userData.name;
                 onlineList.appendChild(userEl);
                 titalNum.innerText = "当前在线:" + document.querySelectorAll(".list-user-name").length + "人";
-                createBursh(userData);
+                createbrush(userData);
                 createZoomBar(userData);
             };
         };
 
         // 登录成功方法
-        function loginSuccess() {
+        function loginSuccess(data) {
             if (!loginStatus) {
+                localUser = new Player(data);
+                localUser.create();
                 // 初始化本地路径
                 if (pathArrList[userId] === undefined) {
                     pathArrList[userId] = new Array();
                 }
+                // 初始化笔刷菜单
+                brushMenu();
                 loginStatus = true;
                 console.log("开始请求登录数据");
                 infoText.innerText = "正在加载历史数据,用户列表...";

@@ -393,7 +393,7 @@ div.move {
     pointer-events: none;
 }
 
-.other-user-mouse {
+.user-mouse {
     width: 100%;
     height: 100%;
     position: absolute;
@@ -403,7 +403,7 @@ div.move {
     z-index: 1;
 }
 
-.other-user-mouse .player-mouse {
+.user-mouse .player-mouse {
     pointer-events: auto;
     width: 20px;
     height: 20px;
@@ -418,7 +418,7 @@ div.move {
     cursor: pointer;
 }
 
-.other-user-mouse .player-mouse .user-name {
+.user-mouse .player-mouse .user-name {
     width: 90px;
     height: 20px;
     color: #333333;
@@ -434,13 +434,13 @@ div.move {
     text-overflow: ellipsis;
 }
 
-.other-user-mouse .player-mouse.out {
+.user-mouse .player-mouse.out {
     pointer-events: auto;
     border: none;
     background-color: transparent;
 }
 
-.other-user-mouse .player-mouse.out::before {
+.user-mouse .player-mouse.out::before {
     content: "";
     opacity: 1;
     position: absolute;
@@ -456,25 +456,25 @@ div.move {
     border-bottom-color: red;
 }
 
-.other-user-mouse .player-mouse.to-top::before {}
+.user-mouse .player-mouse.to-top::before {}
 
-.other-user-mouse .player-mouse.to-bottom::before {
+.user-mouse .player-mouse.to-bottom::before {
     transform: translateX(-50%) rotateZ(180deg);
 }
 
-.other-user-mouse .player-mouse.to-bottom .user-name {
+.user-mouse .player-mouse.to-bottom .user-name {
     top: -90%;
 }
 
-.other-user-mouse .player-mouse.to-left::before {
+.user-mouse .player-mouse.to-left::before {
     transform: translateX(-50%) rotateZ(270deg);
 }
 
-.other-user-mouse .player-mouse.to-right::before {
+.user-mouse .player-mouse.to-right::before {
     transform: translateX(-50%) rotateZ(90deg);
 }
 
-.other-user-mouse .player-mouse.to-right .user-name {
+.user-mouse .player-mouse.to-right .user-name {
     left: -70px;
 }
 

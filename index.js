@@ -322,7 +322,7 @@ io.on('connection', (socket) => {
                     fs.writeFile(`path/${canvasId}-${decodeData.userId}-${time}`, JSON.stringify(userPath[`id${decodeData.userId}`]), async function(err) {
                         if (!err) {
                             await db.runSync("INSERT INTO path_list (userId,userName,pathFile,canvasId) VALUES (?,?,?,?)", [decodeData.userId, checkId(decodeData.userId).userName, `${canvasId}-${decodeData.userId}-${time}`, canvasId]);
-                            // await db.runSync("DELETE FROM path_list WHERE disable = 1 AND userId = ?", [decodeData.userId]); [需要单独分离出去]
+                            await db.runSync("DELETE FROM path_list WHERE disable = 1 AND userId = ?", [decodeData.userId]); // [需要单独分离出去]
                         } else {
                             console.log("写入失败", err);
                             sendMessage({ content: "写入路径文件失败,请联系管理员", time: 0, type: 1, userId: 0, userName: "root", only: true });
