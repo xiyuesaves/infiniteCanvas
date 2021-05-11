@@ -17,44 +17,51 @@ function initCanvas() {
     // 通信库
     const socket = io();
     // 主要操作元素
-    const canvas = document.querySelector("#canvas");
-    const bursh = document.querySelector("#brush");
-    const ctx = canvas.getContext("2d");
-    const menuLayer = document.querySelector(".menus");
-    const zoomIndicator = document.querySelector(".indicator-tag.your-self");
-    const fullImfo = document.querySelector(".wating-service");
-    const userName = document.querySelector(".input-user-name");
-    const userPsw = document.querySelector(".input-user-psw");
-    const loginView = document.querySelector(".login");
-    const titalNum = document.querySelector(".total-num");
-    const onlineList = document.querySelector(".online-list");
-    const msgList = document.querySelector(".top-msg-list");
-    const otherPlayerList = document.querySelector(".other-user-mouse");
-    const zoomList = document.querySelector(".right-zoom-indicator");
-    const msgBox = document.querySelector(".omMsg");
-    const onlineEl = document.querySelector(".online");
-    const rightZoomIndicator = document.querySelector(".right-zoom-indicator");
-    const leftMenu = document.querySelector(".left-menu");
-    // const testEl = document.querySelector(".full-z");
+    const canvas = document.querySelector("#canvas"); // 画布
+    const bursh = document.querySelector("#brush"); // 本地用户笔刷
+    const ctx = canvas.getContext("2d"); // canvas2d对象
+    const menuLayer = document.querySelector(".menus"); // 菜单
+    const zoomIndicator = document.querySelector(".indicator-tag.your-self"); // 本地用户缩放比
+    const fullImfo = document.querySelector(".wating-service"); // 等待服务器响应界面
+    const userName = document.querySelector(".input-user-name"); // 输入用户名
+    const userPsw = document.querySelector(".input-user-psw"); // 输入密码
+    const loginView = document.querySelector(".login"); // 登录界面
+    const titalNum = document.querySelector(".total-num"); // 总人数
+    const onlineList = document.querySelector(".online-list"); // 在线列表
+    const msgList = document.querySelector(".top-msg-list"); // 消息列表
+    const zoomList = document.querySelector(".right-zoom-indicator"); // 右侧缩放条
+    const msgBox = document.querySelector(".omMsg"); // 消息模块
+    const onlineEl = document.querySelector(".online"); // 总人数展示
+    const leftMenu = document.querySelector(".left-menu"); // 左侧笔刷菜单
     // 配置项
     let runTime = new Date().getTime(); // 运行时钟
     let loadOk = 0; // 历史数据加载状态
     let pathArrList = {}; // 路径数组列表
     let tempPathArr = {}; // 临时绘制路径
     let withdrawArr = []; // 撤回记录
-    let disabledPath = []; // 停止绘制id列表
+    let disabledPath = []; // 禁用id列表
     let userId = null; // 本地玩家id
-    let localUserId = null; // 服务器上用户的id
+
+    let localUserId = null; // 服务器上用户的id[即将淘汰]
+
+
     let loaclUserName = null; // 本地玩家名称
     let lockUserList = []; // 本地用户统计
+
     let moveMouse = false; // 增加节流算法,同步用户间的差异
     let moveObj = {
         x: 0,
         y: 0
-    };
-    let canvasBGC = "#d9d9d9";
+    }; // 用户鼠标坐标对象
+
+    let canvasBGC = "#d9d9d9"; // 画布背景色
+
     let lastX = 0, // 当前位置
         lastY = 0;
+
+    let beforeX = 0,
+        beforeY = 0; // 上一步位置
+
     let moveX = 0,
         moveY = 0;
     let tempX = 0, // 临时坐标
@@ -67,25 +74,16 @@ function initCanvas() {
         minZoom = -150;
     let mouseX = 0, // 鼠标位置
         mouseY = 0;
-    let transX = 0, // 计算补间用
-        transY = 0;
-    let hipX = 0, // 高性能移动坐标
-        hipY = 0;
-    let drowLine = true; // 更改绘制模式为贝塞尔曲线,可大幅度提高性能,但小几率出现线条扭曲
+
     let imageData; // 图片数据
-    let minimumThreshold = 0.1; // 画布最低绘制宽度
     let brushColor = "#000000"; // 笔刷颜色
     let dragStart = false;
     let moveStart = false;
-    let enableTween = true; // 是否启用补间[如果启用drowLine则几乎不会造成卡顿]
-    let autoInterval = true; // 根据当前笔刷大小自动计算补间间隔,开启时"tweenInterval","tweenStride"将无效
-    let tweenInterval = 6; // 启用补间的间隔
-    let tweenStride = 5; // 补间步幅
     let loginStatus = false; // 登录状态
     let brushMinSize = 5; // 笔刷最小直径
-    let brushMaxSize = 120;
+    let brushMaxSize = 120; // 笔刷最大直径
     let brushDefaultSize = 20; // 初始笔刷直径
-    let zoomVal = 0; // 记录用缩放值
+    let zoomVal = 0; // 记录缩放倍率
     let f1Num = 0; // 切换ui展示状态保存值
     // 宽度变化监听
     window.onresize = function() {
@@ -162,7 +160,8 @@ function initCanvas() {
     // 创建其他用户笔刷
     function createBursh(data) {
         console.log("其他用户笔刷", data)
-        if (data.userId !== localUserId && !document.querySelector("#id" + data.userId)) {
+        console.log(data)
+        if (data.userId !== localUserId && checkUser(data)) {
 
         };
     };
@@ -181,7 +180,7 @@ function initCanvas() {
                         onlineEl.style.display = "none";
                         break;
                     case 3:
-                        rightZoomIndicator.style.display = "none";
+                        zoomList.style.display = "none";
                         break;
                     case 4:
                         leftMenu.style.display = "none";
@@ -189,7 +188,7 @@ function initCanvas() {
                     case 5:
                         msgBox.style.display = "";
                         onlineEl.style.display = "";
-                        rightZoomIndicator.style.display = "";
+                        zoomList.style.display = "";
                         leftMenu.style.display = "";
                         f1Num = 0;
                         break;
@@ -264,8 +263,6 @@ function initCanvas() {
             withdrawArr = new Array();
         };
         if (e.buttons === 1) {
-            transX = e.offsetX;
-            transY = e.offsetY;
             dragStart = true;
             dren(e);
         } else if (e.buttons === 2) {
@@ -291,7 +288,7 @@ function initCanvas() {
                 tempPathArr[userId] = [];
             }
         } else {
-            alert("出现错误\nNot Found userId");
+            console.error("未登录,或登录过期");
         };
         drenArr(pathArrList);
         emitData();
@@ -312,36 +309,8 @@ function initCanvas() {
             burshX = mouseX - bursh.offsetWidth / 2;
             burshY = mouseY - bursh.offsetHeight / 2;
             bursh.style.transform = "translate3d(" + burshX + "px, " + burshY + "px, 0px)";
-            let frameX = transX - mouseX,
-                frameY = transY - mouseY;
             if (dragStart) {
                 menuLayer.className = "menus poe";
-                // 补间,填充两个坐标之间的空隙
-                if (enableTween) {
-                    if (autoInterval) {
-                        tweenInterval = Math.pow(bursh.offsetWidth, 0.6);
-                        tweenStride = 1;
-                    };
-                    if (Math.abs(frameX) > tweenInterval || Math.abs(frameY) > tweenInterval || (Math.abs(frameX) > tweenInterval / 2 && Math.abs(frameY) > tweenInterval / 2)) {
-                        let tween = Math.abs(frameX) > Math.abs(frameY) ? Math.abs(frameX) / tweenStride : Math.abs(frameY) / tweenStride;
-                        let tweenX = frameX / tween,
-                            tweenY = frameY / tween;
-                        let stepX = tweenX,
-                            stepY = tweenY;
-                        for (let i = tween - 1; i >= 0; i--) {
-                            let point = {
-                                offsetX: mouseX + stepX,
-                                offsetY: mouseY + stepY,
-                                tween: true
-                            };
-                            stepX += tweenX;
-                            stepY += tweenY;
-                            dren(point);
-                        };
-                    };
-                };
-                transX = mouseX;
-                transY = mouseY;
                 dren(moveObj);
             } else {
                 menuLayer.className = "menus";
@@ -352,13 +321,17 @@ function initCanvas() {
             };
             emitData();
         }
+        // 画直线用
+        beforeX = moveObj.offsetX;
+        beforeY = moveObj.offsetY;
+        // 稳定鼠标捕获率在60帧
         setTimeout(function() {
             throttling();
         }, 16.7);
     };
     throttling();
 
-    // 绘制方法
+    // 临时线条-绘制方法
     function dren(e) {
         if (!tempPathArr[userId].length) {
             tempPathArr[userId].push({
@@ -366,33 +339,27 @@ function initCanvas() {
                 y: (e.offsetY / dZoom - lastY),
                 color: brushColor,
                 brushSize: bursh.offsetWidth / dZoom,
-                tween: e.tween,
                 time: runTime
-            })
-        } else if (!drowLine) { // 如果是点绘制模式则需要这些数据
-            tempPathArr[userId].push({
-                x: (e.offsetX / dZoom - lastX),
-                y: (e.offsetY / dZoom - lastY),
-                color: brushColor,
-                brushSize: bursh.offsetWidth / dZoom,
-                tween: e.tween
             })
         } else {
             tempPathArr[userId].push({
                 x: (e.offsetX / dZoom - lastX),
                 y: (e.offsetY / dZoom - lastY),
-                tween: e.tween ? true : false
             })
         }
-        ctx.fillStyle = brushColor;
+        // 绘制线条
         ctx.beginPath();
-        ctx.arc(e.offsetX / dZoom, e.offsetY / dZoom, (bursh.offsetWidth / 2) / dZoom, 0, 2 * Math.PI);
-        ctx.fill();
+        ctx.lineCap = "round";
+        ctx.lineWidth = bursh.offsetWidth;
+        ctx.strokeStyle = brushColor;
+        ctx.moveTo(beforeX, beforeY);
+        ctx.lineTo(e.offsetX, e.offsetY);
+        ctx.stroke();
+        ctx.closePath();
     }
 
     // 绘制数组路径
     function drenArr(arr) {
-        // console.log(arr)
         ctx.clearRect(0, 0, canvas.width / dZoom, canvas.height / dZoom);
         ctx.fillStyle = canvasBGC;
         ctx.fillRect(0, 0, canvas.width / dZoom, canvas.height / dZoom)
@@ -425,58 +392,38 @@ function initCanvas() {
                 // 如果路径点少于阈值,使用点绘制,否则根据配置选择点绘制还是线绘制
                 if (pathArr[path].length > 2) {
                     // 判断绘制方法
-                    if (drowLine) {
-                        ctx.beginPath();
-                        ctx.lineCap = "round";
-                        ctx.lineWidth = pathArr[path][0].brushSize;
-                        ctx.strokeStyle = pathArr[path][0].color;
-                        // 移除补间帧
-                        let points = removeTween(pathArr[path]);
-                        // 新的贝塞尔曲线绘制方法
-                        let besselPoints = getBessel(points);
-                        let int = 0;
-                        try {
-                            for (let i = 0; i < points.length; i++) {
-                                ctx.lineTo(points[i].x + lastX, points[i].y + lastY);
-                                if (i == 0) {
-                                    ctx.moveTo(points[0].x + lastX, points[0].y + lastY);
-                                    ctx.quadraticCurveTo(besselPoints[0].x + lastX, besselPoints[0].y + lastY, points[1].x + lastX, points[1].y + lastY);
-                                    int = int + 1;
-                                } else if (i < points.length - 2) {
-                                    ctx.moveTo(points[i].x + lastX, points[i].y + lastY);
-                                    ctx.bezierCurveTo(besselPoints[int].x + lastX, besselPoints[int].y + lastY, besselPoints[int + 1].x + lastX, besselPoints[int + 1].y + lastY, points[i + 1].x + lastX, points[i + 1].y + lastY);
-                                    int += 2;
-                                } else if (i == points.length - 2) {
-                                    ctx.moveTo(points[points.length - 2].x + lastX, points[points.length - 2].y + lastY);
-                                    ctx.quadraticCurveTo(besselPoints[besselPoints.length - 1].x + lastX, besselPoints[besselPoints.length - 1].y + lastY, points[points.length - 1].x + lastX, points[points.length - 1].y + lastY);
-                                };
-                            };
-                        } catch (error) {
-                            console.error(besselPoints);
-                        }
-                        ctx.stroke();
-                        ctx.closePath();
-                    } else {
-                        // 点绘制方法,非常消耗性能,不建议使用
-                        for (let point = 0; point < pathArr[path].length; point++) {
-                            // 如果缩放后笔刷粗细小于阈值则不绘制以提升性能
-                            if (pathArr[path][point].brushSize * dZoom > minimumThreshold) {
-                                ctx.beginPath();
-                                ctx.fillStyle = pathArr[path][point].color;
-                                ctx.arc((pathArr[path][point].x + lastX), (pathArr[path][point].y + lastY), pathArr[path][point].brushSize / 2, 0, 2 * Math.PI);
-                                ctx.fill();
-                            };
+                    ctx.beginPath();
+                    ctx.lineCap = "round";
+                    ctx.lineWidth = pathArr[path][0].brushSize;
+                    ctx.strokeStyle = pathArr[path][0].color;
+                    // 移除补间帧[去除]
+                    let points = pathArr[path];
+                    // 贝塞尔曲线绘制方法
+                    let besselPoints = getBessel(points);
+                    let int = 0;
+                    for (let i = 0; i < points.length; i++) {
+                        ctx.lineTo(points[i].x + lastX, points[i].y + lastY);
+                        if (i == 0) {
+                            ctx.moveTo(points[0].x + lastX, points[0].y + lastY);
+                            ctx.quadraticCurveTo(besselPoints[0].x + lastX, besselPoints[0].y + lastY, points[1].x + lastX, points[1].y + lastY);
+                            int = int + 1;
+                        } else if (i < points.length - 2) {
+                            ctx.moveTo(points[i].x + lastX, points[i].y + lastY);
+                            ctx.bezierCurveTo(besselPoints[int].x + lastX, besselPoints[int].y + lastY, besselPoints[int + 1].x + lastX, besselPoints[int + 1].y + lastY, points[i + 1].x + lastX, points[i + 1].y + lastY);
+                            int += 2;
+                        } else if (i == points.length - 2) {
+                            ctx.moveTo(points[points.length - 2].x + lastX, points[points.length - 2].y + lastY);
+                            ctx.quadraticCurveTo(besselPoints[besselPoints.length - 1].x + lastX, besselPoints[besselPoints.length - 1].y + lastY, points[points.length - 1].x + lastX, points[points.length - 1].y + lastY);
                         };
                     };
+                    ctx.stroke();
+                    ctx.closePath();
                 } else {
                     for (let point = 0; point < pathArr[path].length; point++) {
-                        // 如果缩放后笔刷粗细小于阈值则不绘制以提升性能
-                        if (pathArr[path][point].brushSize * dZoom > minimumThreshold) {
-                            ctx.beginPath();
-                            ctx.fillStyle = pathArr[path][point].color;
-                            ctx.arc((pathArr[path][point].x + lastX), (pathArr[path][point].y + lastY), pathArr[path][point].brushSize / 2, 0, 2 * Math.PI);
-                            ctx.fill();
-                        };
+                        ctx.beginPath();
+                        ctx.fillStyle = pathArr[path][point].color;
+                        ctx.arc((pathArr[path][point].x + lastX), (pathArr[path][point].y + lastY), pathArr[path][point].brushSize / 2, 0, 2 * Math.PI);
+                        ctx.fill();
                     };
                 };
             }
@@ -495,17 +442,6 @@ function initCanvas() {
         lastY = lastY + moveY / dZoom;
         drenArr(pathArrList);
         refreshPlayer();
-    };
-
-    // 移除补间坐标
-    function removeTween(arr) {
-        let newArr = [];
-        for (let i = 0; i < arr.length; i++) {
-            if (!arr[i].tween) {
-                newArr.push(arr[i]);
-            };
-        };
-        return newArr;
     };
 
     // 转换坐标点为贝塞尔控制点 (借鉴代码,有bug,可能返回NaN)
@@ -535,7 +471,6 @@ function initCanvas() {
         }
     };
 
-    // 贝塞尔控制点计算函数,似乎有bug,坐标会随机返回NaN
     function getBessel(arr) {
         let rt = 0.3;
         let i = 0,
@@ -578,11 +513,6 @@ function initCanvas() {
         socket.emit("pointMove", { point: mouseData, cookie: Cookies.get("cookieId"), time: runTime });
     }
 
-    // 高性能移动
-    function moveImage() {
-        ctx.clearRect(0, 0, canvas.width / dZoom, canvas.height / dZoom);
-        ctx.putImageData(imageData, hipX, hipY)
-    }
     // 鼠标滚轮监听
     canvas.addEventListener('mousewheel', function(e) {
         if (!dragStart) {
@@ -632,7 +562,7 @@ function initCanvas() {
         }
     }
 
-    // 刷新其他用户数据
+    // 刷新其他用户数据[待重写]
     function refreshPlayer() {
         const players = document.querySelectorAll(".player-mouse");
         for (let i = 0; i < players.length; i++) {
@@ -1058,10 +988,6 @@ function initCanvas() {
                         playrDrag = true;
                         somX = data.point.x;
                         somY = data.point.y;
-                    };
-                    if (autoInterval) {
-                        tweenInterval = data.point.brushSize / 3;
-                        tweenStride = tweenInterval;
                     };
                     ctx.beginPath();
                     ctx.lineCap = "round";
