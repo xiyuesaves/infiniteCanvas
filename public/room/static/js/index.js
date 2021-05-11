@@ -98,6 +98,75 @@ function initCanvas() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
+    // 创建用户构造函数
+    const Player = class {
+        // 用户对象,目标元素
+        constructor(data, target) {
+            this.name = data.name;
+            this.id = data.userId;
+            this.isOnline = data.isOnline || false;
+            this.pontX = 0;
+            this.pontY = 0;
+            this.bursh = {
+                size: 20,
+                color: "#ffffff"
+            };
+            this.element = {};
+            this.target = {
+                userList: target.userList || ".online-list",
+                playerMouse: target.playerMouse || "other-user-mouse"
+            }
+        }
+        create() {
+            this.element.userItem = document.createElement("div");
+            this.element.userItem.className = "user-name list-user-name";
+            this.element.userItem.id = "listId" + this.id;
+            this.element.userItem.innerText = "id" + this.id + " " + this.name;
+            this.element.userBrush = document.createElement("div");
+            this.element.userNameEl = document.createElement("p");
+            this.element.userNameEl.className = "user-name";
+            this.element.userNameEl.innerText = this.name;
+            this.element.userBrush.className = "player-mouse";
+            this.element.userBrush.id = `id${this.userId}`;
+            this.element.userBrush.appendChild(this.element.userNameEl);
+            this.setBrush(this.bursh.size, this.bursh.color);
+            document.querySelector(this.target.userList).appendChild(this.element.userItem);
+            document.querySelector(this.target.playerMouse).appendChild(this.element.userBrush);
+            if (this.isOnline) {
+                this.online();
+            };
+        }
+        online() {
+            this.isOnline = true;
+            this.element.userItem.className = "user-name list-user-name online";
+        }
+        offline() {
+            this.isOnline = false;
+            this.element.userItem.className = "user-name list-user-name";
+            document.querySelector("body")
+        }
+        move(x, y) {
+            this.pontX = x;
+            this.pontY = y;
+            this.element.userBrush.style.transform = "translate3d(" + x + "px, " + y + "px, 0px)";
+        }
+        setBrush(size, color) {
+            this.bursh.size = size;
+            this.bursh.color = color;
+            this.element.userBrush.style.backgroundColor = color;
+            this.element.userBrush.style.width = `${size}px`;
+            this.element.userBrush.style.height = `${size}px`;
+        }
+    }
+
+    // 创建其他用户笔刷
+    function createBursh(data) {
+        console.log("其他用户笔刷", data)
+        if (data.userId !== localUserId && !document.querySelector("#id" + data.userId)) {
+
+        };
+    };
+
     // 监听快捷键
     document.addEventListener("keydown", function(e) {
         switch (e.keyCode) {
