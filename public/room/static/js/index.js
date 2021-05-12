@@ -1029,68 +1029,6 @@ function initCanvas() {
                     };
                 }
             }
-            if (playerbrush) {
-                // zoomEl.style.top = `${50 - (zoomPercentage / 2)}%`;
-                // if (!tempPathArr[data.userId]) {
-                //     tempPathArr[data.userId] = new Array();
-                // }
-                // if (!pathArrList[data.userId]) {
-                //     pathArrList[data.userId] = new Array();
-                // }
-                // if (data.point.drag) {
-                //     if (!tempPathArr[data.userId].length) {
-                //         tempPathArr[data.userId].push({
-                //             x: data.point.x + (data.point.brushSize / 2),
-                //             y: data.point.y + (data.point.brushSize / 2),
-                //             color: data.point.color,
-                //             brushSize: data.point.brushSize,
-                //             time: data.time
-                //         })
-                //     } else {
-                //         tempPathArr[data.userId].push({
-                //             x: data.point.x + (data.point.brushSize / 2),
-                //             y: data.point.y + (data.point.brushSize / 2)
-                //         })
-                //     }
-                // } else if (tempPathArr[data.userId].length) {
-                //     pathArrList[data.userId].push(tempPathArr[data.userId]);
-                //     tempPathArr[data.userId] = new Array();
-                //     drenArr(pathArrList);
-                // }
-
-                // playerbrush.setAttribute("data-brush-size", data.point.brushSize);
-                // playerbrush.setAttribute("data-brush-x", data.point.x);
-                // playerbrush.setAttribute("data-brush-y", data.point.y);
-
-                // data.point.x = data.point.x + lastX;
-                // data.point.y = data.point.y + lastY;
-                // playerbrush.style.transform = "translate3d(" + (data.point.x * dZoom) + "px, " + (data.point.y * dZoom) + "px, 0px)";
-                // playerbrush.style.width = data.point.brushSize * dZoom + "px";
-                // playerbrush.style.height = data.point.brushSize * dZoom + "px";
-                // playerbrush.style.backgroundColor = data.point.color + "6B";
-                // zoomEl.style.backgroundColor = data.point.color + "6B";
-
-                // if (!data.point.drag && playrDrag) {
-                //     playrDrag = false;
-                // };
-                // if (data.point.drag) {
-                //     if (!playrDrag) {
-                //         playrDrag = true;
-                //         somX = data.point.x;
-                //         somY = data.point.y;
-                //     };
-                //     ctx.beginPath();
-                //     ctx.lineCap = "round";
-                //     ctx.lineWidth = data.point.brushSize;
-                //     ctx.strokeStyle = data.point.color;
-                //     ctx.moveTo(somX + (data.point.brushSize / 2), somY + (data.point.brushSize / 2));
-                //     ctx.lineTo(data.point.x + (data.point.brushSize / 2), data.point.y + (data.point.brushSize / 2));
-                //     ctx.stroke();
-                //     ctx.closePath();
-                //     somX = data.point.x;
-                //     somY = data.point.y;
-                // };
-            };
         });
 
         // 判断用户实例是否创建
