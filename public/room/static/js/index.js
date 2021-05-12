@@ -584,15 +584,6 @@ function initCanvas() {
             let newY = (playerList[i].pontY + lastY) * dZoom;
             playerList[i].move(newX, newY);
         }
-        // const players = document.querySelectorAll(".player-mouse");
-        // for (let i = 0; i < players.length; i++) {
-        //     let elPintX = players[i].getAttribute("data-brush-x");
-        //     let elPintY = players[i].getAttribute("data-brush-y");
-        //     let elBrushSize = players[i].getAttribute("data-brush-size");
-        //     players[i].style.transform = "translate3d(" + ((1 * elPintX + lastX) * dZoom) + "px, " + ((1 * elPintY + lastY) * dZoom) + "px, 0px)";
-        //     players[i].style.width = elBrushSize * dZoom + "px";
-        //     players[i].style.height = elBrushSize * dZoom + "px";
-        // }
     }
 
     // 笔刷菜单功能
@@ -1029,8 +1020,8 @@ function initCanvas() {
                         ctx.lineCap = "round";
                         ctx.lineWidth = data.point.brushSize;
                         ctx.strokeStyle = data.point.color;
-                        ctx.moveTo(somX + (data.point.brushSize / 2), somY + (data.point.brushSize / 2));
-                        ctx.lineTo(data.point.x + (data.point.brushSize / 2), data.point.y + (data.point.brushSize / 2));
+                        ctx.moveTo(lastX + somX + (data.point.brushSize / 2), lastY + somY + (data.point.brushSize / 2));
+                        ctx.lineTo(lastX + data.point.x + (data.point.brushSize / 2), lastY + data.point.y + (data.point.brushSize / 2));
                         ctx.stroke();
                         ctx.closePath();
                         somX = data.point.x;
