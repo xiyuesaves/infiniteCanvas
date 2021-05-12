@@ -148,34 +148,33 @@ function initCanvas() {
             this.element.userItem.className = "user-name list-user-name";
         }
         move(x, y) {
-            this.pontX = x;
-            this.pontY = y;
+            // this.pontX = x;
+            // this.pontY = y;
             this.element.userBrush.style.transform = `translate3d(${x}px, ${y}px, 0px)`;
         }
         brushSize(size) {
-            this.brush.size = size;
+            // this.brush.size = size;
             this.element.userBrush.style.width = `${size}px`;
             this.element.userBrush.style.height = `${size}px`;
         }
         brushColor(color) {
-            this.brush.color = color;
+            // this.brush.color = color;
             this.element.userBrush.style.backgroundColor = `${color}6b`;
             this.element.zoomEl.style.backgroundColor = `${color}6b`;
         }
         zoomValue(zoomVal) {
-            this.zoom = zoomVal;
+            // this.zoom = zoomVal;
             this.element.zoomEl.style.top = `calc(${zoomVal}% - ${this.element.zoomEl.offsetHeight * (zoomVal/100)}px)`;
         }
+        update(data) {
+            this.brush.size = data.brushSize;
+            this.brush.color = data.color;
+            this.zoom = data.zoom;
+            this.pontX = data.x;
+            this.pontY = data.y;
+            console.log(data)
+        }
     }
-
-    // 创建其他用户笔刷
-    function createbrush(data) {
-        console.log("其他用户笔刷", data)
-        console.log(data)
-        if (data.userId !== localUser.id && checkUser(data)) {
-
-        };
-    };
 
     // 监听快捷键
     document.addEventListener("keydown", function(e) {
@@ -578,6 +577,13 @@ function initCanvas() {
 
     // 刷新其他用户数据[待重写]
     function refreshPlayer() {
+        for (let i = 0; i < playerList.length; i++) {
+            let newSize = playerList[i].brush.size * dZoom;
+            playerList[i].brushSize(newSize)
+            let newX = (playerList[i].pontX + lastX) * dZoom;
+            let newY = (playerList[i].pontY + lastY) * dZoom;
+            playerList[i].move(newX, newY);
+        }
         // const players = document.querySelectorAll(".player-mouse");
         // for (let i = 0; i < players.length; i++) {
         //     let elPintX = players[i].getAttribute("data-brush-x");
@@ -983,6 +989,9 @@ function initCanvas() {
                     let moveX = (data.point.x + lastX) * dZoom;
                     let moveY = (data.point.y + lastY) * dZoom;
                     playerList[userIndex].move(moveX, moveY);
+                    let updateData = data.point;
+                        updateData.zoom = zoomVal;
+                    playerList[userIndex].update(updateData);
 
                     // 缓存路径信息
                     if (data.point.drag) {
