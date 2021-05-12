@@ -18,7 +18,6 @@ function initCanvas() {
     const socket = io();
     // 主要操作元素
     const canvas = document.querySelector("#canvas"); // 画布
-    // const brush = document.querySelector("#brush"); // 本地用户笔刷
     const ctx = canvas.getContext("2d"); // canvas2d对象
     const menuLayer = document.querySelector(".menus"); // 菜单
     const fullImfo = document.querySelector(".wating-service"); // 等待服务器响应界面
@@ -35,18 +34,16 @@ function initCanvas() {
     // 配置项
     let runTime = new Date().getTime(); // 运行时钟
     let loadOk = 0; // 历史数据加载状态
+
     let pathArrList = {}; // 路径数组列表
     let tempPathArr = {}; // 临时绘制路径
-    let withdrawArr = []; // 撤回记录
-    let disabledPath = []; // 禁用id列表
-    let userId = null; // 本地玩家id
+    let withdrawArr = []; // 本地撤回记录
+    let disabledPath = []; // 本地禁用id列表
 
     let localUser; // 本地玩家对象
 
-    let localUserId = null; // 服务器上用户的id[即将淘汰]
-
     let loaclUserName = null; // 本地玩家名称
-    let lockUserList = []; // 本地用户统计
+    let playerList = []; // 其他用户列表
 
     let moveMouse = false; // 增加节流算法,同步用户间的差异
     let moveObj = {
@@ -68,10 +65,12 @@ function initCanvas() {
         tempY = 0;
     let brushX = 0, // 笔刷原始坐标
         brushY = 0;
+
     let zoom = 1.1, // 缩放步幅
         dZoom = 1, // 初始缩放值
-        maxZoom = 150,
+        maxZoom = 150, // 缩放限制
         minZoom = -150;
+
     let mouseX = 0, // 鼠标位置
         mouseY = 0;
 
@@ -105,6 +104,7 @@ function initCanvas() {
             this.isOnline = data.isOnline || false;
             this.pontX = 0;
             this.pontY = 0;
+            this.zoom = 1;
             this.brush = {
                 size: 20,
                 color: "#ffffff"
@@ -115,7 +115,13 @@ function initCanvas() {
             this.element.userItem = document.createElement("div");
             this.element.userItem.className = "user-name list-user-name";
             this.element.userItem.id = "listId" + this.id;
-            this.element.userItem.innerText = "id" + this.id + " " + this.name;
+            this.element.userItem.innerText = this.id + " " + this.name;
+            document.querySelector(".online-list").appendChild(this.element.userItem);
+            if (this.isOnline) {
+                this.online();
+            };
+        }
+        online() {
             this.element.userNameEl = document.createElement("p");
             this.element.userNameEl.className = "user-name";
             this.element.userNameEl.innerText = this.name;
@@ -129,21 +135,17 @@ function initCanvas() {
             this.element.zoomEl.className = "indicator-tag";
             this.element.zoomEl.appendChild(this.element.zoomName);
             document.querySelector(".right-zoom-indicator").appendChild(this.element.zoomEl)
-            document.querySelector(".online-list").appendChild(this.element.userItem);
             document.querySelector(".user-mouse").appendChild(this.element.userBrush);
+
             this.brushSize(this.brush.size);
-            if (this.isOnline) {
-                this.online();
-            };
-        }
-        online() {
             this.isOnline = true;
-            this.element.userItem.className = "user-name list-user-name online";
+            this.element.userItem.className = "user-name list-user-name isonline";
         }
         offline() {
+            document.querySelector(".right-zoom-indicator").removeChild(this.element.zoomEl)
+            document.querySelector(".user-mouse").removeChild(this.element.userBrush);
             this.isOnline = false;
             this.element.userItem.className = "user-name list-user-name";
-            document.querySelector("body")
         }
         move(x, y) {
             this.pontX = x;
@@ -161,7 +163,7 @@ function initCanvas() {
             this.element.zoomEl.style.backgroundColor = `${color}6b`;
         }
         zoomValue(zoomVal) {
-            console.log(this.element.zoomEl.offsetHeight)
+            this.zoom = zoomVal;
             this.element.zoomEl.style.top = `calc(${zoomVal}% - ${this.element.zoomEl.offsetHeight * (zoomVal/100)}px)`;
         }
     }
@@ -170,7 +172,7 @@ function initCanvas() {
     function createbrush(data) {
         console.log("其他用户笔刷", data)
         console.log(data)
-        if (data.userId !== localUserId && checkUser(data)) {
+        if (data.userId !== localUser.id && checkUser(data)) {
 
         };
     };
@@ -239,9 +241,8 @@ function initCanvas() {
 
     // 撤回操作
     function withdraw() {
-        if (pathArrList[userId].length) {
-            let withdrawPath = pathArrList[userId].pop();
-            console.log("撤回", withdrawPath[0].time);
+        if (pathArrList[localUser.id].length) {
+            let withdrawPath = pathArrList[localUser.id].pop();
             withdrawArr.push(withdrawPath);
             socket.emit("withdraw", { cookie: Cookies.get("cookieId"), time: withdrawPath[0].time });
             drenArr(pathArrList);
@@ -254,7 +255,7 @@ function initCanvas() {
     function redo() {
         if (withdrawArr.length) {
             let redoPath = withdrawArr.pop();
-            pathArrList[userId].push(redoPath);
+            pathArrList[localUser.id].push(redoPath);
             socket.emit("redo", { cookie: Cookies.get("cookieId"), time: redoPath[0].time });
             drenArr(pathArrList);
         } else {
@@ -264,8 +265,8 @@ function initCanvas() {
 
     // 监听笔刷位置
     canvas.addEventListener("mousedown", function(e) {
-        if (!tempPathArr[userId]) {
-            tempPathArr[userId] = new Array();
+        if (!tempPathArr[localUser.id]) {
+            tempPathArr[localUser.id] = new Array();
         };
         // 清除重做步数
         if (withdrawArr.length) {
@@ -282,7 +283,6 @@ function initCanvas() {
             tempY = e.offsetY;
             moveStart = true;
             canvas.className = "move";
-            // brush.className = "move";
             localUser.element.userBrush.className = "player-mouse move";
         } else {
             dragStart = false;
@@ -293,12 +293,11 @@ function initCanvas() {
         dragStart = false;
         moveStart = false;
         canvas.className = "";
-        // brush.className = "";
         localUser.element.userBrush.className = "player-mouse";
-        if (userId) {
-            if (tempPathArr[userId].length) {
-                pathArrList[userId].push(tempPathArr[userId]);
-                tempPathArr[userId] = [];
+        if (localUser.id) {
+            if (tempPathArr[localUser.id].length) {
+                pathArrList[localUser.id].push(tempPathArr[localUser.id]);
+                tempPathArr[localUser.id] = [];
             }
         } else {
             console.error("未登录,或登录过期");
@@ -349,8 +348,8 @@ function initCanvas() {
 
     // 临时线条-绘制方法
     function dren(e) {
-        if (!tempPathArr[userId].length) {
-            tempPathArr[userId].push({
+        if (!tempPathArr[localUser.id].length) {
+            tempPathArr[localUser.id].push({
                 x: (e.offsetX / dZoom - lastX),
                 y: (e.offsetY / dZoom - lastY),
                 color: brushColor,
@@ -358,7 +357,7 @@ function initCanvas() {
                 time: runTime
             })
         } else {
-            tempPathArr[userId].push({
+            tempPathArr[localUser.id].push({
                 x: (e.offsetX / dZoom - lastX),
                 y: (e.offsetY / dZoom - lastY),
             })
@@ -540,7 +539,6 @@ function initCanvas() {
             zoomFun(-delta);
             let proportion = zoomVal / maxZoom * 100
             localUser.zoomValue(50 - (proportion / 2));
-            // zoomIndicator.style.top = `${50 - (proportion / 2)}%`;
         }
     }, false);
 
@@ -599,7 +597,7 @@ function initCanvas() {
         const selectColor = document.querySelector(".color-view");
         let clickSlider = false;
 
-        // 初始化笔刷控制器默认值
+        // 初始化笔刷控制器
         brushSize.setAttribute("min", brushMinSize);
         brushSize.setAttribute("max", brushMaxSize);
         brushSize.value = brushDefaultSize;
@@ -750,8 +748,6 @@ function initCanvas() {
             if (data.status) {
                 Cookies.set("cookieId", data.cookieId, { expires: 365 });
                 infoText.innerText = "登录成功啦~";
-                userId = "id" + data.id;
-                localUserId = data.id;
                 loaclUserName = data.name;
                 loginSuccess(data);
             } else {
@@ -778,9 +774,6 @@ function initCanvas() {
             if (data.status) {
                 Cookies.set("cookieId", data.cookieId, { expires: 365 });
                 infoText.innerText = "注册成功啦~";
-
-                userId = "id" + data.id;
-                localUserId = data.id;
                 loaclUserName = data.name;
                 loginSuccess(data);
             } else {
@@ -818,7 +811,6 @@ function initCanvas() {
                         Cookies.remove("cookieId");
                         break;
                 }
-
             };
         });
 
@@ -838,10 +830,23 @@ function initCanvas() {
 
         // 新用户上线监听
         socket.on("userAdd", function(data) {
-            console.log("新用户上线", data);
+            console.log("用户进入画布", data);
             if (loginStatus) {
-                newUserAdd(data);
-                lockUserList.push(data);
+                let isExisted = checkUser(data);
+                if (isExisted !== false) {
+                    console.log("重新上线")
+                    // 重新上线的用户肯定是已经初始化了数组的
+                    playerList[isExisted].online();
+                } else {
+                    console.log("新加入画布")
+                    let userNum = playerList.length
+                    playerList[userNum] = new Player(data[i]);
+                    playerList[userNum].create();
+                    // 初始化用户临时路径数组
+                    tempPathArr[data.id] = new Array();
+                    // 初始化用户路径数组
+                    pathArrList[data.id] = new Array();
+                }
             }
         });
 
@@ -849,20 +854,29 @@ function initCanvas() {
         socket.on("userDisconnect", function(data) {
             if (loginStatus) {
                 console.log("用户下线", data);
-                removeUser(data);
+                for (let i = 0; i < playerList.length; i++) {
+                    if (playerList[i].id === data.id) {
+                        playerList[i].offline();
+                    }
+                }
             }
         });
 
         // 接收用户列表
         socket.on("returnUserList", function(data) {
             console.log("接收到用户列表", data);
-            loadOk++;
-            initUserList()
             for (let i = 0; i < data.length; i++) {
-                newUserAdd(data[i]);
-                lockUserList.push(data);
+                // 剔除本地用户
+                if (data[i].id !== localUser.id) {
+                    let userNum = playerList.length
+                    playerList[userNum] = new Player(data[i]);
+                    playerList[userNum].create();
+                    // 初始化用户临时路径数组
+                    tempPathArr[data[i].id] = new Array();
+                    // 初始化用户路径数组
+                    pathArrList[data[i].id] = new Array();
+                }
             }
-            isloadOk();
         });
 
         // 返回历史消息
@@ -872,7 +886,7 @@ function initCanvas() {
                 if (data[i].type === 1) { // 1为系统消息
                     putSystemMsg(data[i].content);
                 } else if (data[i].type === 0) { // 0为用户消息
-                    if (data[i].userId === localUserId) {
+                    if (data[i].userId === localUser.id) {
                         putUsMsg(data[i].userName, data[i].content);
                     } else {
                         putUserMsg(data[i].userName, data[i].content);
@@ -887,10 +901,10 @@ function initCanvas() {
             console.log("接收到历史路径信息", data);
             for (let i = 0; i < data.length; i++) {
                 let playerId = data[i].userId;
-                if (pathArrList["id" + playerId] === undefined) {
-                    pathArrList["id" + playerId] = new Array();
+                if (pathArrList[playerId] === undefined) {
+                    pathArrList[playerId] = new Array();
                 }
-                pathArrList["id" + playerId].push(data[i].path)
+                pathArrList[playerId].push(data[i].path)
             }
             drenArr(pathArrList)
         })
@@ -901,7 +915,7 @@ function initCanvas() {
                 if (data.type === 1) { // 1为系统消息
                     putSystemMsg(data.content);
                 } else if (data.type === 0) { // 0为用户消息
-                    if (data.userId === localUserId) {
+                    if (data.userId === localUser.id) {
                         putUsMsg(data.userName, data.content);
                     } else {
                         putUserMsg(data.userName, data.content);
@@ -932,14 +946,14 @@ function initCanvas() {
         // 其他用户的撤回操作
         socket.on("userWithdraw", function(data) {
             console.log("其他用户的撤回操作", data)
-            pathArrList["id" + data.userId].pop();
+            pathArrList[data.userId].pop();
             drenArr(pathArrList);
         })
 
         // 其他用户的重做操作
         socket.on("userRedo", function(data) {
             console.log("其他用户的重做操作", data)
-            pathArrList["id" + data.userId].push(data.path);
+            pathArrList[data.userId].push(data.path);
             drenArr(pathArrList);
         })
 
@@ -949,151 +963,228 @@ function initCanvas() {
             const playerbrush = document.querySelector(`#id${data.userId}`);
             const zoomEl = document.querySelector(`#bar-id${data.userId}`);
             let zoomPercentage = data.point.zoomSize / maxZoom * 100;
-            if (playerbrush) {
-                zoomEl.style.top = `${50 - (zoomPercentage / 2)}%`;
-                if (!tempPathArr["id" + data.userId]) {
-                    tempPathArr["id" + data.userId] = new Array();
-                }
-                if (!pathArrList["id" + data.userId]) {
-                    pathArrList["id" + data.userId] = new Array();
-                }
-                if (data.point.drag) {
-                    if (!tempPathArr["id" + data.userId].length) {
-                        tempPathArr["id" + data.userId].push({
-                            x: data.point.x + (data.point.brushSize / 2),
-                            y: data.point.y + (data.point.brushSize / 2),
-                            color: data.point.color,
-                            brushSize: data.point.brushSize,
-                            time: data.time,
-                            tween: false
-                        })
-                    } else {
-                        tempPathArr["id" + data.userId].push({
-                            x: data.point.x + (data.point.brushSize / 2),
-                            y: data.point.y + (data.point.brushSize / 2),
-                            tween: false
-                        })
+            let zoomVal = 50 - (zoomPercentage / 2)
+            let userIndex = checkUser(data)
+            // 检测当前列表是否有此用户
+            if (userIndex !== false) {
+                // 判断是否在线
+                if (playerList[userIndex].isOnline) {
+                    // 将接收到的数据反馈到用户实例上
+                    if (playerList[userIndex].zoom !== zoomVal) {
+                        playerList[userIndex].zoomValue(zoomVal);
+                    };
+                    let brushSize = data.point.brushSize * dZoom;
+                    if (playerList[userIndex].brush.size !== brushSize) {
+                        playerList[userIndex].brushSize(brushSize)
+                    };
+                    if (playerList[userIndex].brush.color !== data.point.color) {
+                        playerList[userIndex].brushColor(data.point.color)
                     }
-                } else if (tempPathArr["id" + data.userId].length) {
-                    pathArrList["id" + data.userId].push(tempPathArr["id" + data.userId]);
-                    tempPathArr["id" + data.userId] = new Array();
-                    drenArr(pathArrList);
-                }
-                playerbrush.setAttribute("data-brush-size", data.point.brushSize);
-                playerbrush.setAttribute("data-brush-x", data.point.x);
-                playerbrush.setAttribute("data-brush-y", data.point.y);
-                data.point.x = data.point.x + lastX;
-                data.point.y = data.point.y + lastY;
-                playerbrush.style.transform = "translate3d(" + (data.point.x * dZoom) + "px, " + (data.point.y * dZoom) + "px, 0px)";
-                playerbrush.style.width = data.point.brushSize * dZoom + "px";
-                playerbrush.style.height = data.point.brushSize * dZoom + "px";
-                playerbrush.style.backgroundColor = data.point.color + "6B";
-                zoomEl.style.backgroundColor = data.point.color + "6B";
-                if (!data.point.drag && playrDrag) {
-                    playrDrag = false;
-                };
-                if (data.point.drag) {
-                    if (!playrDrag) {
-                        playrDrag = true;
+                    let moveX = (data.point.x + lastX) * dZoom;
+                    let moveY = (data.point.y + lastY) * dZoom;
+                    playerList[userIndex].move(moveX, moveY);
+
+                    // 缓存路径信息
+                    if (data.point.drag) {
+                        if (!tempPathArr[data.id].length) {
+                            tempPathArr[data.id].push({
+                                x: data.point.x + (data.point.brushSize / 2),
+                                y: data.point.y + (data.point.brushSize / 2),
+                                color: data.point.color,
+                                brushSize: data.point.brushSize,
+                                time: data.time
+                            })
+                        } else {
+                            tempPathArr[data.id].push({
+                                x: data.point.x + (data.point.brushSize / 2),
+                                y: data.point.y + (data.point.brushSize / 2)
+                            })
+                        }
+                    } else if (tempPathArr[data.id].length) {
+                        pathArrList[data.id].push(tempPathArr[data.id]);
+                        tempPathArr[data.id] = new Array();
+                        drenArr(pathArrList);
+                    }
+
+                    // 绘制临时路径
+                    if (!data.point.drag && playrDrag) {
+                        playrDrag = false;
+                    };
+                    if (data.point.drag) {
+                        if (!playrDrag) {
+                            playrDrag = true;
+                            somX = data.point.x;
+                            somY = data.point.y;
+                        };
+                        ctx.beginPath();
+                        ctx.lineCap = "round";
+                        ctx.lineWidth = data.point.brushSize;
+                        ctx.strokeStyle = data.point.color;
+                        ctx.moveTo(somX + (data.point.brushSize / 2), somY + (data.point.brushSize / 2));
+                        ctx.lineTo(data.point.x + (data.point.brushSize / 2), data.point.y + (data.point.brushSize / 2));
+                        ctx.stroke();
+                        ctx.closePath();
                         somX = data.point.x;
                         somY = data.point.y;
                     };
-                    ctx.beginPath();
-                    ctx.lineCap = "round";
-                    ctx.lineWidth = data.point.brushSize;
-                    ctx.strokeStyle = data.point.color;
-                    ctx.moveTo(somX + (data.point.brushSize / 2), somY + (data.point.brushSize / 2));
-                    ctx.lineTo(data.point.x + (data.point.brushSize / 2), data.point.y + (data.point.brushSize / 2));
-                    ctx.stroke();
-                    ctx.closePath();
-                    somX = data.point.x;
-                    somY = data.point.y;
-                };
+                }
+            }
+            if (playerbrush) {
+                // zoomEl.style.top = `${50 - (zoomPercentage / 2)}%`;
+                // if (!tempPathArr[data.userId]) {
+                //     tempPathArr[data.userId] = new Array();
+                // }
+                // if (!pathArrList[data.userId]) {
+                //     pathArrList[data.userId] = new Array();
+                // }
+                // if (data.point.drag) {
+                //     if (!tempPathArr[data.userId].length) {
+                //         tempPathArr[data.userId].push({
+                //             x: data.point.x + (data.point.brushSize / 2),
+                //             y: data.point.y + (data.point.brushSize / 2),
+                //             color: data.point.color,
+                //             brushSize: data.point.brushSize,
+                //             time: data.time
+                //         })
+                //     } else {
+                //         tempPathArr[data.userId].push({
+                //             x: data.point.x + (data.point.brushSize / 2),
+                //             y: data.point.y + (data.point.brushSize / 2)
+                //         })
+                //     }
+                // } else if (tempPathArr[data.userId].length) {
+                //     pathArrList[data.userId].push(tempPathArr[data.userId]);
+                //     tempPathArr[data.userId] = new Array();
+                //     drenArr(pathArrList);
+                // }
+
+                // playerbrush.setAttribute("data-brush-size", data.point.brushSize);
+                // playerbrush.setAttribute("data-brush-x", data.point.x);
+                // playerbrush.setAttribute("data-brush-y", data.point.y);
+
+                // data.point.x = data.point.x + lastX;
+                // data.point.y = data.point.y + lastY;
+                // playerbrush.style.transform = "translate3d(" + (data.point.x * dZoom) + "px, " + (data.point.y * dZoom) + "px, 0px)";
+                // playerbrush.style.width = data.point.brushSize * dZoom + "px";
+                // playerbrush.style.height = data.point.brushSize * dZoom + "px";
+                // playerbrush.style.backgroundColor = data.point.color + "6B";
+                // zoomEl.style.backgroundColor = data.point.color + "6B";
+
+                // if (!data.point.drag && playrDrag) {
+                //     playrDrag = false;
+                // };
+                // if (data.point.drag) {
+                //     if (!playrDrag) {
+                //         playrDrag = true;
+                //         somX = data.point.x;
+                //         somY = data.point.y;
+                //     };
+                //     ctx.beginPath();
+                //     ctx.lineCap = "round";
+                //     ctx.lineWidth = data.point.brushSize;
+                //     ctx.strokeStyle = data.point.color;
+                //     ctx.moveTo(somX + (data.point.brushSize / 2), somY + (data.point.brushSize / 2));
+                //     ctx.lineTo(data.point.x + (data.point.brushSize / 2), data.point.y + (data.point.brushSize / 2));
+                //     ctx.stroke();
+                //     ctx.closePath();
+                //     somX = data.point.x;
+                //     somY = data.point.y;
+                // };
             };
         });
 
-        // 创建其他用户缩放展示条
-        function createZoomBar(data) {
-            console.log("其他用户缩放条", data);
-            if (data.userId !== localUserId && !document.querySelector("#bar-id" + data.userId)) {
-                const zoomEl = document.createElement("div");
-                const zoomName = document.createElement("p");
-                zoomName.className = "tg-name";
-                zoomName.innerText = data.name;
-                zoomEl.className = "indicator-tag";
-                zoomEl.id = `bar-id${data.userId}`;
-                zoomEl.appendChild(zoomName);
-                zoomList.appendChild(zoomEl);
+        // 判断用户实例是否创建
+        function checkUser(data) {
+            for (let i = 0; i < playerList.length; i++) {
+                if (playerList[i].id === data.id) {
+                    return i;
+                };
+                return false;
             };
-        }
+        };
+
+        // 创建其他用户缩放展示条
+        // function createZoomBar(data) {
+        //     console.log("其他用户缩放条", data);
+        //     if (data.userId !== localUser.id && !document.querySelector("#bar-id" + data.userId)) {
+        //         const zoomEl = document.createElement("div");
+        //         const zoomName = document.createElement("p");
+        //         zoomName.className = "tg-name";
+        //         zoomName.innerText = data.name;
+        //         zoomEl.className = "indicator-tag";
+        //         zoomEl.id = `bar-id${data.userId}`;
+        //         zoomEl.appendChild(zoomName);
+        //         zoomList.appendChild(zoomEl);
+        //     };
+        // }
 
         // 删除下线用户缩放条
-        function removeZoomBar(data) {
-            console.log("删除下线用户缩放条", data);
-            const removeEl = document.querySelector(`#bar-id${data.userId}`)
-            zoomList.removeChild(removeEl);
-        }
+        // function removeZoomBar(data) {
+        //     console.log("删除下线用户缩放条", data);
+        //     const removeEl = document.querySelector(`#bar-id${data.userId}`)
+        //     zoomList.removeChild(removeEl);
+        // }
 
         // 创建其他用户笔刷
-        function createbrush(data) {
-            console.log("其他用户笔刷", data)
-            if (data.userId !== localUserId && !document.querySelector("#id" + data.userId)) {
-                const playerEl = document.createElement("div");
-                const userNameEl = document.createElement("p");
-                userNameEl.className = "user-name";
-                userNameEl.innerText = data.name;
-                playerEl.className = "player-mouse";
-                playerEl.id = `id${data.userId}`;
-                playerEl.setAttribute("data-brush-x", "0");
-                playerEl.setAttribute("data-brush-y", "0");
-                playerEl.setAttribute("data-brush-size", "20");
-                playerEl.appendChild(userNameEl);
-                otherPlayerList.appendChild(playerEl);
-            };
-        };
+        // function createbrush(data) {
+        //     console.log("其他用户笔刷", data)
+        //     if (data.userId !== localUser.id && !document.querySelector("#id" + data.userId)) {
+        //         const playerEl = document.createElement("div");
+        //         const userNameEl = document.createElement("p");
+        //         userNameEl.className = "user-name";
+        //         userNameEl.innerText = data.name;
+        //         playerEl.className = "player-mouse";
+        //         playerEl.id = `id${data.userId}`;
+        //         playerEl.setAttribute("data-brush-x", "0");
+        //         playerEl.setAttribute("data-brush-y", "0");
+        //         playerEl.setAttribute("data-brush-size", "20");
+        //         playerEl.appendChild(userNameEl);
+        //         otherPlayerList.appendChild(playerEl);
+        //     };
+        // };
 
         // 删除下线用户笔刷
-        function remveUserBrush(data) {
-            const removeEl = document.querySelector("#id" + data.userId);
-            otherPlayerList.removeChild(removeEl);
-        };
+        // function remveUserBrush(data) {
+        //     const removeEl = document.querySelector("#id" + data.userId);
+        //     otherPlayerList.removeChild(removeEl);
+        // };
 
         // 删除下线用户
-        function removeUser(data) {
-            remveUserBrush(data);
-            removeZoomBar(data);
-            for (let i = 0; i < lockUserList.length; i++) {
-                if (lockUserList[i].userId === data.userId) {
-                    lockUserList.splice(i, 1);
-                };
-            };
-            initUserList();
-            for (let i = 0; i < lockUserList.length; i++) {
-                newUserAdd(lockUserList[i]);
-            };
-        };
+        // function removeUser(data) {
+        //     remveUserBrush(data);
+        //     removeZoomBar(data);
+        //     for (let i = 0; i < lockUserList.length; i++) {
+        //         if (lockUserList[i].userId === data.userId) {
+        //             lockUserList.splice(i, 1);
+        //         };
+        //     };
+        //     initUserList();
+        //     for (let i = 0; i < lockUserList.length; i++) {
+        //         newUserAdd(lockUserList[i]);
+        //     };
+        // };
 
         // 初始化用户列表
-        function initUserList() {
-            let removeEl = document.querySelectorAll(".list-user-name")
-            for (let i = 0; i < removeEl.length; i++) {
-                onlineList.removeChild(removeEl[i]);
-            };
-        };
+        // function initUserList() {
+        //     let removeEl = document.querySelectorAll(".list-user-name")
+        //     for (let i = 0; i < removeEl.length; i++) {
+        //         onlineList.removeChild(removeEl[i]);
+        //     };
+        // };
 
         // 新用户加入
-        function newUserAdd(userData) {
-            if (!document.querySelector("#listId" + userData.userId)) {
-                const userEl = document.createElement("div");
-                userEl.className = "user-name list-user-name";
-                userEl.id = "listId" + userData.userId;
-                userEl.innerText = "id" + userData.userId + " " + userData.name;
-                onlineList.appendChild(userEl);
-                titalNum.innerText = "当前在线:" + document.querySelectorAll(".list-user-name").length + "人";
-                createbrush(userData);
-                createZoomBar(userData);
-            };
-        };
+        // function newUserAdd(userData) {
+        //     if (!document.querySelector("#listId" + userData.userId)) {
+        //         const userEl = document.createElement("div");
+        //         userEl.className = "user-name list-user-name";
+        //         userEl.id = "listId" + userData.userId;
+        //         userEl.innerText = userData.userId + " " + userData.name;
+        //         onlineList.appendChild(userEl);
+        //         titalNum.innerText = "当前在线:" + document.querySelectorAll(".list-user-name").length + "人";
+        //         createbrush(userData);
+        //         createZoomBar(userData);
+        //     };
+        // };
 
         // 登录成功方法
         function loginSuccess(data) {
@@ -1101,8 +1192,9 @@ function initCanvas() {
                 localUser = new Player(data);
                 localUser.create();
                 // 初始化本地路径
-                if (pathArrList[userId] === undefined) {
-                    pathArrList[userId] = new Array();
+                if (pathArrList[localUser.id] === undefined) {
+                    pathArrList[localUser.id] = new Array();
+                    console.log(pathArrList)
                 }
                 // 初始化笔刷菜单
                 brushMenu();
@@ -1287,7 +1379,7 @@ function initCanvas() {
                         let str2arr = tempInputVal.split(" ");
                         if (str2arr.length === 2) {
                             disabledPath.push(str2arr[1]);
-                            putSystemMsg(`已屏蔽 ${str2arr[1]} 绘制的内容`);
+                            putSystemMsg(`已屏蔽 id${str2arr[1]} 绘制的内容`);
                             drenArr(pathArrList);
                         } else {
                             putSystemMsg(`命令或参数错误`);
@@ -1298,9 +1390,9 @@ function initCanvas() {
                             if (disabledPath.indexOf(str2arr[1]) !== -1) {
                                 disabledPath.splice(disabledPath.indexOf(str2arr[1]), 1);
                                 drenArr(pathArrList);
-                                putSystemMsg(`已解除屏蔽 ${str2arr[1]} 绘制的内容`);
+                                putSystemMsg(`已解除屏蔽 id${str2arr[1]} 绘制的内容`);
                             } else {
-                                putSystemMsg(`没有在屏蔽列表找到 ${str2arr[1]}`);
+                                putSystemMsg(`没有在屏蔽列表找到 id${str2arr[1]}`);
                             }
                         } else {
                             putSystemMsg(`命令或参数错误`);
@@ -1311,7 +1403,7 @@ function initCanvas() {
                         putSystemMsg(`鼠标放置在"在线人数"上可显示用户id和在线列表`);
                         putSystemMsg(`输入/disable 他人id 可以屏蔽此id绘制的内容`);
                         putSystemMsg(`输入/enable 他人id 可以解禁此id绘制的内容`);
-                        putSystemMsg(`例如,禁用id1的用户 /disable id1`);
+                        putSystemMsg(`例如,禁用id1的用户 /disable 1`);
                         putSystemMsg(`快捷键,f7切换ui展示,ctrl + s/f8保存当前视图`);
                     } else {
                         putSystemMsg(`命令错误`);

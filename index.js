@@ -180,7 +180,7 @@ io.on('connection', (socket) => {
         if (dbData) {
             if (!checkId(dbData.userId)) {
                 let cookieId = Buffer.from(`${dbData.userName}${new Date().getTime()}`).toString('base64');
-                socket.emit("loginReturn", { status: true, cookieId: cookieId, name: dbData.userName, id: dbData.userId });
+                socket.emit("loginReturn", { status: true, cookieId: cookieId, name: dbData.userName, id: dbData.userId, isOnline: true });
                 updateCookieId(dbData.userId, cookieId);
                 newUserAdd(dbData.userName, dbData.userId, cookieId);
             } else {
@@ -199,7 +199,7 @@ io.on('connection', (socket) => {
         let dbData = await db.getSync("SELECT userName,userId,cookieId FROM user WHERE user.cookieId = ?", [data.cookie]);
         if (dbData) {
             if (!checkCookie(dbData.cookieId)) {
-                socket.emit("loginReturn", { status: true, cookieId: dbData.cookieId, name: dbData.userName, id: dbData.userId });
+                socket.emit("loginReturn", { status: true, cookieId: dbData.cookieId, name: dbData.userName, id: dbData.userId, isOnline: true });
                 newUserAdd(dbData.userName, dbData.userId, dbData.cookieId);
             } else {
                 // [修改]踢掉已上线的人
@@ -220,11 +220,10 @@ io.on('connection', (socket) => {
                 let createTime = new Date().getTime() + "";
                 await db.runSync("INSERT INTO user (userName,createTime,password) VALUES (?,?,?)", [data.name, createTime, data.psw]);
                 let userData = await db.getSync("SELECT userId,userName FROM user WHERE user.userName = ?", [data.name]);
-                userData = userData.data
                 let cookieId = Buffer.from(`${userData.userName}${new Date().getTime()}`).toString('base64');
                 updateCookieId(userData.userId, cookieId);
                 newUserAdd(userData.userName, userData.userId, cookieId);
-                socket.emit("registeredReturn", { status: true, cookieId: cookieId, name: userData.userName, id: userData.userId });
+                socket.emit("registeredReturn", { status: true, cookieId: cookieId, name: userData.userName, id: userData.userId, isOnline: true });
             } else {
                 console.log("注册失败,邀请码错误");
                 socket.emit("registeredReturn", { status: false, err: 2 });
@@ -256,7 +255,8 @@ io.on('connection', (socket) => {
             for (let i = 0; i < userList.length; i++) {
                 userListArr.push({
                     name: userList[i].userName,
-                    userId: userList[i].userId
+                    id: userList[i].userId,
+                    isOnline: true
                 });
             };
             socket.emit("returnUserList", userListArr);
@@ -291,13 +291,13 @@ io.on('connection', (socket) => {
             let decodeData = {
                 point: data.point,
                 time: data.time,
-                userId: checkCookie(data.cookie).userId
+                id: checkCookie(data.cookie).userId
             };
             if (data.point.drag) {
                 let brsuhMove = data.point.brushSize / 2;
                 // 测试用修改
-                if (!userPath[`id${decodeData.userId}`].length) {
-                    userPath[`id${decodeData.userId}`].push({
+                if (!userPath[`${decodeData.id}`].length) {
+                    userPath[`${decodeData.id}`].push({
                         x: data.point.x + brsuhMove,
                         y: data.point.y + brsuhMove,
                         time: data.time,
@@ -306,29 +306,29 @@ io.on('connection', (socket) => {
                         tween: false
                     });
                 } else {
-                    userPath[`id${decodeData.userId}`].push({
+                    userPath[`${decodeData.id}`].push({
                         x: data.point.x + brsuhMove,
                         y: data.point.y + brsuhMove,
                         tween: false
                     });
                 };
             } else {
-                if (userPath[`id${decodeData.userId}`].length) {
-                    let time = userPath[`id${decodeData.userId}`][0].time
+                if (userPath[`${decodeData.id}`].length) {
+                    let time = userPath[`${decodeData.id}`][0].time
                     if (!fs.existsSync('path/')) {
                         console.log("创建路径存储目录");
                         fs.mkdirSync('path');
                     };
-                    fs.writeFile(`path/${canvasId}-${decodeData.userId}-${time}`, JSON.stringify(userPath[`id${decodeData.userId}`]), async function(err) {
+                    fs.writeFile(`path/${canvasId}-${decodeData.id}-${time}`, JSON.stringify(userPath[`${decodeData.id}`]), async function(err) {
                         if (!err) {
-                            await db.runSync("INSERT INTO path_list (userId,userName,pathFile,canvasId) VALUES (?,?,?,?)", [decodeData.userId, checkId(decodeData.userId).userName, `${canvasId}-${decodeData.userId}-${time}`, canvasId]);
-                            await db.runSync("DELETE FROM path_list WHERE disable = 1 AND userId = ?", [decodeData.userId]); // [需要单独分离出去]
+                            await db.runSync("INSERT INTO path_list (userId,userName,pathFile,canvasId) VALUES (?,?,?,?)", [decodeData.id, checkId(decodeData.id).userName, `${canvasId}-${decodeData.id}-${time}`, canvasId]);
+                            await db.runSync("DELETE FROM path_list WHERE disable = 1 AND userId = ?", [decodeData.id]); // [需要单独分离出去,否则可能会占用过多性能]
                         } else {
                             console.log("写入失败", err);
                             sendMessage({ content: "写入路径文件失败,请联系管理员", time: 0, type: 1, userId: 0, userName: "root", only: true });
                         };
                     });
-                    userPath[`id${decodeData.userId}`] = new Array();
+                    userPath[`${decodeData.id}`] = new Array();
                 };
             };
             socket.broadcast.emit("otherPlayer", decodeData);
@@ -412,9 +412,9 @@ io.on('connection', (socket) => {
     function newUserAdd(userName, userId, userCookie) {
         console.log("用户上线", userName);
         userList.push({ socket: socket, userName: userName, userId: userId, userCookie: userCookie });
-        socket.broadcast.emit("userAdd", { name: userName, userId: userId });
-        if (!userPath[`id${userId}`]) {
-            userPath[`id${userId}`] = new Array();
+        socket.broadcast.emit("userAdd", { name: userName, id: userId });
+        if (!userPath[`${userId}`]) {
+            userPath[`${userId}`] = new Array();
         };
     };
     // 用户下线 [未完成多canvas]
@@ -422,7 +422,7 @@ io.on('connection', (socket) => {
         for (let i = 0; i < userList.length; i++) {
             if (userList[i].socket == userSocket) {
                 console.log("用户离开房间", userList[i].userName);
-                socket.broadcast.emit("userDisconnect", { userName: userList[i].userName, userId: userList[i].userId });
+                socket.broadcast.emit("userDisconnect", { name: userList[i].userName, id: userList[i].userId });
                 userList.splice(i, 1);
             };
         };
