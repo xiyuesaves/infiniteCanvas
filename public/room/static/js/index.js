@@ -136,7 +136,6 @@ function initCanvas() {
             this.element.zoomEl.appendChild(this.element.zoomName);
             document.querySelector(".right-zoom-indicator").appendChild(this.element.zoomEl)
             document.querySelector(".user-mouse").appendChild(this.element.userBrush);
-
             this.brushSize(this.brush.size);
             this.isOnline = true;
             this.element.userItem.className = "user-name list-user-name isonline";
@@ -613,6 +612,7 @@ function initCanvas() {
         // 监听笔刷大小
         onRangeChange(brushSize, function() {
             localUser.brushSize(brushSize.value);
+            localUser.brush.size = brushSize.value
             brushSize.setAttribute("title", "当前笔刷大小" + brushSize.value + "px");
             emitData();
         })
@@ -1040,89 +1040,6 @@ function initCanvas() {
                 return false;
             };
         };
-
-        // 创建其他用户缩放展示条
-        // function createZoomBar(data) {
-        //     console.log("其他用户缩放条", data);
-        //     if (data.userId !== localUser.id && !document.querySelector("#bar-id" + data.userId)) {
-        //         const zoomEl = document.createElement("div");
-        //         const zoomName = document.createElement("p");
-        //         zoomName.className = "tg-name";
-        //         zoomName.innerText = data.name;
-        //         zoomEl.className = "indicator-tag";
-        //         zoomEl.id = `bar-id${data.userId}`;
-        //         zoomEl.appendChild(zoomName);
-        //         zoomList.appendChild(zoomEl);
-        //     };
-        // }
-
-        // 删除下线用户缩放条
-        // function removeZoomBar(data) {
-        //     console.log("删除下线用户缩放条", data);
-        //     const removeEl = document.querySelector(`#bar-id${data.userId}`)
-        //     zoomList.removeChild(removeEl);
-        // }
-
-        // 创建其他用户笔刷
-        // function createbrush(data) {
-        //     console.log("其他用户笔刷", data)
-        //     if (data.userId !== localUser.id && !document.querySelector("#id" + data.userId)) {
-        //         const playerEl = document.createElement("div");
-        //         const userNameEl = document.createElement("p");
-        //         userNameEl.className = "user-name";
-        //         userNameEl.innerText = data.name;
-        //         playerEl.className = "player-mouse";
-        //         playerEl.id = `id${data.userId}`;
-        //         playerEl.setAttribute("data-brush-x", "0");
-        //         playerEl.setAttribute("data-brush-y", "0");
-        //         playerEl.setAttribute("data-brush-size", "20");
-        //         playerEl.appendChild(userNameEl);
-        //         otherPlayerList.appendChild(playerEl);
-        //     };
-        // };
-
-        // 删除下线用户笔刷
-        // function remveUserBrush(data) {
-        //     const removeEl = document.querySelector("#id" + data.userId);
-        //     otherPlayerList.removeChild(removeEl);
-        // };
-
-        // 删除下线用户
-        // function removeUser(data) {
-        //     remveUserBrush(data);
-        //     removeZoomBar(data);
-        //     for (let i = 0; i < lockUserList.length; i++) {
-        //         if (lockUserList[i].userId === data.userId) {
-        //             lockUserList.splice(i, 1);
-        //         };
-        //     };
-        //     initUserList();
-        //     for (let i = 0; i < lockUserList.length; i++) {
-        //         newUserAdd(lockUserList[i]);
-        //     };
-        // };
-
-        // 初始化用户列表
-        // function initUserList() {
-        //     let removeEl = document.querySelectorAll(".list-user-name")
-        //     for (let i = 0; i < removeEl.length; i++) {
-        //         onlineList.removeChild(removeEl[i]);
-        //     };
-        // };
-
-        // 新用户加入
-        // function newUserAdd(userData) {
-        //     if (!document.querySelector("#listId" + userData.userId)) {
-        //         const userEl = document.createElement("div");
-        //         userEl.className = "user-name list-user-name";
-        //         userEl.id = "listId" + userData.userId;
-        //         userEl.innerText = userData.userId + " " + userData.name;
-        //         onlineList.appendChild(userEl);
-        //         titalNum.innerText = "当前在线:" + document.querySelectorAll(".list-user-name").length + "人";
-        //         createbrush(userData);
-        //         createZoomBar(userData);
-        //     };
-        // };
 
         // 登录成功方法
         function loginSuccess(data) {
