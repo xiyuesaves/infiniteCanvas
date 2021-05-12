@@ -171,7 +171,6 @@ function initCanvas() {
             this.zoom = data.zoom;
             this.pontX = data.x;
             this.pontY = data.y;
-            console.log(data)
         }
     }
 
@@ -835,10 +834,11 @@ function initCanvas() {
                     // 重新上线的用户肯定是已经初始化了数组的
                     playerList[isExisted].online();
                 } else {
-                    console.log("新加入画布")
+                    console.log("新加入画布", data)
                     let userNum = playerList.length
-                    playerList[userNum] = new Player(data[i]);
+                    playerList[userNum] = new Player(data);
                     playerList[userNum].create();
+                    console.log(playerList)
                     // 初始化用户临时路径数组
                     tempPathArr[data.id] = new Array();
                     // 初始化用户路径数组
@@ -981,7 +981,7 @@ function initCanvas() {
                     let moveY = (data.point.y + lastY) * dZoom;
                     playerList[userIndex].move(moveX, moveY);
                     let updateData = data.point;
-                        updateData.zoom = zoomVal;
+                    updateData.zoom = zoomVal;
                     playerList[userIndex].update(updateData);
 
                     // 缓存路径信息
@@ -1037,8 +1037,8 @@ function initCanvas() {
                 if (playerList[i].id === data.id) {
                     return i;
                 };
-                return false;
             };
+            return false;
         };
 
         // 登录成功方法

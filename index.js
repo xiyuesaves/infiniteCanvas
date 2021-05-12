@@ -412,7 +412,7 @@ io.on('connection', (socket) => {
     function newUserAdd(userName, userId, userCookie) {
         console.log("用户上线", userName);
         userList.push({ socket: socket, userName: userName, userId: userId, userCookie: userCookie });
-        socket.broadcast.emit("userAdd", { name: userName, id: userId });
+        socket.broadcast.emit("userAdd", { name: userName, id: userId, isOnline: true });
         if (!userPath[`${userId}`]) {
             userPath[`${userId}`] = new Array();
         };
