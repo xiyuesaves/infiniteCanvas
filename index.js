@@ -14,7 +14,7 @@ db.runSync = function(sql, arr) {
         let param = arr || [];
         // console.log(sql, param)
         db.run(sql, param, function(err) {
-            if(!err){
+            if (!err) {
                 resolve();
             } else {
                 console.error(err);
@@ -57,8 +57,7 @@ async function initDatabase() {
         "canvas_data",
         "user",
         "invitationCode",
-        "message",
-        "path_list"
+        "message"
     ];
     // 剔除已存在的数据库
     for (let i = dbData.length - 1; i >= 0; i--) {
@@ -73,45 +72,48 @@ async function initDatabase() {
         for (let i = 0; i < tableArr.length; i++) {
             switch (tableArr[i]) {
                 case "canvas":
-                    db.runSync(`CREATE TABLE "canvas" ("canvasName" TEXT,"canvasId" INTEGER,"createTime" TEXT,"isPrivate" TEXT);`);
+                    await db.runSync(`CREATE TABLE "canvas" ("canvasName" TEXT,"canvasId" INTEGER,"createTime" TEXT,"isPrivate" TEXT);`);
                     break;
                 case "canvas_data":
-                    db.runSync(`CREATE TABLE "canvas_data" ("canvasId" TEXT,"userId" INTEGER);`);
+                    await db.runSync(`CREATE TABLE "canvas_data" (  "canvasId" INTEGER,  "userId" INTEGER)`);
                     break;
                 case "user":
-                    db.runSync(`CREATE TABLE "user" (  "userId" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,  "userName" text,  "createTime" TEXT,  "cookieId" TEXT,  "password" TEXT,  "invitePeople" TEXT,  "invitationCode" TEXT);`);
+                    await db.runSync(`CREATE TABLE "user" (  "userId" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,  "userName" text,  "createTime" TEXT,  "cookieId" TEXT,  "password" TEXT,  "invitePeople" TEXT,  "invitationCode" TEXT);`);
                     break;
                 case "invitationCode":
-                    db.runSync(`CREATE TABLE "invitationCode" ("invitationCode" TEXT,"createUserId" TEXT,"usingUserId" TEXT);`);
+                    await db.runSync(`CREATE TABLE "invitationCode" ("invitationCode" TEXT,"createUserId" TEXT,"usingUserId" TEXT);`);
                     break;
                 case "message":
-                    db.runSync(`CREATE TABLE "message" (  "msgId" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,  "userName" TEXT,  "userId" INTEGER,  "content" TEXT,  "canvasId" INTEGER,  "time" TEXT,  "type" integer);`);
-                    break;
-                case "path_list":
-                    db.runSync(`CREATE TABLE "path_list" (  "userId" integer,  "userName" TEXT,  "pathFile" TEXT,  "canvasId" INTEGER,  "disable" integer DEFAULT 0);`);
+                    await db.runSync(`CREATE TABLE "message" (  "msgId" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,  "userName" TEXT,  "userId" INTEGER,  "content" TEXT,  "canvasId" INTEGER,  "time" TEXT,  "type" integer);`);
                     break;
             };
         };
         console.log("修复完成");
     }
-    clearPathFile();
+    startHttpServer()
+    // clearPathFile();
 }
 initDatabase();
 
 // 整理路径数据
 async function clearPathFile() {
     const dbData = await db.allSync('SELECT pathFile FROM path_list');
-    let pathFile = fs.readdirSync("path/");
-    for (let i = 0; i < dbData.length; i++) {
-        if (pathFile.indexOf(dbData[i].pathFile) !== -1) {
-            pathFile.splice(pathFile.indexOf(dbData[i].pathFile), 1);
+    if (!fs.existsSync('path/')) {
+        console.log("创建路径存储目录");
+        fs.mkdirSync('path');
+    } else {
+        let pathFile = fs.readdirSync("path/");
+        for (let i = 0; i < dbData.length; i++) {
+            if (pathFile.indexOf(dbData[i].pathFile) !== -1) {
+                pathFile.splice(pathFile.indexOf(dbData[i].pathFile), 1);
+            };
         };
-    };
-    if (pathFile.length) {
-        console.log(`清理无用路径文件，共${pathFile.length}条`);
-        for (let i = 0; i < pathFile.length; i++) {
-            fs.unlinkSync(`path/${pathFile[i]}`);
-        };
+        if (pathFile.length) {
+            console.log(`清理无用路径文件，共${pathFile.length}条`);
+            for (let i = 0; i < pathFile.length; i++) {
+                // fs.unlinkSync(`path/${pathFile[i]}`);
+            };
+        }
     }
     startHttpServer()
 };
@@ -302,32 +304,18 @@ io.on('connection', (socket) => {
                         y: data.point.y + brsuhMove,
                         time: data.time,
                         color: data.point.color,
-                        brushSize: data.point.brushSize,
-                        tween: false
+                        brushSize: data.point.brushSize
                     });
                 } else {
                     userPath[`${decodeData.id}`].push({
                         x: data.point.x + brsuhMove,
-                        y: data.point.y + brsuhMove,
-                        tween: false
+                        y: data.point.y + brsuhMove
                     });
                 };
             } else {
                 if (userPath[`${decodeData.id}`].length) {
                     let time = userPath[`${decodeData.id}`][0].time
-                    if (!fs.existsSync('path/')) {
-                        console.log("创建路径存储目录");
-                        fs.mkdirSync('path');
-                    };
-                    fs.writeFile(`path/${canvasId}-${decodeData.id}-${time}`, JSON.stringify(userPath[`${decodeData.id}`]), async function(err) {
-                        if (!err) {
-                            await db.runSync("INSERT INTO path_list (userId,userName,pathFile,canvasId) VALUES (?,?,?,?)", [decodeData.id, checkId(decodeData.id).userName, `${canvasId}-${decodeData.id}-${time}`, canvasId]);
-                            await db.runSync("DELETE FROM path_list WHERE disable = 1 AND userId = ?", [decodeData.id]); // [需要单独分离出去,否则可能会占用过多性能]
-                        } else {
-                            console.log("写入失败", err);
-                            sendMessage({ content: "写入路径文件失败,请联系管理员", time: 0, type: 1, userId: 0, userName: "root", only: true });
-                        };
-                    });
+                    fs.writeFile(`path/c${canvasId}-u${decodeData.id}`, JSON.stringify(userPath[decodeData.id]) + "\n", { flag: 'a' }, async function(err) {});
                     userPath[`${decodeData.id}`] = new Array();
                 };
             };
@@ -339,65 +327,66 @@ io.on('connection', (socket) => {
     // 获取历画布数据
     socket.on("getHistoricalPath", async function(data) {
         if (checkCookie(data.cookie)) {
-            let dbData = await db.allSync("SELECT * FROM path_list WHERE path_list.canvasId = ? AND path_list.disable = 0", [canvasId]);
-            for (let i = 0; i < dbData.length; i++) {
-                let tempJson = [];
-                try {
-                    tempJson = JSON.parse(fs.readFileSync(`path/${dbData[i].pathFile}`).toString());
-                } catch (err) {
-                    console.log("读取路径时出现错误", err);
-                    sendMessage({ content: `无法加载路径${dbData[i].pathFile}`, time: 0, type: 1, userId: 0, userName: "root" });
-                };
-                dbData[i].path = tempJson;
+            let dbData = await db.allSync("SELECT userId FROM canvas_data WHERE canvas_data.canvasId = ?", [canvasId]);
+            let historicalData = [];
+            for (let user = 0; user < dbData.length; user++) {
+                let arrList = fs.readFileSync(`path/c${canvasId}-u${dbData[user].userId}`).toString().split("\n");
+                arrList.pop();
+                for (let path = 0; path < arrList.length; path++) {
+                    historicalData.push({
+                        id: dbData[user].userId,
+                        path: JSON.parse(arrList[path])
+                    });
+                }
             };
-            socket.emit("returnHistoricalPath", dbData);
+            socket.emit("returnHistoricalPath", historicalData);
         } else {
             console.log("没有通过检测 getHistoricalPath", data);
         };
     });
     // 撤回
-    socket.on("withdraw", async function(data) {
-        if (checkCookie(data.cookie)) {
-            // 撤回该用户发送的此条路径
-            let pathFile = `${canvasId}-${checkCookie(data.cookie).userId}-${data.time}`;
-            console.log(`撤回${pathFile}`);
-            await db.runSync("UPDATE path_list SET disable = ? WHERE pathFile = ?", [1, pathFile]);
-            socket.broadcast.emit("userWithdraw", { userId: checkCookie(data.cookie).userId });
-        } else {
-            console.log("没有通过检测 withdraw", data)
-        }
-    })
+    // socket.on("withdraw", async function(data) {
+    //     if (checkCookie(data.cookie)) {
+    //         // 撤回该用户发送的此条路径
+    //         let pathFile = `${canvasId}-${checkCookie(data.cookie).userId}-${data.time}`;
+    //         console.log(`撤回${pathFile}`);
+    //         await db.runSync("UPDATE path_list SET disable = ? WHERE pathFile = ?", [1, pathFile]);
+    //         socket.broadcast.emit("userWithdraw", { userId: checkCookie(data.cookie).userId });
+    //     } else {
+    //         console.log("没有通过检测 withdraw", data)
+    //     }
+    // })
     // 重做
-    socket.on("redo", async function(data) {
-        if (checkCookie(data.cookie)) {
-            let pathFile = `${canvasId}-${checkCookie(data.cookie).userId}-${data.time}`;
-            console.log(`重做${pathFile}`);
-            await db.runSync("UPDATE path_list SET disable = ? WHERE pathFile = ?", [0, pathFile]);
-            let pathList = JSON.parse(fs.readFileSync(`path/${pathFile}`).toString());
-            socket.broadcast.emit("userRedo", { userId: checkCookie(data.cookie).userId, path: pathList });
-        } else {
-            console.log("没有通过检测 redo", data)
-        }
-    })
+    // socket.on("redo", async function(data) {
+    //     if (checkCookie(data.cookie)) {
+    //         let pathFile = `${canvasId}-${checkCookie(data.cookie).userId}-${data.time}`;
+    //         console.log(`重做${pathFile}`);
+    //         await db.runSync("UPDATE path_list SET disable = ? WHERE pathFile = ?", [0, pathFile]);
+    //         let pathList = JSON.parse(fs.readFileSync(`path/${pathFile}`).toString());
+    //         socket.broadcast.emit("userRedo", { userId: checkCookie(data.cookie).userId, path: pathList });
+    //     } else {
+    //         console.log("没有通过检测 redo", data)
+    //     }
+    // })
     // 获取服务端重做列表
     socket.on("getRedoPath", async function(data) {
-        if (checkCookie(data.cookie)) {
-            let dbData = await db.allSync("SELECT pathFile FROM path_list WHERE path_list.userId = ? AND path_list.disable = 1", [checkCookie(data.cookie).userId]);
-            let pathList = []
-            for (let i = 0; i < dbData.length; i++) {
-                let tempJson = [];
-                try {
-                    tempJson = JSON.parse(fs.readFileSync(`path/${dbData[i].pathFile}`).toString());
-                    pathList.push(tempJson)
-                } catch (err) {
-                    console.log("读取路径时出现错误", err);
-                    sendMessage({ content: `无法加载重做路径${dbData[i].pathFile}`, time: 0, type: 1, userId: 0, userName: "root", only: true });
-                };
-            }
-            socket.emit("returnRedoPath", pathList)
-        } else {
-            console.log("没有通过检测 getRedoPath", data)
-        }
+        // if (checkCookie(data.cookie)) {
+        //     let dbData = await db.allSync("SELECT pathFile FROM path_list WHERE path_list.userId = ? AND path_list.disable = 1", [checkCookie(data.cookie).userId]);
+        //     let pathList = []
+        //     for (let i = 0; i < dbData.length; i++) {
+        //         let tempJson = [];
+        //         try {
+        //             tempJson = JSON.parse(fs.readFileSync(`path/${dbData[i].pathFile}`).toString());
+        //             pathList.push(tempJson)
+        //         } catch (err) {
+        //             console.log("读取路径时出现错误", err);
+        //             sendMessage({ content: `无法加载重做路径${dbData[i].pathFile}`, time: 0, type: 1, userId: 0, userName: "root", only: true });
+        //         };
+        //     }
+        //     socket.emit("returnRedoPath", pathList)
+        // } else {
+        //     console.log("没有通过检测 getRedoPath", data)
+        // }
     })
 
     // 广播消息 [未完成多canvas]

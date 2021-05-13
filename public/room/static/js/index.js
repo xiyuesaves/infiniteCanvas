@@ -897,7 +897,7 @@ function initCanvas() {
         socket.on("returnHistoricalPath", function(data) {
             console.log("接收到历史路径信息", data);
             for (let i = 0; i < data.length; i++) {
-                let playerId = data[i].userId;
+                let playerId = data[i].id;
                 if (pathArrList[playerId] === undefined) {
                     pathArrList[playerId] = new Array();
                 }
