@@ -3,7 +3,11 @@
 
 
 
-开发中...
+#### 开发中...
+
+#### 请注意,最新版本并不能正常运行,如果想尝试可下载[releases](https://github.com/xiyuesaves/infiniteCanvas/releases)中的版本
+
+
 
 ##### 部署方法
 
