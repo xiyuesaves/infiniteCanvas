@@ -111,7 +111,7 @@ async function clearPathFile() {
         if (pathFile.length) {
             console.log(`清理无用路径文件，共${pathFile.length}条`);
             for (let i = 0; i < pathFile.length; i++) {
-                // fs.unlinkSync(`path/${pathFile[i]}`);
+                fs.unlinkSync(`path/${pathFile[i]}`);
             };
         }
     }
