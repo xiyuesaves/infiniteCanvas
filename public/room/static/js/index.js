@@ -147,22 +147,18 @@ function initCanvas() {
             this.element.userItem.className = "user-name list-user-name";
         }
         move(x, y) {
-            // this.pontX = x;
-            // this.pontY = y;
             this.element.userBrush.style.transform = `translate3d(${x}px, ${y}px, 0px)`;
         }
         brushSize(size) {
-            // this.brush.size = size;
             this.element.userBrush.style.width = `${size}px`;
             this.element.userBrush.style.height = `${size}px`;
         }
         brushColor(color) {
-            // this.brush.color = color;
+            this.brush.color = color;
             this.element.userBrush.style.backgroundColor = `${color}6b`;
             this.element.zoomEl.style.backgroundColor = `${color}6b`;
         }
         zoomValue(zoomVal) {
-            // this.zoom = zoomVal;
             this.element.zoomEl.style.top = `calc(${zoomVal}% - ${this.element.zoomEl.offsetHeight * (zoomVal/100)}px)`;
         }
         update(data) {
