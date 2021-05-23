@@ -60,23 +60,38 @@ p {
 }
 
 .login-view .center-box {
+    pointer-events: none;
     width: 360px;
-    height: 390px;
+    min-height: 390px;
     background-color: #ffffff;
     border-radius: 8px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
     transition: 300ms;
     opacity: 0;
     transform: translateY(-20%);
-    padding: 20px 30px;
+    padding: 20px 30px 70px;
+    margin: 0 30px;
+    opacity: 0;
 }
 
 .login-view.show .center-box {
-    opacity: 1;
     transform: translateY(0%);
 }
-
-.login-view.show .center-box .top-title {
+.login-view.show.log{
+    padding-left: 420px;
+}
+.login-view.show.log .log{
+    pointer-events: auto;
+    opacity: 1;
+}
+.login-view.show.reg{
+    padding-right: 420px;
+}
+.login-view.show.reg .reg{
+    pointer-events: auto;
+    opacity: 1;
+}
+.login-view .center-box .top-title {
     width: 100%;
     text-align: center;
     font-size: 24px;
@@ -86,14 +101,14 @@ p {
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     margin-bottom: 20px;
 }
-.login-view.show .center-box .login-info{
+.login-view .center-box .login-info{
     width: 100%;
     text-align: center;
     font-size: 12px;
     color: #999999;
     margin-bottom: 40px;
 }
-.login-view.show .center-box input{
+.login-view .center-box input{
     width: 100%;
     height: 40px;
     margin-bottom: 25px;
@@ -103,17 +118,20 @@ p {
     transition: 300ms;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
-.login-view.show .center-box input:focus{
+.login-view .center-box input::placeholder{
+    color: #B2B2B2;
+}
+.login-view .center-box input:focus{
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
-.login-view.show .center-box .list-box{
+.login-view .center-box .list-box{
     width: 100%;
     height: 40px;
     display: flex;
     align-items: center;
     justify-content: space-between;
 }
-.login-view.show .center-box .list-box button{
+.login-view .center-box .list-box button{
     width: 140px;
     height: 100%;
     border: none;
@@ -122,14 +140,35 @@ p {
     font-weight: lighter;
     cursor: pointer;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    position: relative;
 }
-.login-view.show .center-box .list-box button.reg{
+.login-view .center-box .list-box button.reg{
     background-color: transparent;
     border: solid 1px #eaeaea;
     color: #666666;
 }
-.login-view.show .center-box .list-box button.log{
+.login-view .center-box .list-box button.log{
     background-color: #2db7f5;
     color: #ffffff;
     box-shadow: 0 2px 8px #2DB7F566;
+}
+.login-view .center-box .list-box button::after{
+    content: "";
+    transition: 200ms;
+    opacity: 0;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.05);
+    top: 0;
+    left: 0;
+}
+.login-view .center-box .list-box button:active:after{
+    opacity: 1;
+    box-shadow: inset 2px 2px 6px rgba(0, 0, 0, 0.025);
+}
+
+
+.login-view .center-box.check{
+    transform:translateY(0%) translateX(256px);
 }
