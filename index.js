@@ -141,6 +141,9 @@ function startHttpServer() {
 // 处理http服务
 
 // 返回正确文件地址
+app.get('/axios.js', function(req, res) {
+    res.sendFile(`${__dirname}/node_modules/axios/dist/axios.js`);
+});
 app.get('/cookies.js', function(req, res) {
     res.sendFile(`${__dirname}/node_modules/js-cookie/src/js.cookie.js`);
 });
@@ -171,6 +174,7 @@ app.get('/*', function(req, res) {
     res.sendFile(`${__dirname}/public/errPage/errImg/404.png`)
 });
 
+// 在线列表
 let userList = [];
 
 // socketio

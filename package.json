@@ -4,7 +4,8 @@
   "description": "可多人合作的无限缩放画布",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon node index.js"
+    "dev": "nodemon node index.js",
+    "test": "nodemon node test.js"
   },
   "repository": {
     "type": "git",
@@ -17,8 +18,14 @@
   },
   "homepage": "https://github.com/xiyuesaves/infiniteCanvas#readme",
   "dependencies": {
+    "axios": "^0.21.1",
+    "better-sqlite3": "^7.4.0",
+    "better-sqlite3-session-store": "0.0.2",
+    "body-parser": "^1.19.0",
+    "cookie-parser": "^1.4.5",
     "express": "^4.17.1",
     "js-cookie": "^2.2.1",
+    "node-uuid": "^1.4.8",
     "socket.io": "^4.0.1",
     "sqlite3": "^5.0.2"
   },

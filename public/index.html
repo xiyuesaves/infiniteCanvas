@@ -4,33 +4,51 @@
 <head>
     <meta charset="utf-8">
     <title>无限画布</title>
+    <link rel="stylesheet" type="text/css" href="static/css/default.css">
     <link rel="stylesheet" type="text/css" href="static/css/room-list.css">
-    <script type="text/javascript" src="static/js/room-list.js"></script>
+    <link rel="stylesheet" type="text/css" href="static/css/login.css">
+    <script type="text/javascript" src="axios.js"></script>
+    <script type="text/javascript" src="cookies.js"></script>
+    <script type="text/javascript" src="static/js/login.js"></script>
     <meta name="viewport" content="width=device-width, user-scalable=no,initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
 </head>
 
 <body>
-    <div class="login-view show log">
-        <div class="center-box log">
-            <p class="top-title">登录</p>
-            <p class="login-info">请在登录之后再进行此操作</p>
-            <input class="success" type="text" placeholder="用户名" name="">
-            <input class="success" type="password" placeholder="密码" name="">
-            <div class="list-box">
-                <button class="reg">注册</button>
-                <button class="log">登录</button>
+    <!-- 登录层 -->
+    <div class="login-view log">
+        <div class="switch-box">
+            <div class="center-box log">
+                <p class="top-title">登录</p>
+                <p class="login-info">请在登录之后再进行此操作</p>
+                <input class="log-name" type="text" placeholder="用户名" name="">
+                <p class="text-info "></p>
+                <input class="log-psw" type="password" placeholder="密码" name="">
+                <p class="text-info"></p>
+                <div class="list-box">
+                    <button class="reg">注册</button>
+                    <button class="log">登录</button>
+                </div>
+            </div>
+            <div class="center-box reg">
+                <p class="top-title">注册</p>
+                <p class="login-info">有朋自远方来，不亦说乎</p>
+                <input class="reg-name" type="text" placeholder="用户名" name="">
+                <p class="text-info"></p>
+                <input class="reg-psw" title="虽然被攻击的可能性不大,但还是请不要和其他账号使用同一密码" type="password" placeholder="密码" name="">
+                <p class="text-info"></p>
+                <input class="reg-key" type="text" placeholder="邀请码" name="">
+                <p class="text-info"></p>
+                <div class="list-box">
+                    <button class="reg">返回</button>
+                    <button class="log">注册</button>
+                </div>
             </div>
         </div>
-        <div class="center-box reg">
-            <p class="top-title">注册</p>
-            <p class="login-info">有朋自远方来，不亦说乎</p>
-            <input class="success" type="text" placeholder="用户名" name="">
-            <input class="success" type="password" placeholder="密码" name="">
-            <input class="success" type="password" placeholder="邀请码" name="">
-            <div class="list-box">
-                <button class="reg">返回</button>
-                <button class="log">注册</button>
-            </div>
+    </div>
+    <!-- 房间列表层 -->
+    <div class="room-list">
+        <div class="right-ligin-status">
+            
         </div>
     </div>
 </body>

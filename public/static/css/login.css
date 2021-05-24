@@ -1,0 +1,218 @@
+.login-view {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    justify-content: center;
+    /*backdrop-filter: blur(5px);*/
+    opacity: 0;
+    transition: 300ms;
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.login-view.show {
+    pointer-events: auto;
+    opacity: 1;
+}
+
+.login-view .center-box {
+    pointer-events: none;
+    width: 360px;
+    min-height: 390px;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    transition: 300ms;
+    opacity: 0;
+    transform: scale(0.8);
+    padding: 20px 30px 70px;
+    margin: 0 30px;
+    opacity: 0;
+}
+
+.login-view .center-box .text-info {
+    line-height: 0;
+    font-size: 12px;
+    color: #cccccc;
+    text-indent: 10px;
+    transform: translateY(-40px);
+    opacity: 0;
+    transition: 300ms;
+}
+
+.login-view .center-box .text-info.show {
+    opacity: 0.7;
+    transform: translateY(-14px);
+}
+
+.login-view .center-box .text-info.war {
+    color: #fe0000;
+}
+
+.login-view .center-box .text-info.info {
+    color: #F4B700;
+}
+
+.login-view .center-box .text-info.success {
+    color: #28a745;
+}
+
+.login-view .switch-box {
+    width: auto;
+    height: auto;
+    display: flex;
+    transition: 300ms;
+    align-items: center;
+    justify-content: center;
+    transform: translateY(-30%);
+}
+
+.login-view.log .switch-box {
+    transform: translateY(-30%) translateX(210px);
+}
+
+.login-view.reg .switch-box {
+    transform: translateY(-30%) translateX(-210px);
+}
+
+.login-view.show.log .switch-box {
+    transform: translateY(0%) translateX(210px);
+}
+
+.login-view.show.reg .switch-box {
+    transform: translateY(0%) translateX(-210px);
+}
+
+.login-view.log .center-box.log {
+    pointer-events: auto;
+    opacity: 1;
+    transform: scale(1.0);
+}
+
+.login-view.reg .center-box.reg {
+    pointer-events: auto;
+    opacity: 1;
+    transform: scale(1.0);
+}
+
+.login-view .center-box .top-title {
+    width: 100%;
+    text-align: center;
+    font-size: 24px;
+    font-weight: lighter;
+    margin-top: 20px;
+    color: #666666;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    margin-bottom: 20px;
+}
+
+.login-view .center-box .login-info {
+    width: 100%;
+    text-align: center;
+    font-size: 12px;
+    color: #999999;
+    margin-bottom: 40px;
+}
+
+.login-view .center-box input {
+    width: 100%;
+    height: 40px;
+    margin-bottom: 25px;
+    position: relative;
+    z-index: 10;
+    border: solid 1px #efefef;
+    border-radius: 4px;
+    text-indent: 8px;
+    color: #464646;
+    transition: 300ms;
+    font-size: 14px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.login-view .center-box input::placeholder {
+    color: #B2B2B2;
+    font-size: 14px;
+    letter-spacing: normal;
+}
+
+.login-view .center-box input:focus {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.login-view .center-box input[type="password"] {
+    letter-spacing: 5px;
+}
+
+.login-view .center-box .list-box {
+    width: 100%;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+}
+
+.login-view .center-box .list-box button {
+    width: 140px;
+    height: 100%;
+    border: none;
+    transition: 300ms;
+    border-radius: 4px;
+    font-size: 16px;
+    font-weight: lighter;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    position: relative;
+}
+
+.login-view .center-box .list-box button.loding-status {
+    width: 100%;
+    cursor: not-allowed;
+}
+
+.login-view .center-box .disable {
+    pointer-events: none;
+    opacity: 0.8;
+}
+
+.login-view .center-box .list-box button.reg {
+    background-color: transparent;
+    border: solid 1px #eaeaea;
+    color: #666666;
+}
+
+.login-view .center-box .list-box button.log {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background-color: #2db7f5;
+    color: #ffffff;
+    box-shadow: 0 2px 8px #2DB7F566;
+}
+
+.login-view .center-box .list-box button::after {
+    content: "";
+    transition: 100ms;
+    opacity: 0;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.05);
+    top: 0;
+    left: 0;
+}
+
+.login-view .center-box .list-box button:active:after {
+    opacity: 1;
+    box-shadow: inset 2px 2px 6px rgba(0, 0, 0, 0.025);
+}
+
+
+.login-view .center-box.check {
+    transform: translateY(0%) translateX(256px);
+}
