@@ -4,10 +4,12 @@
     width: 100%;
     height: 100%;
     display: flex;
+    overflow: hidden;
     position: absolute;
     align-items: center;
     justify-content: center;
     background-color: #fafafa;
+    background-image: url(../../../bgi.jpg);
 }
 
 .room-list .right-ligin-status {
@@ -32,127 +34,6 @@
     cursor: pointer;
     position: relative;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-}
-
-.room-list .folder-list {
-    width: 1200px;
-    height: 700px;
-    overflow: hidden;
-    border-radius: 6px;
-    background-color: #ffffff;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-}
-
-.room-list .folder-list .top-bar {
-    width: 100%;
-    padding: 6px;
-    height: 32px;
-    display: flex;
-    font-size: 14px;
-    line-height: 20px;
-    align-items: center;
-    background-color: #ffffff;
-    justify-content: space-between;
-    border-bottom: solid 1px #E7E8E8;
-}
-
-.room-list .folder-list .top-bar .left-title {
-    width: auto;
-    height: 100%;
-    color: #666666;
-}
-
-.room-list .folder-list .top-bar .right-menu {
-    width: 60px;
-    height: 100%;
-    display: flex;
-    min-width: 60px;
-    margin-left: 40px;
-    align-items: center;
-    justify-content: space-between;
-}
-
-.room-list .folder-list .top-bar .right-menu button {
-    width: 12px;
-    border: none;
-    height: 12px;
-    cursor: pointer;
-    border-radius: 100px;
-}
-
-.room-list .folder-list.act .top-bar .right-menu .min {
-    background-color: #28c841;
-}
-
-.room-list .folder-list.act .top-bar .right-menu .max {
-    background-color: #fbba2d;
-}
-
-.room-list .folder-list.act .top-bar .right-menu .close {
-    background-color: #ff5f58;
-}
-
-.room-list .folder-list.act .search-bar {
-    width: 100%;
-    height: 40px;
-    padding: 6px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.room-list .folder-list.act .ul-list {
-    width: 120px;
-    min-width: 120px;
-    position: relative;
-}
-
-.room-list .folder-list.act .ul-list .show-folder-name {
-    width: 100%;
-    height: 100%;
-    display: block;
-    color: #666666;
-    cursor: pointer;
-    font-size: 12px;
-    line-height: 28px;
-    user-select: none;
-    position: relative;
-    padding: 0 30px 0 6px;
-}
-
-.room-list .folder-list.act .ul-list .show-folder-name::after {
-    top: 8px;
-    width: 6px;
-    right: 10px;
-    height: 6px;
-    content: "";
-    display: block;
-    position: absolute;
-    transform-origin: center;
-    transform: rotateZ(45deg);
-    background-color: transparent;
-    border-right: solid 2px #999999;
-    border-bottom: solid 2px #999999;
-}
-
-.room-list .folder-list.act .search-bar .search-input {
-    width: 100%;
-    height: 100%;
-    font-size: 12px;
-    text-indent: 6px;
-    border: solid 1px #E7E8E8;
-}
-
-.room-list .folder-list.act .search-bar .refresh {
-    width: 28px;
-    height: 28px;
-    color: #666666;
-    min-width: 28px;
-    cursor: pointer;
-    margin-left: 6px;
-    line-height: 25px;
-    border: solid 1px #E7E8E8;
-    background-color: transparent;
 }
 
 .room-list .taskbar {
@@ -287,7 +168,6 @@
     overflow: hidden;
     position: absolute;
     pointer-events: none;
-    border-radius: 0 4px 0 0;
     transform: translateY(-100%);
 }
 
@@ -299,8 +179,11 @@
     max-height: 245px;
     transition: 200ms;
     position: absolute;
+    border-radius: 0 6px 0 0;
     pointer-events: none;
     backdrop-filter: blur(20px);
+    border-top: solid 1px rgba(255, 255, 255, 0.5);
+    border-right: solid 1px rgba(255, 255, 255, 0.5);
     background-color: rgba(230, 230, 230, 0.6);
     box-shadow: 10px -10px 20px -10px rgba(0, 0, 0, 0.05);
 }
@@ -353,46 +236,161 @@
     pointer-events: none;
 }
 
-.room-list .taskbar .task-list .program{
-    width: 40px;
+.room-list .taskbar .task-list .program {
+    width: 48px;
     height: 100%;
-    margin:0 5px;
+    margin: 0 1px;
     display: flex;
-    overflow: hidden;
     user-select: none;
     transition: 200ms;
     position: relative;
-    align-items: center;
+    /*align-items: center;*/
     justify-content: center;
-    background-color: transparent;
-    border-bottom: solid 2px #5c5956;
+    /*background-color: transparent;*/
+    /*border-bottom: solid 2px #5c5956;*/
 }
-.room-list .taskbar .task-list .program .icon{
+
+.room-list .taskbar .task-list .program .task-show {
+    width: 40px;
+    height: 100%;
+    line-height: 40px;
+    text-align: center;
+    border-bottom: solid 2px #5c5956;
     position: relative;
-    z-index: 20;
+    z-index: 30;
+    transition: 200ms;
+}
+
+.room-list .taskbar .task-list .program .task-show .icon {
     pointer-events: none;
 }
-.room-list .taskbar .task-list .program.act{
+
+.room-list .taskbar .task-list .program .task-show:hover {
     width: 48px;
-    margin:0 1px;
+    background-color: rgba(249, 249, 249, 0.4);
 }
-.room-list .taskbar .task-list .program.act::before{
-    transition: 200ms;
-    content: "";
-    width: 100%;
-    z-index: 10;
-    height: 100%;
+
+.room-list .taskbar .task-list .program .task-show.act {
+    width: 48px;
+    background-color: rgba(249, 249, 249, 0.6);
+}
+
+.room-list .taskbar .task-list .program .task-show.act:hover {
+    background-color: rgba(255, 255, 255, 0.8);
+}
+
+
+.room-list .taskbar .task-list .program .folder-list.act {
+    opacity: 1;
+    transform: scale(1);
+    pointer-events: auto;
+}
+
+.room-list .taskbar .task-list .program .folder-list {
+    width: 1200px;
+    height: 700px;
+    overflow: hidden;
+    border-radius: 6px;
+    background-color: #ffffff;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
     position: absolute;
-    background-color: #f9f9f9;
-}
-.room-list .taskbar .task-list .program:hover{
-    width: 48px;
-    margin:0 1px;
-    background-color: #f6f6f6;
-}
-.room-list .taskbar .task-list .program.act:hover:before{
+    top: -700px;
+    left: 0;
+    transition: 300ms;
     opacity: 0;
+    pointer-events: none;
+    transform-origin: bottom left;
+    transform: scale(0.1) translateX(0) translateY(0);
 }
-.room-list .taskbar .task-list .program.act:hover{
-    background-color: #fcfcfc;
+
+
+
+
+
+
+/*文件夹*/
+
+.room-list .taskbar .task-list .program .folder-list .top-bar {
+    width: 100%;
+    padding: 6px;
+    height: 32px;
+    display: flex;
+    font-size: 14px;
+    line-height: 20px;
+    align-items: center;
+    background-color: #ffffff;
+    justify-content: space-between;
+    border-bottom: solid 1px #E7E8E8;
+}
+
+.room-list .taskbar .task-list .program .folder-list .top-bar .left-title {
+    width: auto;
+    height: 100%;
+    color: #666666;
+}
+
+.room-list .taskbar .task-list .program .folder-list .top-bar .right-menu {
+    width: 60px;
+    height: 100%;
+    display: flex;
+    min-width: 60px;
+    margin-left: 40px;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.room-list .taskbar .task-list .program .folder-list .top-bar .right-menu button {
+    width: 12px;
+    border: none;
+    height: 12px;
+    cursor: pointer;
+    border-radius: 100px;
+}
+
+.room-list .taskbar .task-list .program .folder-list .top-bar .right-menu .min {
+    background-color: #28c841;
+}
+
+.room-list .taskbar .task-list .program .folder-list .top-bar .right-menu .max {
+    background-color: #fbba2d;
+}
+
+.room-list .taskbar .task-list .program .folder-list .top-bar .right-menu .close {
+    background-color: #ff5f58;
+}
+
+.room-list .taskbar .task-list .program .folder-list .search-bar {
+    width: 100%;
+    height: 40px;
+    padding: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.room-list .taskbar .task-list .program .folder-list .search-bar .search-input {
+    width: 100%;
+    height: 100%;
+    font-size: 12px;
+    text-indent: 6px;
+    border: solid 1px #E7E8E8;
+}
+
+.room-list .taskbar .task-list .program .folder-list .search-bar .refresh {
+    width: 28px;
+    height: 28px;
+    color: #666666;
+    min-width: 28px;
+    cursor: pointer;
+    margin-left: 6px;
+    line-height: 25px;
+    border: solid 1px #E7E8E8;
+    background-color: transparent;
+}
+
+.room-list .taskbar .task-list .program .folder-list .content {
+    width: 100%;
+    height: calc(100% - 72px);
+    padding: 6px;
+    overflow: auto;
 }

@@ -26,8 +26,7 @@
     "express": "^4.17.1",
     "js-cookie": "^2.2.1",
     "node-uuid": "^1.4.8",
-    "socket.io": "^4.0.1",
-    "sqlite3": "^5.0.2"
+    "socket.io": "^4.0.1"
   },
   "devDependencies": {
     "nodemon": "^2.0.7"

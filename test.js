@@ -6,7 +6,7 @@ const server = require('http').Server(app);
 const io = require('socket.io')(server);
 const fs = require('fs');
 
-const { v4: uuidv4 } = require('uuid');
+const { v4: uuidv4 } = require('node-uuid');
 
 const db = require('better-sqlite3')('main.db');
 
