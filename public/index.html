@@ -5,11 +5,13 @@
     <meta charset="utf-8">
     <title>无限画布</title>
     <link rel="stylesheet" type="text/css" href="static/css/default.css">
+    <link rel="stylesheet" type="text/css" href="static/css/iconfont.css">
     <link rel="stylesheet" type="text/css" href="static/css/room-list.css">
     <link rel="stylesheet" type="text/css" href="static/css/login.css">
     <script type="text/javascript" src="axios.js"></script>
     <script type="text/javascript" src="cookies.js"></script>
     <script type="text/javascript" src="static/js/login.js"></script>
+    <script type="text/javascript" src="static/js/taskbar.js"></script>
     <meta name="viewport" content="width=device-width, user-scalable=no,initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
 </head>
 
@@ -47,20 +49,66 @@
     </div>
     <!-- 房间列表层 -->
     <div class="room-list">
-        <div class="right-ligin-status">
-            <div title="暂时没想好放些啥..." class="show-name of-ellipsis">
-                xiyue
-            </div>
-        </div>
         <div class="folder-list act">
             <div class="top-bar">
                 <p class="left-title of-ellipsis">
-                    📁画布列表
+                    📁选择房间
                 </p>
                 <div class="right-menu">
                     <button class="min"></button>
                     <button class="max"></button>
                     <button class="close"></button>
+                </div>
+            </div>
+            <div class="search-bar">
+                <div class="ul-list">
+                    <span class="show-folder-name of-ellipsis">
+                        所有房间
+                    </span>
+                </div>
+                <input type="" placeholder="搜索" class="search-input" name="">
+                <button class="refresh iconfont icon-shuaxin" title="刷新列表"></button>
+            </div>
+        </div>
+        <div class="taskbar">
+            <div class="menu-btn">
+                <span class="menu-icon"></span>
+                <div class="start-menu">
+                    <div class="content">
+                        <ul>
+                            <li>
+                                <p class="left-icon iconfont icon-yonghu"></p>
+                                <p class="meu-text">xiyue</p>
+                            </li>
+                            <li>
+                                <p class="left-icon iconfont icon-fangwen"></p>
+                                <p class="meu-text">经常访问</p>
+                            </li>
+                            <li>
+                                <p class="left-icon iconfont icon-shoucang"></p>
+                                <p class="meu-text">收藏</p>
+                            </li>
+                            <li>
+                                <p class="left-icon iconfont icon-shezhi"></p>
+                                <p class="meu-text">设置</p>
+                            </li>
+                            <li class="disable">
+                                <p class="left-icon iconfont icon-guanji"></p>
+                                <p class="meu-text">退出登录</p>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="task-list">
+                <div class="program">
+                    <p class="icon">🍞</p>
+                </div>
+                <div class="program">
+                    <p class="icon">🧀</p>
+                </div>
+                <div class="program">
+                    <p class="icon">🍞</p>
                 </div>
             </div>
         </div>

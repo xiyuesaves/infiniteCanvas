@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", function() {
-    console.log("dom加载完成")
+    console.log("加载登录组件")
     let switchLogBtn = document.querySelector(".center-box.reg button.reg");
     let switchRegBtn = document.querySelector(".center-box.log button.reg");
     let loginBtn = document.querySelector(".center-box.log button.log");

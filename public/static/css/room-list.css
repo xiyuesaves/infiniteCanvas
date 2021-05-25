@@ -1,85 +1,398 @@
-.room-list{
-    position: absolute;
-    width: 100%;
-    height: 100%;
+.room-list {
     top: 0;
     left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    position: absolute;
+    align-items: center;
+    justify-content: center;
     background-color: #fafafa;
+}
+
+.room-list .right-ligin-status {
+    top: 0;
+    right: 40px;
+    width: 120px;
+    height: 40px;
+    position: fixed;
+    font-size: 16px;
+    line-height: 40px;
+    text-align: center;
+    background-color: #ffffff;
+    border-radius: 0 0 6px 6px;
+}
+
+.room-list .right-ligin-status .show-name {
+    z-index: 2;
+    width: 100%;
+    height: 100%;
+    color: #333333;
+    padding: 0 16px;
+    cursor: pointer;
+    position: relative;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+.room-list .folder-list {
+    width: 1200px;
+    height: 700px;
+    overflow: hidden;
+    border-radius: 6px;
+    background-color: #ffffff;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+.room-list .folder-list .top-bar {
+    width: 100%;
+    padding: 6px;
+    height: 32px;
+    display: flex;
+    font-size: 14px;
+    line-height: 20px;
+    align-items: center;
+    background-color: #ffffff;
+    justify-content: space-between;
+    border-bottom: solid 1px #E7E8E8;
+}
+
+.room-list .folder-list .top-bar .left-title {
+    width: auto;
+    height: 100%;
+    color: #666666;
+}
+
+.room-list .folder-list .top-bar .right-menu {
+    width: 60px;
+    height: 100%;
+    display: flex;
+    min-width: 60px;
+    margin-left: 40px;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.room-list .folder-list .top-bar .right-menu button {
+    width: 12px;
+    border: none;
+    height: 12px;
+    cursor: pointer;
+    border-radius: 100px;
+}
+
+.room-list .folder-list.act .top-bar .right-menu .min {
+    background-color: #28c841;
+}
+
+.room-list .folder-list.act .top-bar .right-menu .max {
+    background-color: #fbba2d;
+}
+
+.room-list .folder-list.act .top-bar .right-menu .close {
+    background-color: #ff5f58;
+}
+
+.room-list .folder-list.act .search-bar {
+    width: 100%;
+    height: 40px;
+    padding: 6px;
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
-.room-list .right-ligin-status{
+.room-list .folder-list.act .ul-list {
     width: 120px;
-    height: 40px;
-    background-color: #ffffff;
-    position: fixed;
-    top: 0;
-    right: 40px;
-    border-radius: 0 0 6px 6px;
-    font-size: 16px;
-    text-align: center;
-    line-height: 40px;
-}
-.room-list .right-ligin-status .show-name{
-    padding: 0 16px;
-    cursor: pointer;
+    min-width: 120px;
     position: relative;
-    width: 100%;
-    height: 100%;
-    color: #333333;
-    z-index: 2;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
 }
 
-.room-list .folder-list{
-    width: 1200px;
-    height: 700px;
-    background-color: #ffffff;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-    border-radius: 6px;
-    overflow: hidden;
-}
-
-.room-list .folder-list .top-bar{
+.room-list .folder-list.act .ul-list .show-folder-name {
     width: 100%;
-    height: 32px;
-    border-bottom: solid 1px #dadbdc;
-    font-size: 14px;
-    line-height: 20px;
-    background-color: #ffffff;
-    padding: 6px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-.room-list .folder-list .top-bar .left-title{
-    width: auto;
     height: 100%;
-}
-.room-list .folder-list .top-bar .right-menu{
-    min-width: 80px;
-    margin-left: 40px;
-    width: 80px;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-.room-list .folder-list .top-bar .right-menu button{
-    width: 16px;
-    border-radius: 100px;
-    border: none;
+    display: block;
+    color: #666666;
     cursor: pointer;
-    height: 16px;
+    font-size: 12px;
+    line-height: 28px;
+    user-select: none;
+    position: relative;
+    padding: 0 30px 0 6px;
 }
-.room-list .folder-list.act .top-bar .right-menu .min{
-    background-color: #28c841;
+
+.room-list .folder-list.act .ul-list .show-folder-name::after {
+    top: 8px;
+    width: 6px;
+    right: 10px;
+    height: 6px;
+    content: "";
+    display: block;
+    position: absolute;
+    transform-origin: center;
+    transform: rotateZ(45deg);
+    background-color: transparent;
+    border-right: solid 2px #999999;
+    border-bottom: solid 2px #999999;
 }
-.room-list .folder-list.act .top-bar .right-menu .max{
-    background-color: #fbba2d;
+
+.room-list .folder-list.act .search-bar .search-input {
+    width: 100%;
+    height: 100%;
+    font-size: 12px;
+    text-indent: 6px;
+    border: solid 1px #E7E8E8;
 }
-.room-list .folder-list.act .top-bar .right-menu .close{
-    background-color: #ff5f58;
+
+.room-list .folder-list.act .search-bar .refresh {
+    width: 28px;
+    height: 28px;
+    color: #666666;
+    min-width: 28px;
+    cursor: pointer;
+    margin-left: 6px;
+    line-height: 25px;
+    border: solid 1px #E7E8E8;
+    background-color: transparent;
+}
+
+.room-list .taskbar {
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    height: 40px;
+    z-index: 990;
+    position: absolute;
+}
+
+.room-list .taskbar .task-list {
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 10;
+    height: 100%;
+    display: flex;
+    padding-left: 52px;
+    position: absolute;
+    align-items: center;
+    justify-content: flex-start;
+    backdrop-filter: blur(20px);
+    background-color: rgba(240, 240, 240, 0.8);
+}
+
+.room-list .taskbar .menu-btn {
+    top: 0;
+    left: 0;
+    z-index: 20;
+    width: 48px;
+    height: 100%;
+    display: flex;
+    position: absolute;
+    align-items: center;
+    flex-direction: column;
+    justify-content: center;
+    /*background-color: #ffffff;*/
+}
+
+.room-list .taskbar .menu-btn:hover {
+    background-color: rgba(230, 230, 230, 1);
+}
+
+.room-list .taskbar .menu-btn .menu-icon {
+    z-index: 10;
+    width: 18px;
+    display: block;
+    min-height: 18px;
+    margin-top: 12px;
+    position: relative;
+    border: solid 2px;
+    pointer-events: none;
+    border-color: #f2f2f2;
+    background-color: #555555;
+    transition: 300ms, border-color 0;
+    transform: rotateX(45deg) rotate3d(0, 0, 1, 45deg);
+}
+
+.room-list .taskbar .menu-btn.act {
+    background-color: rgba(230, 230, 230, 1);
+}
+
+.room-list .taskbar .menu-btn.act .menu-icon {
+    border-color: #e6e6e6;
+}
+
+.room-list .taskbar .menu-btn.act .menu-icon::after {
+    top: -13px;
+    left: -13px;
+    transform: rotate3d(0, 0, 1, 180deg);
+}
+
+.room-list .taskbar .menu-btn.act .menu-icon::before {
+    top: -7.5px;
+    left: -7.5px;
+    transform: rotate3d(0, 0, 1, 90deg);
+}
+
+.room-list .taskbar .menu-btn:hover .menu-icon {
+    border-color: #e6e6e6;
+}
+
+.room-list .taskbar .menu-btn:hover .menu-icon::after {
+    /*top: -13px;*/
+    /*left: -13px;*/
+    /*transform: rotate3d(0, 0, 1, 180deg);*/
+}
+
+.room-list .taskbar .menu-btn .menu-icon::after {
+    top: -10px;
+    left: -10px;
+    content: "";
+    width: 100%;
+    height: 100%;
+    display: block;
+    border: solid 2px;
+    position: absolute;
+    border-color: inherit;
+    background-color: inherit;
+    background-clip: padding-box;
+    transition: left 300ms, top 300ms, transform 300ms;
+}
+
+.room-list .taskbar .menu-btn:hover .menu-icon::before {
+    /*top: -7.5px;*/
+    /*left: -7.5px;*/
+    /*transform: rotate3d(0, 0, 1, 90deg);*/
+}
+
+.room-list .taskbar .menu-btn .menu-icon::before {
+    top: -6px;
+    left: -6px;
+    z-index: 0;
+    width: 100%;
+    content: "";
+    height: 100%;
+    display: block;
+    border: solid 2px;
+    position: absolute;
+    border-color: inherit;
+    background-color: inherit;
+    background-clip: padding-box;
+    transition: left 300ms, top 300ms, transform 300ms;
+}
+
+.room-list .taskbar .menu-btn .start-menu {
+    top: 0;
+    left: 0;
+    width: 274px;
+    height: 265px;
+    overflow: hidden;
+    position: absolute;
+    pointer-events: none;
+    border-radius: 0 4px 0 0;
+    transform: translateY(-100%);
+}
+
+.room-list .taskbar .menu-btn .start-menu .content {
+    bottom: -80px;
+    left: 0;
+    opacity: 0;
+    width: 254px;
+    max-height: 245px;
+    transition: 200ms;
+    position: absolute;
+    pointer-events: none;
+    backdrop-filter: blur(20px);
+    background-color: rgba(230, 230, 230, 0.6);
+    box-shadow: 10px -10px 20px -10px rgba(0, 0, 0, 0.05);
+}
+
+/*.room-list .taskbar .menu-btn.act .start-menu {
+    pointer-events: auto;
+}*/
+.room-list .taskbar .menu-btn.act .start-menu .content {
+    bottom: 0px;
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.room-list .taskbar .menu-btn .start-menu .content ul {
+    padding: 0;
+    margin: 0;
+    list-style: none;
+}
+
+.room-list .taskbar .menu-btn .start-menu .content ul li {
+    width: 100%;
+    height: 49px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.room-list .taskbar .menu-btn .start-menu .content ul li:hover {
+    background-color: rgba(255, 255, 255, 0.6);
+}
+
+.room-list .taskbar .menu-btn .start-menu .content ul li .left-icon {
+    width: 48px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.room-list .taskbar .menu-btn .start-menu .content ul li .left-icon::before {
+    color: #333333;
+    font-size: 18px;
+}
+
+.room-list .taskbar .menu-btn .start-menu .content ul li .meu-text {
+    width: 206px;
+    font-size: 15px;
+    color: #333333;
+    user-select: none;
+    pointer-events: none;
+}
+
+.room-list .taskbar .task-list .program{
+    width: 40px;
+    height: 100%;
+    margin:0 5px;
+    display: flex;
+    overflow: hidden;
+    user-select: none;
+    transition: 200ms;
+    position: relative;
+    align-items: center;
+    justify-content: center;
+    background-color: transparent;
+    border-bottom: solid 2px #5c5956;
+}
+.room-list .taskbar .task-list .program .icon{
+    position: relative;
+    z-index: 20;
+    pointer-events: none;
+}
+.room-list .taskbar .task-list .program.act{
+    width: 48px;
+    margin:0 1px;
+}
+.room-list .taskbar .task-list .program.act::before{
+    transition: 200ms;
+    content: "";
+    width: 100%;
+    z-index: 10;
+    height: 100%;
+    position: absolute;
+    background-color: #f9f9f9;
+}
+.room-list .taskbar .task-list .program:hover{
+    width: 48px;
+    margin:0 1px;
+    background-color: #f6f6f6;
+}
+.room-list .taskbar .task-list .program.act:hover:before{
+    opacity: 0;
+}
+.room-list .taskbar .task-list .program.act:hover{
+    background-color: #fcfcfc;
 }
