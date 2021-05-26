@@ -1,0 +1,70 @@
+[
+    {
+        "type": "floder",
+        "icon": "\ud83d\udcc1",
+        "position":
+        {
+            "x": 10,
+            "y": 10
+        },
+        "title": "名称",
+        "floderList": [
+        {
+            "type": "text",
+            "icon": "\ud83d\udcc3",
+            "title": "hello",
+            "position":
+            {
+                "x": 0,
+                "y": 0
+            },
+            "content": "hello world"
+        },
+        {
+            "type": "text",
+            "icon": "\ud83d\udcc3",
+            "title": "hi",
+            "position":
+            {
+                "x": 50,
+                "y": 0
+            },
+            "content": "hahahaha"
+        }]
+    },
+    {
+        "type": "image",
+        "icon": "\ud83d\uddbc\ufe0f",
+        "position":
+        {
+            "x": 10,
+            "y": 140
+        },
+        "title": "这是张图片",
+        "data": null,
+        "src": "http://127.0.0.1:3399/static/css/bgi.jpg"
+    },
+    {
+        "type": "program",
+        "icon": "\ud83c\udfbc",
+        "position":
+        {
+            "x": 10,
+            "y": 270
+        },
+        "title": "音乐",
+        "src": "https://music.163.com"
+    },
+    {
+        "type": "text",
+        "icon": "\ud83d\udcc3",
+        "position":
+        {
+            "x": 10,
+            "y": 400
+        },
+        "title": "这是一串文本",
+        "content": "这是一个文本内容"
+    }
+
+]

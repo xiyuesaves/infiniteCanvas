@@ -9,7 +9,7 @@
     align-items: center;
     justify-content: center;
     background-color: #fafafa;
-    background-image: url(../../../bgi.jpg);
+    background-image: url(./bgi.jpg);
 }
 
 .room-list .right-ligin-status {
@@ -56,7 +56,7 @@
     position: absolute;
     align-items: center;
     justify-content: flex-start;
-    backdrop-filter: blur(20px);
+    backdrop-filter: blur(6px);
     background-color: rgba(240, 240, 240, 0.8);
 }
 
@@ -102,8 +102,8 @@
 }
 
 .room-list .taskbar .menu-btn.act .menu-icon::after {
-    top: -13px;
-    left: -13px;
+    top: -12px;
+    left: -12px;
     transform: rotate3d(0, 0, 1, 180deg);
 }
 
@@ -180,11 +180,12 @@
     transition: 200ms;
     position: absolute;
     border-radius: 0 6px 0 0;
+    overflow: hidden;
     pointer-events: none;
-    backdrop-filter: blur(20px);
+    backdrop-filter: blur(12px);
     border-top: solid 1px rgba(255, 255, 255, 0.5);
     border-right: solid 1px rgba(255, 255, 255, 0.5);
-    background-color: rgba(230, 230, 230, 0.6);
+    background-color: rgba(245, 245, 245, 0.7);
     box-shadow: 10px -10px 20px -10px rgba(0, 0, 0, 0.05);
 }
 
@@ -299,6 +300,10 @@
     transform: scale(0.1) translateX(0) translateY(0);
 }
 
+.room-list .taskbar .task-list .program.act .folder-list.act {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
 .room-list .taskbar .task-list .program .folder-list.act {
     opacity: 1;
     transform: scale(1);
@@ -385,7 +390,68 @@
 
 .room-list .taskbar .task-list .program .folder-list .content {
     width: 100%;
-    height: calc(100% - 72px);
     padding: 6px;
     overflow: auto;
+    height: calc(100% - 32px);
+}
+
+.room-list .desktop {
+    top: 0;
+    left: 0;
+    z-index: 0;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
+.room-list .desktop .screen-icon {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    width: 78px;
+    height: 120px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+}
+
+.room-list .desktop .screen-icon .content {
+    user-select: none;
+    width: 100%;
+    height: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    cursor: default;
+    border-radius: 4px;
+    padding-bottom: 6px;
+}
+
+.room-list .desktop .screen-icon .content:hover {
+    background-color: rgba(255,255,255,0.3);
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.6);
+}
+
+.room-list .desktop .screen-icon .content .icon {
+    width: 60px;
+    height: 60px;
+    line-height: 60px;
+    text-align: center;
+    font-size: 38px;
+}
+
+.room-list .desktop .screen-icon .content .icon-title {
+    padding: 0 3px;
+    width: 100%;
+    font-size: 12px;
+    text-align: center;
+    color: #ffffff;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 1),1px 1px 2px rgba(0, 0, 0, 1);
+    text-overflow: -o-ellipsis-lastline;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
 }

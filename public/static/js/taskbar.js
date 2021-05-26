@@ -1,10 +1,9 @@
-document.addEventListener("DOMContentLoaded", function() {
-    console.log("加载任务栏")
-    const menuBtn = document.querySelector(".menu-btn");
+function taskbar() {
+    console.log("加载任务栏模块")
     const taskList = document.querySelector(".task-list");
 
-
     // 开始菜单点击事件
+    const menuBtn = document.querySelector(".menu-btn");
     menuBtn.addEventListener("click", function(e) {
         if (!menuBtn.className.includes("act")) {
             menuBtn.className = "menu-btn act"
@@ -31,7 +30,6 @@ document.addEventListener("DOMContentLoaded", function() {
     let zIndexVal = 0
     // 任务栏图标点击事件
     taskList.addEventListener("click", function(e) {
-        console.log(e)
         // 遍历点击路径
         for (let i = 0; i < e.path.length; i++) {
             // 最小化按钮操作
@@ -63,8 +61,10 @@ document.addEventListener("DOMContentLoaded", function() {
                         document.querySelector(".program.act").className = "program"
                     }
                     floderEl.parentNode.className = "program act"
-                    zIndexVal += document.querySelectorAll(".program").length
-                    floderEl.parentNode.style.zIndex = zIndexVal
+                    if (parseInt(floderEl.parentNode.style.zIndex) !== zIndexVal) {
+                        zIndexVal++
+                        floderEl.parentNode.style.zIndex = zIndexVal
+                    }
                 }
             } else {
                 // 最小化程序窗口
@@ -76,6 +76,19 @@ document.addEventListener("DOMContentLoaded", function() {
                     floderEl.setAttribute("data-disable-style", floderEl.getAttribute("style"))
                     floderEl.removeAttribute("style")
                     floderEl.className = "folder-list"
+                }
+                // 找到下一个层级最高的窗口,并激活
+                let programList = document.querySelectorAll(".program")
+                let lastProgram = { style: { zIndex: 0 } }
+                for (let i = 0; i < programList.length; i++) {
+                    if (programList[i].querySelector(".folder-list.act") && programList[i].style.zIndex > lastProgram.style.zIndex) {
+                        lastProgram = programList[i]
+                    }
+                }
+                e.path[0].parentNode.className = "program"
+                if (lastProgram.className) {
+                    lastProgram.className = "program act"
+                    lastProgram.querySelector(".task-show").className = "task-show act"
                 }
             }
         }
@@ -95,9 +108,10 @@ document.addEventListener("DOMContentLoaded", function() {
                 getPrevEl(e.path[i]).className = "task-show act"
                 // 添加激活属性,判断是否置顶
                 if (!e.path[i].parentNode.className.includes("act")) {
-                    console.log(e.path[i].parentNode.className)
-                    zIndexVal += document.querySelectorAll(".program").length
-                    e.path[i].parentNode.style.zIndex = zIndexVal
+                    if (parseInt(e.path[i].parentNode.style.zIndex) !== zIndexVal) {
+                        zIndexVal++
+                        e.path[i].parentNode.style.zIndex = zIndexVal
+                    }
                     // 去除其他进程的置顶属性
                     if (document.querySelector(".program.act")) {
                         document.querySelector(".program.act").className = "program"
@@ -107,39 +121,4 @@ document.addEventListener("DOMContentLoaded", function() {
             }
         }
     })
-
-
-    // 可拖动模组
-    let drop = false
-    document.addEventListener("mousedown", function(e) {
-        if (e.buttons === 1) {
-            for (let i = 0; i < e.path.length; i++) {
-                if (e.path[i].className && e.path[i].className.includes("drop-el")) {
-                    drop = e.path[i]
-                    e.path[i].parentNode.style.transition = "0ms"
-                    return
-                }
-            }
-        }
-    })
-    document.addEventListener("mouseup", function(e) {
-        if (drop) {
-            drop.parentNode.style.transition = "200ms"
-            drop = false
-        }
-    })
-    document.addEventListener("mousemove", function(e) {
-        if (drop) {
-            let moveX = 0
-            let moveY = 0
-            if (drop.parentNode.style.transform) {
-                moveX = parseInt(drop.parentNode.style.transform.match(/-?\d+/g)[0])
-                moveY = parseInt(drop.parentNode.style.transform.match(/-?\d+/g)[1])
-            }
-            moveX += e.movementX
-            moveY += e.movementY
-            drop.parentNode.style.transform = `translateX(${moveX}px) translateY(${moveY}px)`
-        }
-    })
-
-})
+}
