@@ -242,13 +242,12 @@
     margin: 0 1px;
     display: flex;
     user-select: none;
-    transition: 200ms;
+    /*transition: 200ms;*/
     position: relative;
-    /*align-items: center;*/
     justify-content: center;
-    /*background-color: transparent;*/
-    /*border-bottom: solid 2px #5c5956;*/
 }
+
+.room-list .taskbar .task-list .program.act {}
 
 .room-list .taskbar .task-list .program .task-show {
     width: 40px;
@@ -280,21 +279,18 @@
 }
 
 
-.room-list .taskbar .task-list .program .folder-list.act {
-    opacity: 1;
-    transform: scale(1);
-    pointer-events: auto;
-}
+/*文件夹*/
+
 
 .room-list .taskbar .task-list .program .folder-list {
-    width: 1200px;
-    height: 700px;
+    width: 700px;
+    height: 400px;
     overflow: hidden;
     border-radius: 6px;
     background-color: #ffffff;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
     position: absolute;
-    top: -700px;
+    top: -400px;
     left: 0;
     transition: 300ms;
     opacity: 0;
@@ -303,12 +299,11 @@
     transform: scale(0.1) translateX(0) translateY(0);
 }
 
-
-
-
-
-
-/*文件夹*/
+.room-list .taskbar .task-list .program .folder-list.act {
+    opacity: 1;
+    transform: scale(1);
+    pointer-events: auto;
+}
 
 .room-list .taskbar .task-list .program .folder-list .top-bar {
     width: 100%;

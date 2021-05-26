@@ -45,18 +45,18 @@ document.addEventListener("DOMContentLoaded", function() {
     if (Cookies.get("user")) {
         console.log("尝试cookie登录")
         axios.post('/login', {
-            cookie: Cookies.get("user")
-        })
-        .then(function(response) {
-            if (response.data.status) {
-                // loginSuccess()
-            } else {
+                cookie: Cookies.get("user")
+            })
+            .then(function(response) {
+                if (response.data.status) {
+                    // loginSuccess()
+                } else {
+                    Cookies.remove("user")
+                }
+            })
+            .catch(function(error) {
                 Cookies.remove("user")
-            }
-        })
-        .catch(function(error) {
-            Cookies.remove("user")
-        })
+            })
     }
 
     // 登录请求
@@ -284,32 +284,3 @@ document.addEventListener("DOMContentLoaded", function() {
         console.log(leve)
     })
 })
-
-function getNextEl(el) {
-    let listNode = el.parentNode.childNodes
-    for (var i = 0; i < listNode.length; i++) {
-        if (el === listNode[i]) {
-            for (var j = i + 1; j < listNode.length; j++) {
-                if (listNode[j].nodeName !== "#text") {
-                    return listNode[j]
-                }
-            }
-        }
-    }
-    return null
-}
-function getPrevEl(el) {
-    let listNode = el.parentNode.childNodes
-    let newList = []
-    for (var i = 0; i < listNode.length; i++) {
-        if (listNode[i].nodeName !== "#text") {
-            newList.push(listNode[i]);
-        }
-    }
-    for (var i = 0; i < newList.length; i++) {
-        if (newList[i] === el) {
-            return newList[i-1]
-        }
-    }
-    return null
-}
