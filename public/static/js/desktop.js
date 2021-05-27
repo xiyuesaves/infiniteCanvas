@@ -90,15 +90,12 @@ function desktop() {
                 //  打开窗口
                 if (newCreate) {
                     let programEl = this.programEl
-                    console.log(getPrevEl(programEl).className += " create")
-                    setTimeout(function() {
+                    getPrevEl(programEl).className += " create"
+                    setTimeout(() => {
                         programEl.setAttribute("style", programEl.getAttribute("data-disable-style"))
                         programEl.removeAttribute("data-disable-style")
                         programEl.className = "folder-list act"
-                        // setTimeout(function() {
-                            // 置顶窗口
-                            this.topProrame()
-                        // }, 300)
+                        this.topProrame()
                     })
                 } else {
                     this.programEl.setAttribute("style", this.programEl.getAttribute("data-disable-style"))
@@ -108,7 +105,6 @@ function desktop() {
                     this.topProrame()
                 }
             }
-
         }
         // 置顶窗口
         topProrame() {
