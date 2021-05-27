@@ -27,7 +27,9 @@ function startHttpServer() {
     app.get('/cookies.js', function(req, res) {
         res.sendFile(`${__dirname}/node_modules/js-cookie/src/js.cookie.js`);
     });
-
+    app.get('/uuid.js', function(req, res) {
+        res.sendFile(`${__dirname}/node_modules/node-uuid/uuid.js`);
+    });
     // 处理错误地址
     app.get('/room', function(req, res) {
         // res.redirect(302, '/');

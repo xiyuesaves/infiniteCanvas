@@ -1,5 +1,5 @@
 // 公开方法
-
+let iconList = []
 function getNextEl(el) {
     let listNode = el.parentNode.childNodes
     let newList = []
@@ -27,6 +27,15 @@ function getPrevEl(el) {
     for (var i = 0; i < newList.length; i++) {
         if (newList[i] === el) {
             return newList[i - 1]
+        }
+    }
+    return null
+}
+
+function getInstance(uuid) {
+    for (let i = 0; i < iconList.length; i++) {
+        if (iconList[i].uuid === uuid) {
+            return iconList[i]
         }
     }
     return null

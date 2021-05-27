@@ -11,8 +11,7 @@ function drag() {
                     e.path[i].parentNode.style.transition = "0ms"
                     overX = e.offsetX
                     overY = e.offsetY
-                    console.log(e)
-                    return
+                    break
                 }
             }
         }

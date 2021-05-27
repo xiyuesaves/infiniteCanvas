@@ -10,6 +10,7 @@
     <link rel="stylesheet" type="text/css" href="static/css/login.css">
     <script type="text/javascript" src="axios.js"></script>
     <script type="text/javascript" src="cookies.js"></script>
+    <script type="text/javascript" src="uuid.js"></script>
     <script type="text/javascript" src="static/js/default.js"></script>
     <script type="text/javascript" src="static/js/login.js"></script>
     <script type="text/javascript" src="static/js/taskbar.js"></script>
@@ -55,30 +56,6 @@
     <div class="room-list">
         <!-- 桌面 -->
         <div class="desktop">
-            <!-- <div class="screen-icon">
-                <div class="content">
-                    <div class="icon">
-                        📁
-                    </div>
-                    <p class="icon-title">图标名称图标名称图标名称图标名称图标名称图标名称图标名称图标名称图标名称图标名称图标名称图标名称图标名称图标名称图标名称图标名称图标名称图标名称图标名称图标名称</p>
-                </div>
-            </div>
-            <div class="screen-icon" style="top: 140px;">
-                <div class="content">
-                    <div class="icon">
-                        📁
-                    </div>
-                    <p class="icon-title">你好呀</p>
-                </div>
-            </div>
-            <div class="screen-icon" style="top: 270px;">
-                <div class="content">
-                    <div class="icon">
-                        🍞
-                    </div>
-                    <p class="icon-title">大面包</p>
-                </div>
-            </div> -->
         </div>
         <!-- 任务栏 -->
         <div class="taskbar">
@@ -112,78 +89,30 @@
                 </div>
             </div>
             <div class="task-list">
-                <div class="program">
-                    <div class="task-show">
-                        <p class="icon">🍞</p>
-                    </div>
-                    <div class="folder-list" data-disable-style="transform: translateY(0) translateX(0);">
-                        <div class="top-bar drop-el">
-                            <p class="left-title of-ellipsis">
-                                🍞这是程序 - iframe
-                            </p>
-                            <div class="right-menu">
-                                <button class="min"></button>
-                                <button class="max"></button>
-                                <button class="close"></button>
-                            </div>
-                        </div>
-                        <!-- <div class="search-bar">
-                            <input type="" placeholder="搜索" class="search-input" name="">
-                            <button class="refresh iconfont icon-shuaxin" title="刷新列表"></button>
-                        </div> -->
-                        <div class="content">
-                        </div>
-                    </div>
-                </div>
-                <div class="program">
-                    <div class="task-show">
-                        <p class="icon">🧀</p>
-                    </div>
-                    <div class="folder-list" data-disable-style="transform: translateY(0) translateX(0);">
-                        <div class="top-bar drop-el">
-                            <p class="left-title of-ellipsis">
-                                🧀这是图片浏览
-                            </p>
-                            <div class="right-menu">
-                                <button class="min"></button>
-                                <button class="max"></button>
-                                <button class="close"></button>
-                            </div>
-                        </div>
-                        <!-- <div class="search-bar">
-                            <input type="" placeholder="搜索" class="search-input" name="">
-                            <button class="refresh iconfont icon-shuaxin" title="刷新列表"></button>
-                        </div> -->
-                        <div class="content">
-                        </div>
-                    </div>
-                </div>
-                <div class="program">
-                    <div class="task-show">
-                        <p class="icon">🍞</p>
-                    </div>
-                    <div class="folder-list" data-disable-style="transform: translateY(0) translateX(0);">
-                        <div class="top-bar drop-el">
-                            <p class="left-title of-ellipsis">
-                                🍞这是文本展示
-                            </p>
-                            <div class="right-menu">
-                                <button class="min"></button>
-                                <button class="max"></button>
-                                <button class="close"></button>
-                            </div>
-                        </div>
-                        <div class="content">
-                        </div>
-                    </div>
-                </div>
+                
             </div>
         </div>
     </div>
     <!-- 模板层 -->
-    <template id="desktop-folder">
+    <template id="taskList-folder">
+        <div class="program">
+            <div class="task-show">
+                <p class="icon"></p>
+            </div>
+            <div class="folder-list" data-disable-style="transform: translateY(0) translateX(0);">
+                <div class="top-bar drop-el">
+                    <p class="left-title of-ellipsis">
+                    </p>
+                    <div class="right-menu">
+                        <button class="min"></button>
+                        <button class="max"></button>
+                        <button class="close"></button>
+                    </div>
+                </div>
+                <div class="content"></div>
+            </div>
+        </div>
     </template>
-
     <template id="deaktop-icon">
         <div class="screen-icon">
             <div class="content">
