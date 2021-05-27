@@ -28,97 +28,122 @@ function taskbar() {
 
     // 程序层级
     let zIndexVal = 0
-    // 任务栏图标点击事件
+    // 任务栏点击事件
     taskList.addEventListener("click", function(e) {
-        // 遍历点击路径
+        // 窗口按钮事件
         for (let i = 0; i < e.path.length; i++) {
             // 最小化按钮操作
             if (e.path[i].className === "min") {
-                let floderEl = e.path[i].offsetParent
-                floderEl.className = "folder-list"
-                floderEl.setAttribute("data-disable-style", floderEl.getAttribute("style"))
-                floderEl.removeAttribute("style")
-                getPrevEl(floderEl).className = "task-show"
+                let folderEl = e.path[i].offsetParent
+                minimizeProgram(folderEl)
             }
         }
+
         // 如果点击的图标没有处于激活状态,则清除已激活图标,并激活当前点击的图标
         if (e.path[0].className.includes("task-show")) {
+            let programEl = getNextEl(e.path[0])
             if (e.path[0].className === "task-show") {
-                // 清除选中图标
-                if (document.querySelector(".task-show.act")) {
-                    document.querySelector(".task-show.act").className = "task-show"
-                }
-                e.path[0].className = "task-show act"
-                // 打开并置顶此图标对应的窗口
-                let floderEl = getNextEl(e.path[0])
-                if (floderEl.getAttribute("data-disable-style")) {
-                    floderEl.setAttribute("style", floderEl.getAttribute("data-disable-style"))
-                    floderEl.removeAttribute("data-disable-style")
-                    floderEl.className = "folder-list act"
-                }
-                if (!floderEl.parentNode.className.includes("act")) {
-                    if (document.querySelector(".program.act")) {
-                        document.querySelector(".program.act").className = "program"
-                    }
-                    floderEl.parentNode.className = "program act"
-                    if (parseInt(floderEl.parentNode.style.zIndex) !== zIndexVal) {
-                        zIndexVal++
-                        floderEl.parentNode.style.zIndex = zIndexVal
-                    }
+                // 判断文件夹是否处于打开状态
+                if (programEl.getAttribute("data-disable-style")) {
+                    // 打开文件夹
+                    openProgram(programEl)
+                } else {
+                    // 文件夹已打开,仅置顶
+                    topProrame(programEl)
                 }
             } else {
-                // 最小化程序窗口
-                if (document.querySelector(".task-show.act")) {
-                    document.querySelector(".task-show.act").className = "task-show"
-                }
-                let floderEl = getNextEl(e.path[0])
-                if (floderEl.getAttribute("style")) {
-                    floderEl.setAttribute("data-disable-style", floderEl.getAttribute("style"))
-                    floderEl.removeAttribute("style")
-                    floderEl.className = "folder-list"
-                }
-                // 找到下一个层级最高的窗口,并激活
-                let programList = document.querySelectorAll(".program")
-                let lastProgram = { style: { zIndex: 0 } }
-                for (let i = 0; i < programList.length; i++) {
-                    if (programList[i].querySelector(".folder-list.act") && programList[i].style.zIndex > lastProgram.style.zIndex) {
-                        lastProgram = programList[i]
-                    }
-                }
-                e.path[0].parentNode.className = "program"
-                if (lastProgram.className) {
-                    lastProgram.className = "program act"
-                    lastProgram.querySelector(".task-show").className = "task-show act"
-                }
+                // 最小化程序
+                minimizeProgram(programEl)
             }
         }
     })
 
-    // 程序本体鼠标按下事件
+    // 任务栏鼠标按下事件
     taskList.addEventListener("mousedown", function(e) {
         for (let i = 0; i < e.path.length; i++) {
             // 点击展开的文件夹
             if (e.path[i].className === ("folder-list act")) {
-                // 对应图标添加激活样式
-                if (getPrevEl(e.path[i]).className !== "task-show act") {
-                    if (document.querySelector(".task-show.act")) {
-                        document.querySelector(".task-show.act").className = "task-show"
-                    }
-                }
-                getPrevEl(e.path[i]).className = "task-show act"
-                // 添加激活属性,判断是否置顶
-                if (!e.path[i].parentNode.className.includes("act")) {
-                    if (parseInt(e.path[i].parentNode.style.zIndex) !== zIndexVal) {
-                        zIndexVal++
-                        e.path[i].parentNode.style.zIndex = zIndexVal
-                    }
-                    // 去除其他进程的置顶属性
-                    if (document.querySelector(".program.act")) {
-                        document.querySelector(".program.act").className = "program"
-                    }
-                    e.path[i].parentNode.className = "program act"
-                }
+                topProrame(e.path[i])
             }
         }
     })
+
+    // 最小化窗口 - 传入窗口元素
+    function minimizeProgram(programEl) {
+        // 验证元素是否处于打开状态
+        if (programEl.getAttribute("style")) {
+            let showIconEl = getPrevEl(programEl)
+            if (showIconEl.className) {
+                showIconEl.className = "task-show"
+            }
+            programEl.parentNode.className = "program"
+            programEl.setAttribute("data-disable-style", programEl.getAttribute("style"))
+            programEl.removeAttribute("style")
+            programEl.className = "folder-list"
+            // 找到下一个层级最高的窗口,并激活
+            activeNextView()
+        }
+    }
+
+    // 打开窗口 - 传入窗口元素
+    function openProgram(programEl) {
+        // 验证元素是否处于最小化状态
+        if (programEl.getAttribute("data-disable-style")) {
+            console.log("打开窗口")
+            // 清除图标激活效果
+            let actIcons = document.querySelectorAll(".task-show.act")
+            for (let i = 0; i < actIcons.length; i++) {
+                actIcons[i].className = "task-show"
+            }
+            // 激活当前图标
+            let showIconEl = getPrevEl(programEl)
+            showIconEl.className = "task-show act"
+            //  打开窗口
+            programEl.setAttribute("style", programEl.getAttribute("data-disable-style"))
+            programEl.removeAttribute("data-disable-style")
+            programEl.className = "folder-list act"
+            // 置顶窗口
+            topProrame(programEl)
+        }
+    }
+
+    // 置顶窗口
+    function topProrame(programEl) {
+        console.log("置顶窗口")
+        let actPrograms = document.querySelectorAll(".program.act")
+        // 清除激活图标
+        for (let i = 0; i < actPrograms.length; i++) {
+            actPrograms[i].className = "program"
+        }
+        // 激活触发元素
+        programEl.parentNode.className = "program act"
+        // 清除图标激活效果
+        let actIcons = document.querySelectorAll(".task-show.act")
+        for (let i = 0; i < actIcons.length; i++) {
+            actIcons[i].className = "task-show"
+        }
+        // 激活当前图标
+        let showIconEl = getPrevEl(programEl)
+        showIconEl.className = "task-show act"
+        // 判断是否需要置顶
+        if (parseInt(programEl.parentNode.style.zIndex) !== zIndexVal) {
+            zIndexVal++
+            programEl.parentNode.style.zIndex = zIndexVal
+        }
+    }
+
+    // 找到下一个层级最高的窗口,并激活
+    function activeNextView() {
+        let programList = document.querySelectorAll(".program")
+        let lastProgram = { style: { zIndex: 0 } }
+        for (let i = 0; i < programList.length; i++) {
+            if (programList[i].querySelector(".folder-list.act") && programList[i].style.zIndex > lastProgram.style.zIndex) {
+                lastProgram = programList[i]
+            }
+        }
+        if (lastProgram.className) {
+            lastProgram.className = "program act"
+            lastProgram.querySelector(".task-show").className = "task-show act"
+        }
+    }
 }

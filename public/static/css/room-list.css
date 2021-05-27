@@ -340,11 +340,26 @@
 }
 
 .room-list .taskbar .task-list .program .folder-list .top-bar .right-menu button {
-    width: 12px;
+    width: 14px;
     border: none;
-    height: 12px;
-    cursor: pointer;
+    height: 14px;
     border-radius: 100px;
+    position: relative;
+    overflow: hidden;
+    border: solid 1px rgba(0, 0, 0, 0.1);
+}
+
+.room-list .taskbar .task-list .program .folder-list .top-bar .right-menu button::before{
+    content: "";
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+}
+
+.room-list .taskbar .task-list .program .folder-list .top-bar .right-menu button:hover:before{
+    background-color: rgba(0, 0, 0, 0.1);
 }
 
 .room-list .taskbar .task-list .program .folder-list .top-bar .right-menu .min {
