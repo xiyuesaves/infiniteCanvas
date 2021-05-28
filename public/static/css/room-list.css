@@ -479,6 +479,10 @@
     user-select: auto !important;
 }
 
+.room-list .taskbar .task-list .program .folder-list .content.folder{
+    background-color: #ffffff;
+}
+
 .room-list .desktop {
     top: 0;
     left: 0;
