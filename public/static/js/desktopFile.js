@@ -160,6 +160,11 @@
                 this.activeProgram()
             }
         }
+        // 切换最大化
+        switchMaxProgram() {
+            console.log("切换最大化")
+            
+        }
         // 激活下一个窗口
         activeProgram() {
             let programList = document.querySelectorAll(".program")

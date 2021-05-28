@@ -8,9 +8,10 @@ function drag() {
             for (let i = 0; i < e.path.length; i++) {
                 if (e.path[i].className && e.path[i].className.includes("drop-el")) {
                     drop = e.path[i]
-                    e.path[i].parentNode.style.transition = "0ms"
+                    drop.parentNode.style.transition = "0ms"
                     overX = e.offsetX
                     overY = e.offsetY
+                    console.log(drop.parentNode.querySelector(".content").style.pointerEvents = "none")
                     break
                 }
             }
@@ -19,6 +20,7 @@ function drag() {
     document.addEventListener("mouseup", function(e) {
         if (drop) {
             drop.parentNode.style.transition = "200ms"
+            console.log(drop.parentNode.querySelector(".content").style.pointerEvents = "auto")
             drop = false
         }
     })

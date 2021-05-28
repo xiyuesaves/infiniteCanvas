@@ -35,7 +35,6 @@ function desktop() {
                 break
             }
         }
-        clearIconAct()
         if (selectIcon) {
             // 被点击元素添加选中效果
             selectIcon.className = "screen-icon act"
@@ -43,7 +42,6 @@ function desktop() {
             clearTimeout(doubleClickTime)
             // 如果两次点击的是同一个元素,则触发双击操作
             if (selectIcon === doubleClick) {
-                clearIconAct()
                 let iconInstance = getInstance(selectIcon.getAttribute("data-uuid"))
                 iconInstance.showProgram()
                 // 重置双击判断
@@ -60,12 +58,4 @@ function desktop() {
             }
         }
     })
-
-    // 清除图标选中样式
-    function clearIconAct() {
-        const iconList = desktopEl.querySelectorAll(".screen-icon.act")
-        for (let i = 0; i < iconList.length; i++) {
-            iconList[i].className = "screen-icon"
-        }
-    }
 }
