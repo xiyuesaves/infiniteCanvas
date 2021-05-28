@@ -11,7 +11,7 @@ function drag() {
                     drop.parentNode.style.transition = "0ms"
                     overX = e.offsetX
                     overY = e.offsetY
-                    console.log(drop.parentNode.querySelector(".content").style.pointerEvents = "none")
+                    drop.parentNode.querySelector(".content").style.pointerEvents = "none"
                     break
                 }
             }
@@ -19,14 +19,10 @@ function drag() {
     })
     document.addEventListener("mouseup", function(e) {
         if (drop) {
-            drop.parentNode.style.transition = "200ms"
-            console.log(drop.parentNode.querySelector(".content").style.pointerEvents = "auto")
-            drop = false
-        }
-    })
+            
 
-    document.addEventListener("mousemove", function(e) {
-        if (drop) {
+            drop.parentNode.style.transition = "200ms"
+            drop.parentNode.querySelector(".content").style.pointerEvents = "auto"
             let moveX = 0
             let moveY = 0
             if (drop.parentNode.style.transform) {
@@ -50,6 +46,33 @@ function drag() {
                 moveX += offsetRight - elPosition.left
             } else {
                 moveX -= elPosition.left
+            }
+
+            let iconInstance = getInstance(drop.parentNode.getAttribute("data-program-uuid"))
+            if (!iconInstance.windowOption.isMax) {
+                iconInstance.windowOption.position.x = moveX
+                iconInstance.windowOption.position.y = moveY
+            }
+
+            drop.parentNode.style.transform = `translateX(${moveX}px) translateY(${moveY}px)`
+            drop = false
+        }
+    })
+
+    document.addEventListener("mousemove", function(e) {
+        if (drop) {
+            let moveX = 0
+            let moveY = 0
+            if (drop.parentNode.style.transform) {
+                moveX = parseInt(drop.parentNode.style.transform.match(/-?\d+/g)[0])
+                moveY = parseInt(drop.parentNode.style.transform.match(/-?\d+/g)[1])
+            }
+            moveX += e.movementX
+            moveY += e.movementY
+            let iconInstance = getInstance(drop.parentNode.getAttribute("data-program-uuid"))
+            if (!iconInstance.windowOption.isMax) {
+                iconInstance.windowOption.position.x = moveX
+                iconInstance.windowOption.position.y = moveY
             }
             drop.parentNode.style.transform = `translateX(${moveX}px) translateY(${moveY}px)`
         }

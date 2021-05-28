@@ -36,12 +36,12 @@ function taskbar() {
             // 最小化按钮操作
             if (e.path[i].className === "min") {
                 let programEl = e.path[i].offsetParent
-                getInstance(programEl.getAttribute("data-program-uuid")).minimizeProgram()
+                getInstance(programEl.getAttribute("data-program-uuid")).switchMinimize()
                 break
             }
             if (e.path[i].className === "max") {
                 let programEl = e.path[i].offsetParent
-                getInstance(programEl.getAttribute("data-program-uuid")).fullSizeProgram()
+                getInstance(programEl.getAttribute("data-program-uuid")).switchMax()
                 break
             }
         }
@@ -49,18 +49,13 @@ function taskbar() {
         // 任务栏图标点击事件
         if (e.path[0].className.includes("task-show")) {
             let programEl = getNextEl(e.path[0])
+            let programInstance = getInstance(programEl.getAttribute("data-program-uuid"))
             if (e.path[0].className === "task-show") {
-                // 判断文件夹是否处于打开状态
-                if (programEl.getAttribute("data-disable-style")) {
-                    // 打开文件夹
-                    getInstance(programEl.getAttribute("data-program-uuid")).openProgram()
-                } else {
-                    // 文件夹已打开,仅置顶
-                    getInstance(programEl.getAttribute("data-program-uuid")).topProrame()
-                }
+                // 打开程序
+                programInstance.openProgram()
             } else {
                 // 最小化程序
-                getInstance(programEl.getAttribute("data-program-uuid")).minimizeProgram()
+                programInstance.switchMinimize()
             }
         }
     })
