@@ -2,10 +2,10 @@
     {
         "type": "folder",
         "icon": "\ud83d\udcc1",
-        "position":
+        "iconPosition":
         {
-            "x": 10,
-            "y": 10
+            "x": 0,
+            "y": 0
         },
         "title": "名称",
         "floderList": [
@@ -13,10 +13,10 @@
             "type": "text",
             "icon": "\ud83d\udcc3",
             "title": "hello",
-            "position":
+            "iconPosition":
             {
                 "x": 0,
-                "y": 0
+                "y": 2
             },
             "content": "hello world"
         },
@@ -24,10 +24,10 @@
             "type": "text",
             "icon": "\ud83d\udcc3",
             "title": "hi",
-            "position":
+            "iconPosition":
             {
-                "x": 50,
-                "y": 0
+                "x": 0,
+                "y": 3
             },
             "content": "hahahaha"
         }]
@@ -35,10 +35,10 @@
     {
         "type": "image",
         "icon": "\ud83d\uddbc\ufe0f",
-        "position":
+        "iconPosition":
         {
-            "x": 10,
-            "y": 140
+            "x": 0,
+            "y": 1
         },
         "title": "这是张图片",
         "data": null,
@@ -47,10 +47,10 @@
     {
         "type": "program",
         "icon": "\ud83c\udfbc",
-        "position":
+        "iconPosition":
         {
-            "x": 10,
-            "y": 270
+            "x": 0,
+            "y": 2
         },
         "title": "音乐",
         "src": ""
@@ -58,10 +58,10 @@
     {
         "type": "text",
         "icon": "\ud83d\udcc3",
-        "position":
+        "iconPosition":
         {
-            "x": 10,
-            "y": 400
+            "x": 0,
+            "y": 4
         },
         "title": "这是一串文本",
         "content": "这是一个文本内容"
@@ -69,12 +69,12 @@
     {
         "type": "text",
         "icon": "\ud83d\udcc3",
-        "position":
+        "iconPosition":
         {
-            "x": 10,
-            "y": 530
+            "x": 0,
+            "y": 3
         },
-        "title": "这是文本2",
+        "title": "这是文本2这是文本2这是文本2这是文本2这是文本2这是文本2",
         "content": "这是文本2这是文本2这是文本2这是文本2这是文本2这是文本2"
     }
 ]

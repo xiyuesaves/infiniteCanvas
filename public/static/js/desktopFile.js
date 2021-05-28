@@ -2,9 +2,9 @@
         constructor(data, sort) {
             this.icon = data.icon
             this.title = data.title
-            this.position = {
-                x: data.position.x,
-                y: data.position.y
+            this.iconPosition = {
+                x: data.iconPosition.x,
+                y: data.iconPosition.y
             }
             this.type = data.type
             this.content = data.content
@@ -22,9 +22,13 @@
         showOnDesktop() {
             const desktopEl = document.querySelector(".desktop")
             const desktopIconEl = document.querySelector("#deaktop-icon").content.cloneNode(true)
-            desktopIconEl.querySelector(".screen-icon").style.left = this.position.x + "px"
+            const iconFileHeight = 120
+            const iconFileWidth = 78
+            const offsetTop = 10
+            const offsetLeft = 2
+            desktopIconEl.querySelector(".screen-icon").style.left = this.iconPosition.x * iconFileWidth + offsetLeft + "px"
             desktopIconEl.querySelector(".screen-icon").setAttribute("data-uuid", this.uuid)
-            desktopIconEl.querySelector(".screen-icon").style.top = this.position.y + "px"
+            desktopIconEl.querySelector(".screen-icon").style.top = this.iconPosition.y * iconFileHeight + offsetTop + "px"
             desktopIconEl.querySelector(".icon").innerText = this.icon
             desktopIconEl.querySelector(".icon-title").innerText = this.title
             desktopEl.appendChild(desktopIconEl)
@@ -92,7 +96,7 @@
                         this.programEl.className = "folder-list act"
                         // 置顶窗口
                         this.topProrame()
-                    },)
+                    }, )
                 } else {
                     this.programEl.setAttribute("style", this.programEl.getAttribute("data-disable-style"))
                     this.programEl.removeAttribute("data-disable-style")
