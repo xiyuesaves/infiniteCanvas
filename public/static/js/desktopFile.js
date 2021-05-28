@@ -216,8 +216,8 @@ const desktopFile = class {
             this.programEl.setAttribute("style", styleText)
             this.programEl.className = "folder-list act"
             // 置顶窗口
-
-            this.programEl.style.transform = `translateX(${this.windowOption.position.x - offsetRect.left}px) translateY(-${document.querySelector(".room-list").offsetHeight - this.windowOption.height}px)`
+            console.log(offsetRect)
+            this.programEl.style.transform = `translateX(-${offsetRect.left}px) translateY(-${document.querySelector(".room-list").offsetHeight - this.windowOption.height - document.querySelector(".task-list").offsetHeight}px)`
             this.programEl.style.width = `${document.querySelector(".room-list").offsetWidth}px`
             this.programEl.style.height = `${document.querySelector(".room-list").offsetHeight - document.querySelector(".task-list").offsetHeight}px`
         } else {
