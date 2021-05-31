@@ -19,7 +19,6 @@ function drag() {
     })
     document.addEventListener("mouseup", function(e) {
         if (drop) {
-            
 
             drop.parentNode.style.transition = "200ms"
             drop.parentNode.querySelector(".content").style.pointerEvents = "auto"
@@ -73,6 +72,9 @@ function drag() {
             if (!iconInstance.windowOption.isMax) {
                 iconInstance.windowOption.position.x = moveX
                 iconInstance.windowOption.position.y = moveY
+            } else {
+                iconInstance.resetWindow()
+                drop.parentNode.style.transition = "transform 0ms,width 200ms,height 200ms"
             }
             drop.parentNode.style.transform = `translateX(${moveX}px) translateY(${moveY}px)`
         }
