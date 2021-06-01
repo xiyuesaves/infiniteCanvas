@@ -7,11 +7,16 @@ function drag() {
         if (e.buttons === 1) {
             for (let i = 0; i < e.path.length; i++) {
                 if (e.path[i].className && e.path[i].className.includes("drop-el")) {
-                    drop = e.path[i]
-                    drop.parentNode.style.transition = "0ms"
-                    overX = e.offsetX
-                    overY = e.offsetY
-                    drop.parentNode.querySelector(".content").style.pointerEvents = "none"
+                    let clickEl = e.path[i]
+                    if (doubleClick(clickEl)) {
+                        getInstance(clickEl.parentNode.getAttribute("data-program-uuid")).switchMax()
+                    } else {
+                        drop = clickEl
+                        drop.parentNode.style.transition = "0ms"
+                        overX = e.offsetX
+                        overY = e.offsetY
+                        drop.parentNode.querySelector(".content").style.pointerEvents = "none"
+                    }
                     break
                 }
             }
@@ -57,14 +62,15 @@ function drag() {
             drop = false
         }
     })
-
     document.addEventListener("mousemove", function(e) {
         if (drop) {
             let moveX = 0
             let moveY = 0
             if (drop.parentNode.style.transform) {
-                moveX = parseInt(drop.parentNode.style.transform.match(/-?\d+/g)[0])
-                moveY = parseInt(drop.parentNode.style.transform.match(/-?\d+/g)[1])
+                moveX = parseInt(drop.parentNode.style.transform.match(/-?\d+(\.[\d]+)?/g)[0])
+                moveY = parseInt(drop.parentNode.style.transform.match(/-?\d+(\.[\d]+)?/g)[1])
+            } else {
+                console.log("没有找到数据")
             }
             moveX += e.movementX
             moveY += e.movementY
@@ -72,11 +78,14 @@ function drag() {
             if (!iconInstance.windowOption.isMax) {
                 iconInstance.windowOption.position.x = moveX
                 iconInstance.windowOption.position.y = moveY
+                drop.parentNode.style.transform = `translateX(${moveX}px) translateY(${moveY}px)`
             } else {
+                console.log(e.clientX, e, iconInstance.windowOption.width)
+                iconInstance.windowOption.position.x = moveX + e.clientX - e.clientX * (iconInstance.windowOption.width / drop.parentNode.offsetWidth);
+                iconInstance.windowOption.position.y = moveY;
                 iconInstance.resetWindow()
-                drop.parentNode.style.transition = "transform 0ms,width 200ms,height 200ms"
+                drop.parentNode.style.transition = "transform 0ms"
             }
-            drop.parentNode.style.transform = `translateX(${moveX}px) translateY(${moveY}px)`
         }
     })
 }

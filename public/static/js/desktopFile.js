@@ -159,7 +159,7 @@ const desktopFile = class {
         // 激活当前图标
         let showIconEl = getPrevEl(this.programEl)
         showIconEl.className = "task-show act"
-        //  打开窗口
+        //  重置窗口
         if (getPrevEl(this.programEl).getAttribute("create")) {
             getPrevEl(this.programEl).className += " create"
             getPrevEl(this.programEl).removeAttribute("create")
@@ -205,7 +205,6 @@ const desktopFile = class {
     }
 
     maxWindow() {
-
         let offsetRect
         console.log("最大化窗口", this.programEl.style.transform)
         offsetRect = this.programEl.getBoundingClientRect()
@@ -215,8 +214,6 @@ const desktopFile = class {
             let styleText = `width: ${this.windowOption.width}px; height: ${this.windowOption.height}px; top: -${this.windowOption.height}px; transition: all 200ms ease 0s; transform: translateX(0px) translateY(0px);`
             this.programEl.setAttribute("style", styleText)
             this.programEl.className = "folder-list act"
-            // 置顶窗口
-            console.log(offsetRect)
             this.programEl.style.transform = `translateX(-${offsetRect.left}px) translateY(-${document.querySelector(".room-list").offsetHeight - this.windowOption.height - document.querySelector(".task-list").offsetHeight}px)`
             this.programEl.style.width = `${document.querySelector(".room-list").offsetWidth}px`
             this.programEl.style.height = `${document.querySelector(".room-list").offsetHeight - document.querySelector(".task-list").offsetHeight}px`
