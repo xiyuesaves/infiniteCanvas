@@ -7,24 +7,48 @@
     <script src='../socket.io/socket.io.js'></script>
     <script src='../cookies.js'></script>
     <script src='static/js/index.js'></script>
+    <script src='static/js/login.js'></script>
     <link rel='stylesheet' type='text/css' href='static/css/index.css'>
+    <link rel='stylesheet' type='text/css' href='static/css/login.css'>
     <meta name="viewport" content="width=device-width, user-scalable=no,initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
 </head>
 
 <body>
+    <!-- 登录层 -->
+    <div class="login-view show log">
+        <div class="switch-box">
+            <div class="center-box log">
+                <p class="top-title">登录</p>
+                <p class="login-info">请在登录之后再进行此操作</p>
+                <input class="log-name" type="text" placeholder="用户名" name="">
+                <p class="text-info "></p>
+                <input class="log-psw" type="password" placeholder="密码" name="">
+                <p class="text-info"></p>
+                <div class="list-box">
+                    <button class="reg">注册</button>
+                    <button class="log">登录</button>
+                </div>
+            </div>
+            <div class="center-box reg">
+                <p class="top-title">注册</p>
+                <p class="login-info">有朋自远方来，不亦说乎</p>
+                <input class="reg-name" type="text" placeholder="用户名" name="">
+                <p class="text-info"></p>
+                <input class="reg-psw" title="虽然被攻击的可能性不大,但还是请不要和其他账号使用同一密码" type="password" placeholder="密码" name="">
+                <p class="text-info"></p>
+                <input class="reg-key" type="text" placeholder="邀请码" name="">
+                <p class="text-info"></p>
+                <div class="list-box">
+                    <button class="reg">返回</button>
+                    <button class="log">注册</button>
+                </div>
+            </div>
+        </div>
+    </div>
     <!-- 连接服务器 -->
-    <div class="wating-service">
+<!--     <div class="wating-service">
         连接服务器中...
-    </div>
-    <div class="login">
-        <p class="login-info">加入绘画</p>
-        <input class="input-user-name" type="text" placeholder="写上别人对你的称呼?" name="">
-        <input class="input-user-psw" type="password" placeholder="密码可别忘了" name="">
-        <input class="input-invitation-code disable" type="text" placeholder="第一次来可是需要带路人的哦" name="">
-        <button class="login-btn">
-            注册
-        </button>
-    </div>
+    </div> -->
     <!-- 菜单 -->
     <div class="menus">
         <!-- <p class="full-z"></p> -->
