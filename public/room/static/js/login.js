@@ -1,4 +1,4 @@
-document.addEventListener("DOMContentLoaded", function() {
+function initLogin() {
     console.log("加载登录组件")
     let switchLogBtn = document.querySelector(".center-box.reg button.reg");
     let switchRegBtn = document.querySelector(".center-box.log button.reg");
@@ -41,22 +41,35 @@ document.addEventListener("DOMContentLoaded", function() {
         r.addEventListener("change", function(e) { if (!n) f(e); });
     }
 
+
+    function loginSuccess() {
+        setTimeout(function () {
+            document.querySelector(".login-view").className += "login-success"
+        },500)
+    }
+
     // cookie登录
     if (Cookies.get("user")) {
         console.log("尝试cookie登录")
-        axios.post('/login', {
+        axios.post('/loginCookie', {
                 cookie: Cookies.get("user")
             })
             .then(function(response) {
                 if (response.data.status) {
-                    // loginSuccess()
+                    console.log("cookie验证成功")
+                    loginSuccess()
                 } else {
                     Cookies.remove("user")
+                        document.querySelector(".login-view").className += " show"
                 }
             })
             .catch(function(error) {
                 Cookies.remove("user")
             })
+    } else {
+        // 弹窗提醒登录
+        console.log("没有cookie,请登录后访问")
+            document.querySelector(".login-view").className += " show"
     }
 
     // 登录请求
@@ -80,7 +93,7 @@ document.addEventListener("DOMContentLoaded", function() {
                                     console.log(response);
                                     if (response.data.status) {
                                         loginBtn.innerText = "登录成功";
-                                        // loginSuccess()
+                                        loginSuccess()
                                     } else {
                                         setTimeout(function() {
                                             loginIn = false
@@ -111,7 +124,7 @@ document.addEventListener("DOMContentLoaded", function() {
                                     nameEl.className = "log-name ";
                                     pswEl.className = "log-psw ";
                                 });
-                            // 禁用页面功能直到返回消息
+                            // 禁用页面功能直到返回信息
                             loginBtn.className = "log loding-status";
                             loginBtn.innerText = "登录中";
                             switchRegBtn.className = "reg disable";
@@ -166,7 +179,7 @@ document.addEventListener("DOMContentLoaded", function() {
                                                 if (response.data.status) {
                                                     console.log("注册成功")
                                                     regBtn.innerText = "注册成功";
-                                                    // loginSuccess()
+                                                    loginSuccess()
                                                 } else {
                                                     setTimeout(function() {
                                                         loginIn = false
@@ -283,4 +296,39 @@ document.addEventListener("DOMContentLoaded", function() {
         }
         console.log(leve)
     })
-})
+}
+
+
+// 获取下一个元素 - 传入元素
+function getNextEl(el) {
+    let listNode = el.parentNode.childNodes
+    let newList = []
+    for (var i = 0; i < listNode.length; i++) {
+        if (listNode[i].nodeName !== "#text") {
+            newList.push(listNode[i]);
+        }
+    }
+    for (var i = 0; i < newList.length; i++) {
+        if (newList[i] === el) {
+            return newList[i + 1]
+        }
+    }
+    return null
+}
+
+// 获取上一个元素 - 传入元素
+function getPrevEl(el) {
+    let listNode = el.parentNode.childNodes
+    let newList = []
+    for (var i = 0; i < listNode.length; i++) {
+        if (listNode[i].nodeName !== "#text") {
+            newList.push(listNode[i]);
+        }
+    }
+    for (var i = 0; i < newList.length; i++) {
+        if (newList[i] === el) {
+            return newList[i - 1]
+        }
+    }
+    return null
+}

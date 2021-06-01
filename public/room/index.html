@@ -7,6 +7,7 @@
     <script src='../socket.io/socket.io.js'></script>
     <script src='../cookies.js'></script>
     <script src='static/js/index.js'></script>
+    <script src='../axios.js'></script>
     <script src='static/js/login.js'></script>
     <link rel='stylesheet' type='text/css' href='static/css/index.css'>
     <link rel='stylesheet' type='text/css' href='static/css/login.css'>
@@ -15,15 +16,17 @@
 
 <body>
     <!-- 登录层 -->
-    <div class="login-view show log">
+    <div class="login-view log">
         <div class="switch-box">
             <div class="center-box log">
                 <p class="top-title">登录</p>
                 <p class="login-info">请在登录之后再进行此操作</p>
-                <input class="log-name" type="text" placeholder="用户名" name="">
+                <input autocomplete class="log-name" type="text" placeholder="用户名" name="">
                 <p class="text-info "></p>
-                <input class="log-psw" type="password" placeholder="密码" name="">
-                <p class="text-info"></p>
+                <form>
+                    <input autocomplete class="log-psw" type="password" placeholder="密码" name="">
+                    <p class="text-info"></p>
+                </form>
                 <div class="list-box">
                     <button class="reg">注册</button>
                     <button class="log">登录</button>
@@ -32,11 +35,13 @@
             <div class="center-box reg">
                 <p class="top-title">注册</p>
                 <p class="login-info">有朋自远方来，不亦说乎</p>
-                <input class="reg-name" type="text" placeholder="用户名" name="">
+                <input autocomplete class="reg-name" type="text" placeholder="用户名" name="">
                 <p class="text-info"></p>
-                <input class="reg-psw" title="虽然被攻击的可能性不大,但还是请不要和其他账号使用同一密码" type="password" placeholder="密码" name="">
-                <p class="text-info"></p>
-                <input class="reg-key" type="text" placeholder="邀请码" name="">
+                <form>
+                    <input autocomplete class="reg-psw" title="为了您的安全，请不要和其他账号使用同一密码" type="password" placeholder="密码" name="">
+                    <p class="text-info"></p>
+                </form>
+                <input autocomplete class="reg-key" type="text" title="目前处于内侧阶段，所以邀请码是必须的" placeholder="邀请码" name="">
                 <p class="text-info"></p>
                 <div class="list-box">
                     <button class="reg">返回</button>
@@ -46,7 +51,7 @@
         </div>
     </div>
     <!-- 连接服务器 -->
-<!--     <div class="wating-service">
+    <!--     <div class="wating-service">
         连接服务器中...
     </div> -->
     <!-- 菜单 -->
@@ -56,10 +61,10 @@
         <div class="left-menu">
             <div class="top-select-color"></div>
             <div class="input-color-value">
-                <input onkeydown="" class="input-color" maxlength="7" type="text" placeholder="#ffffff" name="">
-                <input title="点击选取颜色" class="color-view" style="background-color: #ffffff;" type="color"  name="">
+                <input autocomplete onkeydown="" class="input-color" maxlength="7" type="text" placeholder="#ffffff" name="">
+                <input autocomplete title="点击选取颜色" class="color-view" style="background-color: #ffffff;" type="color" name="">
             </div>
-            <input title="调整笔刷大小" class="brush-size-range" type="range" value="0" min="0" max="100" step="1"/>
+            <input autocomplete title="调整笔刷大小" class="brush-size-range" type="range" value="0" min="0" max="100" step="1" />
         </div>
         <!-- 人数显示 -->
         <div class="online">
@@ -83,7 +88,7 @@
                 </span> -->
             </div>
             <div class="bottom-msg-input">
-                <input class="input-msg" placeholder="click this" type="texts" name="">
+                <input autocomplete class="input-msg" placeholder="click this" type="texts" name="">
                 <button class="send-msg">send</button>
             </div>
         </div>

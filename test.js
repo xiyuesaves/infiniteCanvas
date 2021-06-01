@@ -12,7 +12,7 @@ const db = require('better-sqlite3')('main.db');
 
 // http服务端口
 const point = 3399;
-
+const roomList = ["test"]
 // 处理http服务
 function startHttpServer() {
     // 加入中间键
@@ -63,9 +63,10 @@ function startHttpServer() {
 
     // 处理cookie登录
     app.post('/loginCookie', async function(req, res) {
-        console.log(JSON.stringify(req.body))
+        console.log("cookie登录",JSON.stringify(req.body))
         if (req.body.cookie) {
-            let userInfo = db.prepare("SELECT * FROM user WHERE userName = ? AND password = ?").get(req.body.cookie)
+            let userInfo = db.prepare("SELECT uuid FROM user WHERE cookie = ?").get(req.body.cookie)
+            console.log(userInfo)
             if (userInfo) {
                 res.send({ status: true, userInfo: { name: userInfo.userName, id: userInfo.userId } });
             } else {
@@ -78,14 +79,14 @@ function startHttpServer() {
 
     // 处理登录请求
     app.post('/login', async function(req, res) {
-        console.log(JSON.stringify(req.body))
+        console.log("用户登录",JSON.stringify(req.body))
         if (req.body.name && req.body.password) {
             let userInfo = db.prepare("SELECT * FROM user WHERE userName = ? AND password = ?").get(req.body.name, req.body.password)
             if (userInfo) {
                 let userSession = uuidv4()
                 res.cookie("user", userSession, { maxAge: new Date("Fri, 31 Dec 9999 23:59:59 GMT").getTime() })
-                res.send({ status: true, userInfo: { name: userInfo.userName, id: userInfo.userId } });
-                db.prepare("UPDATE user SET cookieId = ? WHERE userId = ?").run(userSession, userInfo.userId)
+                res.send({ status: true, userInfo: { name: userInfo.userName, id: userInfo.uuid } });
+                db.prepare("UPDATE user SET cookie = ? WHERE uuid = ?").run(userSession, userInfo.uuid)
             } else {
                 res.send({ status: false, code: 1 });
             }

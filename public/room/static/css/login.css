@@ -7,7 +7,6 @@
     display: flex;
     z-index: 1000;
     overflow: hidden;
-    transition: 300ms;
     position: absolute;
     align-items: center;
     pointer-events: none;
@@ -16,10 +15,16 @@
 }
 
 .login-view.show {
+    transition: 300ms;
     pointer-events: auto;
     opacity: 1;
 }
-
+.login-view.login-success{
+    /*transition: 300ms;*/
+    opacity: 0;
+    transform: translateY(0px);
+    pointer-events: none;
+}
 .login-view .center-box {
     opacity: 0;
     width: 360px;
