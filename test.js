@@ -33,6 +33,7 @@ function startHttpServer() {
     // 处理错误地址
     app.get('/room', function(req, res) {
         // res.redirect(302, '/');
+        console.log("错误地址请求", req.path)
         res.sendFile(`${__dirname}/public/errPage/errImg/404.png`)
     });
 
@@ -41,14 +42,17 @@ function startHttpServer() {
 
     // 处理错误地址
     app.get('/room/*/*', function(req, res) {
+        console.log("错误地址请求", req.path)
         res.sendFile(`${__dirname}/public/errPage/errImg/404.png`)
     });
 
     // 进入绘画房间
     app.get('/room/*', function(req, res) {
         const roomName = req.path.replace(/\/room\//, "");
-        if (roomList.indexOf(roomName) !== -1) {
+        let getRoom = db.prepare("SELECT * FROM canvas WHERE canvasName = ?").get(roomName)
+        if (getRoom) {
             console.log(`进入房间${roomName}`)
+            res.cookie("room", new Buffer.from(JSON.stringify(getRoom)).toString("base64") , { maxAge: new Date("Fri, 31 Dec 9999 23:59:59 GMT").getTime() })
             res.sendFile(`${__dirname}/public/room/index.html`);
         } else {
             console.log(`没有找到房间${roomName}`)
@@ -56,16 +60,22 @@ function startHttpServer() {
         }
     });
 
+    // 获取房间信息
+    app.get('/roomData', function(req, res) {
+        console.log("请求房间信息", req.path, req.cookies.room)
+    });
+
     // 处理错误地址
     app.get('/*', function(req, res) {
+        console.log("错误地址请求", req.path)
         res.sendFile(`${__dirname}/public/errPage/errImg/404.png`)
     });
 
     // 处理cookie登录
     app.post('/loginCookie', async function(req, res) {
-        console.log("cookie登录",JSON.stringify(req.body))
-        if (req.body.cookie) {
-            let userInfo = db.prepare("SELECT uuid FROM user WHERE cookie = ?").get(req.body.cookie)
+        console.log("cookie登录",req.cookies.user)
+        if (req.cookies.user) {
+            let userInfo = db.prepare("SELECT uuid FROM user WHERE cookie = ?").get(req.cookies.user)
             console.log(userInfo)
             if (userInfo) {
                 res.send({ status: true, userInfo: { name: userInfo.userName, id: userInfo.userId } });
@@ -97,12 +107,12 @@ function startHttpServer() {
 
     // 处理注册请求
     app.post('/registered', async function(req, res) {
-        if (req.body.name && req.body.password && req.body.key) {
+        if (req.body.name && req.body.password && req.body.invitationCode) {
             let checkName = db.prepare("SELECT * FROM user WHERE userName = ?").get(req.body.name)
             if (!checkName) {
                 let userSession = uuidv4()
-                let insert = db.prepare("INSERT INTO user (userName,createTime,password,cookieId) VALUES (?,?,?,?)").run(req.body.name, new Date().getTime().toString(), req.body.password, userSession)
-                let userInfo = db.prepare("SELECT * FROM user WHERE userName = ?").get(req.body.name)
+                let userInfo = db.prepare("SELECT * FROM user").all()
+                let insert = db.prepare("INSERT INTO user (userName,password,createDate,invitationCode,authority,cookie) VALUES (?,?,?,?,?,?)").run(req.body.name, req.body.password, new Date().getTime(), req.body.invitationCode, "user", userSession)
                 res.cookie("user", userSession, { maxAge: new Date("Fri, 31 Dec 9999 23:59:59 GMT").getTime() })
                 res.send({ status: true, userInfo: { name: userInfo.userName, id: userInfo.userId } });
             } else {

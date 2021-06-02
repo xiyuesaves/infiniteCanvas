@@ -6,11 +6,13 @@
     <title>无限画布-测试</title>
     <script src='../socket.io/socket.io.js'></script>
     <script src='../cookies.js'></script>
-    <script src='static/js/index.js'></script>
     <script src='../axios.js'></script>
+    <script src='static/js/index.js'></script>
     <script src='static/js/login.js'></script>
+    <script src='static/js/room.js'></script>
     <link rel='stylesheet' type='text/css' href='static/css/index.css'>
     <link rel='stylesheet' type='text/css' href='static/css/login.css'>
+    <link rel='stylesheet' type='text/css' href='static/css/getRoomData.css'>
     <meta name="viewport" content="width=device-width, user-scalable=no,initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
 </head>
 
@@ -51,9 +53,29 @@
         </div>
     </div>
     <!-- 连接服务器 -->
-    <!--     <div class="wating-service">
-        连接服务器中...
-    </div> -->
+    <div class="wating-service">
+        获取数据中...
+        <!-- code from https://codepen.io/jackrugile/pen/JddmaX/ -->
+        <div class="loader">
+            <div class="loader-inner">
+                <div class="loader-line-wrap">
+                    <div class="loader-line"></div>
+                </div>
+                <div class="loader-line-wrap">
+                    <div class="loader-line"></div>
+                </div>
+                <div class="loader-line-wrap">
+                    <div class="loader-line"></div>
+                </div>
+                <div class="loader-line-wrap">
+                    <div class="loader-line"></div>
+                </div>
+                <div class="loader-line-wrap">
+                    <div class="loader-line"></div>
+                </div>
+            </div>
+        </div>
+    </div>
     <!-- 菜单 -->
     <div class="menus">
         <!-- <p class="full-z"></p> -->
@@ -101,14 +123,10 @@
         </div>
     </div>
     <!-- 笔刷显示 -->
-    <div class="user-mouse">
-        <!-- <div id="brush"></div> -->
-        <!-- <div id="player-id" class="player-mouse">
-            <p class="user-name">测试id测试id测试id测试id</p>
-        </div> -->
-    </div>
-    <canvas id="canvas">
-    </canvas>
+    <!--     <div class="user-mouse">
+    </div> -->
+    <!--     <canvas id="canvas">
+    </canvas> -->
 </body>
 
 </html>

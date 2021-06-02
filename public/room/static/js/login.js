@@ -43,33 +43,38 @@ function initLogin() {
 
 
     function loginSuccess() {
-        setTimeout(function () {
-            document.querySelector(".login-view").className += "login-success"
-        },500)
+        setTimeout(function() {
+            document.querySelector(".login-view").className += " login-success"
+        }, 500)
+        loginSuccessReturn()
     }
 
     // cookie登录
     if (Cookies.get("user")) {
         console.log("尝试cookie登录")
-        axios.post('/loginCookie', {
-                cookie: Cookies.get("user")
-            })
+        axios.post('/loginCookie')
             .then(function(response) {
                 if (response.data.status) {
                     console.log("cookie验证成功")
                     loginSuccess()
                 } else {
                     Cookies.remove("user")
+                    setTimeout(function() {
                         document.querySelector(".login-view").className += " show"
+                    }, 300)
                 }
             })
             .catch(function(error) {
                 Cookies.remove("user")
+                setTimeout(function() {
+                    document.querySelector(".login-view").className += " show"
+                }, 300)
             })
     } else {
-        // 弹窗提醒登录
-        console.log("没有cookie,请登录后访问")
+        console.log("没有cookie,需要登录后访问")
+        setTimeout(function() {
             document.querySelector(".login-view").className += " show"
+        }, 300)
     }
 
     // 登录请求
@@ -172,7 +177,7 @@ function initLogin() {
                                         axios.post('/registered', {
                                                 name: nameEl.value,
                                                 password: pswEl.value,
-                                                key: keyEl.value
+                                                invitationCode: keyEl.value
                                             })
                                             .then(function(response) {
                                                 console.log(response)
@@ -296,39 +301,4 @@ function initLogin() {
         }
         console.log(leve)
     })
-}
-
-
-// 获取下一个元素 - 传入元素
-function getNextEl(el) {
-    let listNode = el.parentNode.childNodes
-    let newList = []
-    for (var i = 0; i < listNode.length; i++) {
-        if (listNode[i].nodeName !== "#text") {
-            newList.push(listNode[i]);
-        }
-    }
-    for (var i = 0; i < newList.length; i++) {
-        if (newList[i] === el) {
-            return newList[i + 1]
-        }
-    }
-    return null
-}
-
-// 获取上一个元素 - 传入元素
-function getPrevEl(el) {
-    let listNode = el.parentNode.childNodes
-    let newList = []
-    for (var i = 0; i < listNode.length; i++) {
-        if (listNode[i].nodeName !== "#text") {
-            newList.push(listNode[i]);
-        }
-    }
-    for (var i = 0; i < newList.length; i++) {
-        if (newList[i] === el) {
-            return newList[i - 1]
-        }
-    }
-    return null
 }

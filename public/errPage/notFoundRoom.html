@@ -27,7 +27,7 @@ function time() {
     setTimeout(function() {
         document.querySelector("h1").innerText = `没有此房间,${times}秒后返回首页`;
         if (times === 0) {
-            window.location = "/";
+            window.location = "/room/";
         } else {
             time();
         };
