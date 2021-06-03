@@ -52,7 +52,6 @@ function startHttpServer() {
         let getRoom = db.prepare("SELECT * FROM canvas WHERE canvasName = ?").get(roomName)
         if (getRoom) {
             console.log(`进入房间${roomName}`)
-            res.cookie("room", new Buffer.from(JSON.stringify(getRoom)).toString("base64") , { maxAge: new Date("Fri, 31 Dec 9999 23:59:59 GMT").getTime() })
             res.sendFile(`${__dirname}/public/room/index.html`);
         } else {
             console.log(`没有找到房间${roomName}`)
@@ -61,8 +60,26 @@ function startHttpServer() {
     });
 
     // 获取房间信息
-    app.get('/roomData', function(req, res) {
-        console.log("请求房间信息", req.path, req.cookies.room)
+    app.post('/room/*', function(req, res, next) {
+        let pathArr = req.path.split("/")
+        let roomName = pathArr[pathArr.length - 1]
+        let roomInfo = db.prepare("SELECT canvasId,createUserId,password FROM canvas WHERE canvasName = ?").get(roomName)
+        console.log("获取房间信息", roomName)
+        console.log(roomInfo)
+        if (roomInfo) {
+            if (roomInfo.password) {
+                roomInfo.password = true
+            } else {
+                roomInfo.password = false
+            }
+            let roomData = {
+                status: true,
+                roomInfo: roomInfo
+            }
+            res.send(roomData)
+        } else {
+            res.send({status: false, code: 0})
+        }
     });
 
     // 处理错误地址
