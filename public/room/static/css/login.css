@@ -104,6 +104,9 @@
 .login-view.show .center-box{
     pointer-events: auto;
 }
+.login-view.show.login-success .center-box{
+    pointer-events: none;
+}
 /*.login-view.show.log .center-box.log {
     opacity: 1;
     transform: scale(1.0);

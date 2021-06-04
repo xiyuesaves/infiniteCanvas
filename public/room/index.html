@@ -52,81 +52,41 @@
             </div>
         </div>
     </div>
-    <!-- 连接服务器 -->
+    <!-- 同步数据 -->
     <div class="wating-service">
-        获取数据中...
-        <!-- code from https://codepen.io/jackrugile/pen/JddmaX/ -->
-        <div class="loader">
-            <div class="loader-inner">
-                <div class="loader-line-wrap">
-                    <div class="loader-line"></div>
-                </div>
-                <div class="loader-line-wrap">
-                    <div class="loader-line"></div>
-                </div>
-                <div class="loader-line-wrap">
-                    <div class="loader-line"></div>
-                </div>
-                <div class="loader-line-wrap">
-                    <div class="loader-line"></div>
-                </div>
-                <div class="loader-line-wrap">
-                    <div class="loader-line"></div>
+        <div class="get-data show">
+            获取数据中...
+            <div class="loader">
+                <div class="loader-inner">
+                    <div class="loader-line-wrap">
+                        <div class="loader-line"></div>
+                    </div>
+                    <div class="loader-line-wrap">
+                        <div class="loader-line"></div>
+                    </div>
+                    <div class="loader-line-wrap">
+                        <div class="loader-line"></div>
+                    </div>
+                    <div class="loader-line-wrap">
+                        <div class="loader-line"></div>
+                    </div>
+                    <div class="loader-line-wrap">
+                        <div class="loader-line"></div>
+                    </div>
                 </div>
             </div>
+        </div>
+        <div class="input-psw">
+            <p class="info-text">此房间已开启密码保护</p>
+            <input class="room-password" type="text" name="">
+            <p class="text-info"></p>
+            <button class="post-password">验证</button>
         </div>
     </div>
-    <!-- 菜单 -->
-    <div class="menus">
-        <!-- <p class="full-z"></p> -->
-        <!-- 左侧菜单 -->
-        <div class="left-menu">
-            <div class="top-select-color"></div>
-            <div class="input-color-value">
-                <input autocomplete onkeydown="" class="input-color" maxlength="7" type="text" placeholder="#ffffff" name="">
-                <input autocomplete title="点击选取颜色" class="color-view" style="background-color: #ffffff;" type="color" name="">
-            </div>
-            <input autocomplete title="调整笔刷大小" class="brush-size-range" type="range" value="0" min="0" max="100" step="1" />
-        </div>
-        <!-- 人数显示 -->
-        <div class="online">
-            <p class="total-num">当前在线:0人</p>
-            <div class="online-list">
-            </div>
-        </div>
-        <!-- 聊天框 -->
-        <div class="omMsg">
-            <div class="top-msg-list">
-                <!-- <span class="msg-text">
-                    <p class="user-name">曦月</p>
-                    <p class="content">测试测试啦</p>
-                </span>
-                <span class="msg-text your-self">
-                    <p class="user-name">曦月</p>
-                    <p class="content">123123123123123123123</p>
-                </span>
-                <span class="system-info">
-                    你已经上线啦
-                </span> -->
-            </div>
-            <div class="bottom-msg-input">
-                <input autocomplete class="input-msg" placeholder="click this" type="texts" name="">
-                <button class="send-msg">send</button>
-            </div>
-        </div>
-        <!-- 右侧缩放条 -->
-        <div class="right-zoom-indicator">
-            <!-- <div class="indicator-tag">
-                <p class="tg-name">测试名称</p>
-            </div> -->
-            <!-- <div class="indicator-tag your-self"></div> -->
-        </div>
+    <!-- 主要操作层 -->
+    <div class="main">
+        
     </div>
-    <!-- 笔刷显示 -->
-    <!--     <div class="user-mouse">
-    </div> -->
-    <!--     <canvas id="canvas">
-    </canvas> -->
 </body>
 
 </html>

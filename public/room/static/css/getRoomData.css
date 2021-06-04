@@ -1,34 +1,147 @@
 .wating-service {
     position: fixed;
+    display: flex;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
     z-index: 900;
-    display: none;
     align-items: center;
     justify-content: center;
     flex-direction: column;
     font-size: 64px;
     font-weight: lighter;
     color: #666666;
+    transition: 300ms, font-size 0ms, font-weight 0ms;
+    pointer-events: none;
+    opacity: 0;
     text-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-    backdrop-filter: blur(5px);
-    background-color: rgba(200, 200, 200, 0.3);
+    /*backdrop-filter: blur(30px);*/
+    background-color: rgba(200, 200, 200, 0.15);
 }
 
 .wating-service.show {
+    pointer-events: auto;
+    opacity: 1;
+}
+
+.input-psw {
     display: flex;
+    background-color: #ffffff;
+    width: 360px;
+    height: 0;
+    overflow: hidden;
+    transition: 300ms;
+    border-radius: 8px;
+    pointer-events: none;
+    background-color: #ffffff;
+    opacity: 0;
+    box-shadow: 0 4px 20px rgb(0 0 0 / 5%);
+}
+
+.input-psw.show {
+    height: 236px;
+    pointer-events: auto;
+    padding: 20px 30px 30px;
+    opacity: 1;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+}
+
+.input-psw .info-text {
+    width: 100%;
+    color: #666666;
+    font-size: 24px;
+    margin-top: 20px;
+    text-align: center;
+    margin-bottom: 30px;
+    font-weight: lighter;
+    text-shadow: 0 2px 4px rgb(0 0 0 / 5%);
+}
+
+.input-psw input {
+    z-index: 10;
+    width: 100%;
+    height: 40px;
+    color: #464646;
+    font-size: 14px;
+    text-indent: 8px;
+    transition: 300ms;
+    margin-bottom: 25px;
+    position: relative;
+    border-radius: 4px;
+    border: solid 1px #efefef;
+    box-shadow: 0 2px 8px rgb(0 0 0 / 5%);
+}
+.input-psw input:focus {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+.input-psw button{
+    width: 140px;
+    height: 40px;
+    border: none;
+    font-size: 16px;
+    cursor: pointer;
+    transition: 300ms;
+    position: relative;
+    border-radius: 4px;
+    font-weight: lighter;
+    background-color: #2db7f5;
+    color: #ffffff;
+    box-shadow: 0 2px 8px #2db7f566;
+}
+.input-psw button:active{
+    transform: translateY(1px);
+    background-color: #0DA9E7;
+    box-shadow: 0 2px 12px #2DB7F577;
+}
+
+
+.input-psw .text-info {
+    opacity: 0;
+    line-height: 0;
+    width: 100%;
+    color: #cccccc;
+    font-size: 12px;
+    text-indent: 10px;
+    transition: 300ms;
+    transform: translateY(-40px);
+}
+
+.input-psw .text-info.show {
+    opacity: 1;
+    transform: translateY(-14px);
+}
+
+.input-psw .text-info.war {
+    color: #fe0000;
+}
+.input-psw .text-info.success {
+    color: #28a745;
 }
 
 /* css code from https://codepen.io/jackrugile/pen/JddmaX/ */
+.wating-service .get-data {
+    pointer-events: none;
+    height: 0;
+    overflow: hidden;
+    transition: 300ms, font-size 0ms, font-weight 0ms;
+    opacity: 0;
+}
 
-.wating-service .loader {
+.wating-service .get-data.show {
+    pointer-events: auto;
+    height: 300px;
+    opacity: 1;
+}
+
+.wating-service .get-data .loader {
     width: 200px;
     height: 200px;
 }
 
-.wating-service .loader-inner {
+.wating-service .get-data .loader-inner {
     bottom: 0;
     height: 60px;
     left: 0;
@@ -39,7 +152,7 @@
     width: 100px;
 }
 
-.wating-service .loader-line-wrap {
+.wating-service .get-data .loader-line-wrap {
     animation:
         spin 2000ms cubic-bezier(.175, .885, .32, 1.275) infinite;
     box-sizing: border-box;
@@ -52,7 +165,7 @@
     width: 100px;
 }
 
-.wating-service .loader-line {
+.wating-service .get-data .loader-line {
     border: 4px solid transparent;
     border-radius: 100%;
     box-sizing: border-box;
@@ -65,55 +178,55 @@
     width: 100px;
 }
 
-.wating-service .loader-line-wrap:nth-child(1) {
+.wating-service .get-data .loader-line-wrap:nth-child(1) {
     animation-delay: -50ms;
 }
 
-.wating-service .loader-line-wrap:nth-child(2) {
+.wating-service .get-data .loader-line-wrap:nth-child(2) {
     animation-delay: -100ms;
 }
 
-.wating-service .loader-line-wrap:nth-child(3) {
+.wating-service .get-data .loader-line-wrap:nth-child(3) {
     animation-delay: -150ms;
 }
 
-.wating-service .loader-line-wrap:nth-child(4) {
+.wating-service .get-data .loader-line-wrap:nth-child(4) {
     animation-delay: -200ms;
 }
 
-.wating-service .loader-line-wrap:nth-child(5) {
+.wating-service .get-data .loader-line-wrap:nth-child(5) {
     animation-delay: -250ms;
 }
 
-.wating-service .loader-line-wrap:nth-child(1) .loader-line {
+.wating-service .get-data .loader-line-wrap:nth-child(1) .loader-line {
     border-color: #999999;
     height: 90px;
     width: 90px;
     top: 7px;
 }
 
-.wating-service .loader-line-wrap:nth-child(2) .loader-line {
+.wating-service .get-data .loader-line-wrap:nth-child(2) .loader-line {
     border-color: #aaaaaa;
     height: 76px;
     width: 76px;
     top: 14px;
 }
 
-.wating-service .loader-line-wrap:nth-child(3) .loader-line {
+.wating-service .get-data .loader-line-wrap:nth-child(3) .loader-line {
     border-color: #bbbbbb;
     height: 62px;
     width: 62px;
     top: 21px;
 }
 
-.wating-service .loader-line-wrap:nth-child(4) .loader-line {
+.wating-service .get-data .loader-line-wrap:nth-child(4) .loader-line {
     border-color: #cccccc;
     height: 48px;
     width: 48px;
     top: 28px;
 }
 
-.wating-service .loader-line-wrap:nth-child(5) .loader-line {
+.wating-service .get-data .loader-line-wrap:nth-child(5) .loader-line {
     border-color: #dddddd;
     height: 34px;
     width: 34px;

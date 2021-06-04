@@ -25,9 +25,9 @@ let times = 3;
 function time() {
     times--;
     setTimeout(function() {
-        document.querySelector("h1").innerText = `没有此房间,${times}秒后返回首页`;
+        document.querySelector("h1").innerText = `没有此房间,${times}秒后返回默认房间`;
         if (times === 0) {
-            window.location = "/room/";
+            window.location = "/room/default";
         } else {
             time();
         };

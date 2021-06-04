@@ -1,3 +1,4 @@
+"use strict"
 function initLogin() {
     console.log("加载登录组件")
     let switchLogBtn = document.querySelector(".center-box.reg button.reg");
@@ -44,7 +45,7 @@ function initLogin() {
 
     function loginSuccess() {
         setTimeout(function() {
-            document.querySelector(".login-view").className += " login-success"
+            document.querySelector(".login-view").className = "login-view show log login-success"
         }, 500)
         loginSuccessReturn()
     }
