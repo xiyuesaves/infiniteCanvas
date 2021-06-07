@@ -1,5 +1,3 @@
-"use strict"
-
 function getRoomInfo() {
     let postIn = false
     postRoomInfo()
@@ -13,6 +11,7 @@ function getRoomInfo() {
             document.querySelector(".post-password").innerText = "稍等"
             document.querySelector(".wating-service").className += " show"
             axios.post("", {
+                    type: "join",
                     password: document.querySelector(".room-password").value
                 })
                 .then(function(response) {
@@ -22,13 +21,13 @@ function getRoomInfo() {
                         let roomInfo = response.data.roomInfo
                         postIn = false
                         if (document.querySelector(".get-data").className.includes("show")) {
-                        	initUserData()
+                            initUserData()
                             getpaths()
                         } else {
                             showText("通过", "success")
                             setTimeout(function() {
                                 loadingText()
-                        		initUserData()
+                                initUserData()
                                 getpaths()
                             }, 800)
                         }
@@ -59,7 +58,7 @@ function getRoomInfo() {
     function showPasswod() {
         const inputEl = document.querySelector(".input-psw")
         if (inputEl.className.includes("show")) {
-            showText("密码错误,请在此文本消失后重试")
+            showText("密码错误,请在1秒后重试")
             setTimeout(function() {
                 hiden()
                 postIn = false
@@ -89,11 +88,31 @@ function getRoomInfo() {
     }
 
     function initUserData() {
-    	console.log("初始化用户数据")
+        console.log("初始化用户数据")
     }
 
     function getpaths() {
-    	console.log("请求路径数据")
-    	document.querySelector(".wating-service").className = "wating-service"
+        console.log("请求路径数据")
+        document.querySelector(".get-data p").innerText = "加载路径数据..."
+        axios.post("", {
+                type: "path"
+            })
+            .then(function(response) {
+                let data = response.data
+                if (data.status) {
+                    console.log(data.pathArr)
+                    initCanvas(data.pathArr)
+                } else {
+                    alert("请求错误,请重试")
+                }
+            })
+            .catch(function(error) {
+                // 网络错误
+                alert("网络错误,请刷新页面")
+                console.log(error)
+            })
+        // document.querySelector(".wating-service").className = "wating-service"
+        // document.querySelector(".get-data").className = "get-data"
+        // initCanvas()
     }
 }

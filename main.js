@@ -30,6 +30,9 @@ function startHttpServer() {
     app.get('/uuid.js', function(req, res) {
         res.sendFile(`${__dirname}/node_modules/node-uuid/uuid.js`);
     });
+    app.get('/pixi.js', function(req, res) {
+        res.sendFile(`${__dirname}/node_modules/pixi.js/dist/browser/pixi.js`);
+    });
     // 处理错误地址
     app.get('/room', function(req, res) {
         // res.redirect(302, '/');
@@ -51,7 +54,7 @@ function startHttpServer() {
         const roomName = req.path.replace(/\/room\//, "");
         let getRoom = db.prepare("SELECT * FROM canvas WHERE canvasName = ?").get(roomName)
         if (getRoom) {
-            console.log(`进入房间${roomName}`)
+            console.log("访问房间地址", roomName)
             res.sendFile(`${__dirname}/public/room/index.html`);
         } else {
             let userInfo = db.prepare("SELECT uuid FROM user WHERE cookie = ?").get(req.cookies.user)
@@ -59,7 +62,7 @@ function startHttpServer() {
                 console.log("询问是否创建")
                 res.sendFile(`${__dirname}/public/errPage/newRoom.html`);
             } else {
-                console.log(`没有找到房间${roomName}`)
+                console.log("没有找到房间", roomName)
                 res.sendFile(`${__dirname}/public/errPage/notFoundRoom.html`);
             }
         }
@@ -69,55 +72,64 @@ function startHttpServer() {
     app.post('/room/*', function(req, res, next) {
         let pathArr = req.path.split("/")
         let roomName = pathArr[pathArr.length - 1]
-        let roomInfo = db.prepare("SELECT canvasId,createUserId,password FROM canvas WHERE canvasName = ?").get(roomName)
         let userInfo = db.prepare("SELECT * FROM user WHERE cookie = ?").get(req.cookies.user)
+        let roomInfo = db.prepare("SELECT canvasId,createUserId,password FROM canvas WHERE canvasName = ?").get(roomName)
+        let roomUserList = db.prepare("SELECT * FROM canvas_user WHERE canvasId = ?").all(roomInfo.canvasId)
+        let inRoom = false
+        for (var i = 0; i < roomUserList.length; i++) {
+            if (roomUserList[i].userId === userInfo.uuid) {
+                inRoom = true
+                break
+            }
+        }
         // 用户身份验证
         if (userInfo) {
-            // 房间是否存在
-            if (roomInfo) {
-                let roomUserList = db.prepare("SELECT * FROM canvas_user WHERE canvasId = ?").all(roomInfo.canvasId)
-                console.log("进入房间", roomName)
-                console.log("房间信息", roomInfo)
-                console.log("用户信息", userInfo)
-                console.log("房间用户列表", roomUserList)
-                let inRoom = false
-                for (var i = 0; i < roomUserList.length; i++) {
-                    if (roomUserList[i].userId === userInfo.uuid) {
-                        inRoom = true
-                        break
-                    }
-                }
-                // 是否已加入房间
-                if (inRoom) {
-                    console.log("已经在房间中")
-                    res.send({ status: true, userList: roomUserList})
-                } else if (roomInfo.password) { // 房间是否加密
-                    console.log("加密房间")
-                    // 验证密码
-                    if (req.body.password === roomInfo.password) {
-                        console.log("密码通过,加入房间")
-                        roomUserList = addRoom()
-                        res.send({ status: true, userList: roomUserList})
+            // 加入房间
+            if (req.body.type === "join") {
+                console.log("加入房间")
+                // 房间是否存在
+                if (roomInfo) {
+                    // 是否已加入房间
+                    if (inRoom) {
+                        console.log("已经在房间中")
+                        res.send({ status: true, userList: roomUserList })
+                    } else if (roomInfo.password) { // 房间是否加密
+                        console.log("加密房间")
+                        // 验证密码
+                        if (req.body.password === roomInfo.password) {
+                            console.log("密码通过,加入房间")
+                            roomUserList = joinRoom()
+                            res.send({ status: true, userList: roomUserList })
+                        } else {
+                            console.log("密码错误")
+                            res.send({ status: false, code: 1 })
+                        }
                     } else {
-                        console.log("密码错误")
-                        res.send({ status: false, code: 1 })
+                        console.log("普通房间")
+                        roomUserList = joinRoom()
+                        res.send({ status: true, userList: roomUserList })
+                    }
+                    // 新加入用户
+                    function joinRoom() {
+                        let insert = db.prepare("INSERT INTO canvas_user (canvasId,userId,joinDate,online) VALUES (?,?,?,?)").run(roomInfo.canvasId, userInfo.uuid, new Date().getTime(), 1)
+                        return db.prepare("SELECT * FROM canvas_user WHERE canvasId = ?").all(roomInfo.canvasId)
                     }
                 } else {
-                    console.log("普通房间")
-                    roomUserList = addRoom()
-                    res.send({ status: true, userList: roomUserList})
+                    console.log("访问房间不存在,重置cookie值")
+                    // 返回房间不存在,并重置其账户cookie强制重新登录
+                    res.send({ status: false, code: 0 })
+                    let userSession = uuidv4()
+                    db.prepare("UPDATE user SET cookie = ? WHERE uuid = ?").run(userSession, userInfo.uuid)
                 }
-                // 新加入用户
-                function addRoom() {
-                    let insert = db.prepare("INSERT INTO canvas_user (canvasId,userId,joinDate,online) VALUES (?,?,?,?)").run(roomInfo.canvasId, userInfo.uuid, new Date().getTime(), 1)
-                    return db.prepare("SELECT * FROM canvas_user WHERE canvasId = ?").all(roomInfo.canvasId)
+            } else if (req.body.type === "path") {
+                if (inRoom) {
+                    console.log("获取路径信息")
+                    let pathArr = db.prepare("SELECT roomId,path FROM path WHERE canvasId = ?").all(roomInfo.canvasId)
+                    res.send({status: true, pathArr: pathArr})
+                }else {
+                    console.log("没有加入房间")
+                    res.send({status: false, code: 0})
                 }
-            } else {
-                console.log("访问房间不存在,重置cookie值")
-                // 返回房间不存在,并重置其账户cookie强制重新登录
-                res.send({ status: false, code: 0 })
-                let userSession = uuidv4()
-                db.prepare("UPDATE user SET cookie = ? WHERE uuid = ?").run(userSession, userInfo.uuid)
             }
         } else {
             console.log("没有登录")

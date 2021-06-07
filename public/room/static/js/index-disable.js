@@ -451,7 +451,7 @@ function initCanvas() {
         refreshPlayer();
     };
 
-    // 转换坐标点为贝塞尔控制点 (借鉴代码,有bug,可能返回NaN)
+    // 转换坐标点为贝塞尔控制点 (借鉴代码,有bug,可能返回NaN - 没有bug,返回nan是因为数组长度错误导致的)
     let Vector2 = function(x, y) {
         this.x = x;
         this.y = y;

@@ -10,9 +10,11 @@
     <script src='static/js/index.js'></script>
     <script src='static/js/login.js'></script>
     <script src='static/js/room.js'></script>
+    <script src='static/js/canvas.js'></script>
     <link rel='stylesheet' type='text/css' href='static/css/index.css'>
     <link rel='stylesheet' type='text/css' href='static/css/login.css'>
     <link rel='stylesheet' type='text/css' href='static/css/getRoomData.css'>
+    <link rel='stylesheet' type='text/css' href='static/css/main.css'>
     <meta name="viewport" content="width=device-width, user-scalable=no,initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
 </head>
 
@@ -55,7 +57,7 @@
     <!-- 同步数据 -->
     <div class="wating-service">
         <div class="get-data show">
-            获取数据中...
+            <p>获取数据中...</p>
             <div class="loader">
                 <div class="loader-inner">
                     <div class="loader-line-wrap">
@@ -85,7 +87,8 @@
     </div>
     <!-- 主要操作层 -->
     <div class="main">
-        
+        <canvas id="main-canvas"></canvas>
+        <canvas id="full-canvas"></canvas>
     </div>
 </body>
 
