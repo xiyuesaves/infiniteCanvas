@@ -1,58 +1,51 @@
 function getRoomInfo() {
-    let postIn = false
-    postRoomInfo()
+    enterRoom()
+    let timeOut = true
+    document.querySelector(".wating-service").className += " show"
     document.querySelector(".post-password").addEventListener("click", function() {
-        postRoomInfo()
+        if (timeOut) {
+            const pswVal = document.querySelector(".room-password").value
+            joinRoom(pswVal)
+            timeOut = false
+            setTimeout(function() {
+                timeOut = true
+            }, 1500)
+        }
+
     })
 
-    function postRoomInfo() {
-        if (!postIn) {
-            postIn = true
-            document.querySelector(".post-password").innerText = "稍等"
-            document.querySelector(".wating-service").className += " show"
-            axios.post("", {
-                    type: "join",
-                    password: document.querySelector(".room-password").value
-                })
-                .then(function(response) {
-                    document.querySelector(".post-password").innerText = "验证"
-                    if (response.data.status) {
-                        // 验证通过
-                        let roomInfo = response.data.roomInfo
-                        postIn = false
-                        if (document.querySelector(".get-data").className.includes("show")) {
-                            initUserData()
-                            getpaths()
-                        } else {
-                            showText("通过", "success")
-                            setTimeout(function() {
-                                loadingText()
-                                initUserData()
-                                getpaths()
-                            }, 800)
-                        }
+    function enterRoom() {
+        axios.post("", {
+            type: "enterRoom"
+        }).then(function(response) {
+            const data = response.data
+            console.log(data)
+            if (data.status) {
+                socketConnection()
+            } else if (data.error === "notJoinRoom") {
+                joinRoom("")
+            }
+        })
+    }
 
-                    } else {
-                        // 验证失败,判断原因
-                        switch (response.data.code) {
-                            case 0:
-                                alert("请求地址错误")
-                                window.location = "/room/default";
-                                break;
-                            case 1:
-                                showPasswod()
-                                break;
-                        }
-                    }
-                })
-                .catch(function(error) {
-                    // 网络错误
+    function joinRoom(psw) {
+        axios.post("", {
+            type: "joinRoom",
+            password: psw
+        }).then(function(response) {
+            const data = response.data
+            console.log(data)
+            if (data.status) {
+                document.querySelector(".post-password").innerText = "验证通过"
+                setTimeout(function() {
+                    loadingText()
+                    enterRoom()
                     document.querySelector(".post-password").innerText = "验证"
-                    showText("网络错误,请刷新页面")
-                    postIn = false
-                    console.log(error)
-                })
-        }
+                }, 600)
+            } else {
+                showPasswod()
+            }
+        })
     }
 
     function showPasswod() {
@@ -61,10 +54,9 @@ function getRoomInfo() {
             showText("密码错误,请在1秒后重试")
             setTimeout(function() {
                 hiden()
-                postIn = false
             }, 1500)
         } else {
-            postIn = false
+            hiden()
             inputEl.className += " show"
             document.querySelector(".get-data").className = "get-data"
         }
@@ -91,28 +83,7 @@ function getRoomInfo() {
         console.log("初始化用户数据")
     }
 
-    function getpaths() {
-        console.log("请求路径数据")
-        document.querySelector(".get-data p").innerText = "加载路径数据..."
-        axios.post("", {
-                type: "path"
-            })
-            .then(function(response) {
-                let data = response.data
-                if (data.status) {
-                    console.log(data.pathArr)
-                    initCanvas(data.pathArr)
-                } else {
-                    alert("请求错误,请重试")
-                }
-            })
-            .catch(function(error) {
-                // 网络错误
-                alert("网络错误,请刷新页面")
-                console.log(error)
-            })
-        // document.querySelector(".wating-service").className = "wating-service"
-        // document.querySelector(".get-data").className = "get-data"
-        // initCanvas()
+    function socketConnection() {
+        // 开始尝试socket连接
     }
 }

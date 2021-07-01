@@ -1,4 +1,5 @@
 "use strict"
+
 function initLogin() {
     console.log("加载登录组件")
     let switchLogBtn = document.querySelector(".center-box.reg button.reg");
@@ -44,10 +45,14 @@ function initLogin() {
 
 
     function loginSuccess() {
+        let className = "reg"
+        if (document.querySelector(".login-view").className.includes(" log ")) {
+            className = "log"
+        }
         setTimeout(function() {
-            document.querySelector(".login-view").className = "login-view show log login-success"
+            document.querySelector(".login-view").className = `login-view show ${className} login-success`
+            loginSuccessReturn()
         }, 500)
-        loginSuccessReturn()
     }
 
     // cookie登录
@@ -59,7 +64,7 @@ function initLogin() {
                     console.log("cookie验证成功")
                     loginSuccess()
                 } else {
-                    Cookies.remove("user")
+                    // Cookies.remove("user")
                     setTimeout(function() {
                         document.querySelector(".login-view").className += " show"
                     }, 300)
@@ -262,10 +267,10 @@ function initLogin() {
         leve = 0
         let pswEl = document.querySelector(".reg-psw");
         let infoText = getNextEl(pswEl)
-        if (/\d/.test(pswEl.value)) leve++
-        if (/[a-z]/.test(pswEl.value)) leve++
-        if (/[A-Z]/.test(pswEl.value)) leve++
-        if (/\W/.test(pswEl.value)) leve++
+        if (/\d/.test(pswEl.value)) { leve++ }
+        if (/[a-z]/.test(pswEl.value)) { leve++ }
+        if (/[A-Z]/.test(pswEl.value)) { leve++ }
+        if (/\W/.test(pswEl.value)) { leve++ }
         if (/\s/.test(pswEl.value)) {
             leve = 0
             infoText.innerText = "不能含有空格"
