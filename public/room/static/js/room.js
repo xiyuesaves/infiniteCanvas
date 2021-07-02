@@ -87,6 +87,7 @@ function getRoomInfo() {
         // 开始尝试socket连接
         let roomName = getRoomName()
         const room = io('/room')
+        let myData
         room.on("connect", () => {
             console.log("连接成功")
             connectSuccess()
@@ -94,16 +95,33 @@ function getRoomInfo() {
         room.on('disconnect', (data) => {
             console.log("断开连接", data)
             if (data === "transport close") {
-                // alert("与服务器的连接已断开")
+                document.querySelector(".wating-service .get-data p").innerText = "与服务器的通信已断开,正在重新连接"
+                document.querySelector(".wating-service").className += " show"
             } else {
-                // alert("您的连接请求已被拒绝")
+                document.querySelector(".wating-service .get-data p").innerText = "您的连接已被服务器拒绝,请刷新页面"
+                document.querySelector(".wating-service").className += " show"
+            }
+        })
+        room.on('loginout', () => {
+            console.log("连接已被服务器断开")
+            room.disconnect()
+        })
+        // 接收到消息
+        room.on('newMsg', (msg) => {
+            console.log(msg)
+            if (msg.user_id === myData.userId) {
+                myMsg(msg)
+            } else {
+                newMsg(msg)
             }
         })
 
         function connectSuccess() {
             room.emit("getHistoricalData")
-            room.on("historicalData", (msg,player,path,my) => {
-                console.log("历史数据", msg,player,path,my)
+            room.on("historicalData", (msg, player, path, my) => {
+                console.log("历史数据", msg, player, path, my)
+                myData = my
+                document.querySelector(".wating-service .get-data p").innerText = "获取数据中..."
                 document.querySelector(".wating-service").className = "wating-service"
                 clearMsg()
                 for (let i = 0; i < msg.length; i++) {
@@ -113,9 +131,33 @@ function getRoomInfo() {
                         newMsg(msg[i])
                     }
                 }
+                initSendMsg()
             })
             room.on("mouse", (point) => {
                 console.log("鼠标数据", users)
+            })
+        }
+        // 发送消息
+        function initSendMsg() {
+            console.log("开始监听")
+            const sendBtn = document.querySelector(".send-box button")
+            const sendInput = document.querySelector(".send-box input")
+            sendInput.addEventListener("keydown", (event) => {
+                if (event.keyCode === 13) {
+                    sendBtn.click()
+                }
+            })
+            sendBtn.addEventListener("click", function() {
+                const inputVal = sendInput.value
+                if (inputVal.length) {
+                    // console.log(inputVal)
+                    room.emit("sendMsg", inputVal)
+                    myMsg({
+                        user_name: myData.userName,
+                        content: inputVal
+                    })
+                    sendInput.value = ""
+                }
             })
         }
     }
@@ -123,18 +165,22 @@ function getRoomInfo() {
     // 自己发送的消息
     function myMsg(msg) {
         const msgListEl = document.querySelector(".message-list")
+        const msgListinsEl = msgListEl.querySelector(".msg-ovf")
         let tempHtml = document.querySelector("#my-msg").content.cloneNode(true)
         tempHtml.querySelector(".user-name").innerText = msg.user_name
         tempHtml.querySelector(".content").innerText = msg.content
-        msgListEl.appendChild(tempHtml)
+        msgListinsEl.appendChild(tempHtml)
+        msgListEl.scroll({ top: msgListinsEl.clientHeight, left: 0, behavior: 'smooth' });
     }
     // 其他人的消息
     function newMsg(msg) {
         const msgListEl = document.querySelector(".message-list")
+        const msgListinsEl = msgListEl.querySelector(".msg-ovf")
         let tempHtml = document.querySelector("#msg").content.cloneNode(true)
         tempHtml.querySelector(".user-name").innerText = msg.user_name
         tempHtml.querySelector(".content").innerText = msg.content
-        msgListEl.appendChild(tempHtml)
+        msgListinsEl.appendChild(tempHtml)
+        msgListEl.scroll({ top: msgListinsEl.clientHeight, left: 0, behavior: 'smooth' });
     }
     // 清空消息区
     function clearMsg() {

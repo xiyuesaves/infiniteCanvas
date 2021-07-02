@@ -147,4 +147,8 @@
     background-color: transparent;
     color: #666666;
     height: 30px;
+    cursor: pointer;
+}
+.main .menu-view .message-box .send-box button:active{
+    background-color: #dddddd;
 }

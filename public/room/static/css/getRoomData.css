@@ -17,18 +17,13 @@
     text-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
     pointer-events: none;
     /*backdrop-filter: blur(30px);*/
-    background-color: rgba(200, 200, 200, 0.15);
+    background-color: #ededed;
 }
-.wating-service *{
-    pointer-events: none!important;
-}
+
 .wating-service.show {
-    pointer-events: auto!important;
     opacity: 1;
 }
-.wating-service.show *{
-    pointer-events: auto;
-}
+
 .input-psw {
     display: flex;
     background-color: #ffffff;

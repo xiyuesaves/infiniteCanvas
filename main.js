@@ -217,6 +217,14 @@ function startSocketServer() {
         let userDetail = db.prepare("SELECT user_id,user_name FROM user WHERE room_session = ?").get(roomSession)
         if (roomDetail && userDetail) { // 判断该连接是否有效
             socket.join(roomName)
+            for(var key in onlineUser){
+                if (onlineUser[key].userId === userDetail.user_id) {
+                    console.log("删除之前的连接",key)
+                    room.to(key).emit("loginout")
+                    delete onlineUser[key]
+                }
+            }
+            console.log("新连接",socket.id)
             onlineUser[socket.id] = {
                 session: roomSession,
                 canvasId: roomDetail.canvas_id,
@@ -232,7 +240,7 @@ function startSocketServer() {
     room.on("connection", (socket) => {
         console.log(`${onlineUser[socket.id].userName} socket连接`)
         socket.on("disconnect", () => {
-            console.log(`${onlineUser[socket.id].userName} socket断开`)
+            console.log(`${onlineUser[socket.id] ? onlineUser[socket.id].userName : socket.id} socket断开`)
             delete onlineUser[socket.id]
         })
         socket.on("getHistoricalData", () => {
@@ -246,9 +254,27 @@ function startSocketServer() {
                     userId: userInfo.userId,
                     userName: userInfo.userName
                 }
-                socket.emit("historicalData",msg,players,path,my)
+                socket.emit("historicalData", msg, players, path, my)
             } else {
-                console.error("没有找到该用户",socket.id)
+                console.error("没有找到该用户", socket.id)
+                socket.disconnect()
+            }
+        })
+        socket.on("sendMsg", (msg) => {
+            let userInfo = onlineUser[socket.id]
+            if (userInfo) {
+                console.log(`${onlineUser[socket.id].userName}: ${msg}`)
+                const date = new Date().getTime()
+                let msgId = db.prepare("INSERT INTO message (canvas_id,user_id,content,date) VALUES (?,?,?,?)").run(onlineUser[socket.id].canvasId, onlineUser[socket.id].userId, msg, date).lastInsertRowid;
+                socket.broadcast.to(userInfo.roomName).emit("newMsg",{
+                    content: msg,
+                    date: date,
+                    msg_id: msgId,
+                    user_id: onlineUser[socket.id].userId,
+                    user_name: onlineUser[socket.id].userName
+                });
+            } else {
+                console.error("没有找到该用户", socket.id)
                 socket.disconnect()
             }
         })
