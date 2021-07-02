@@ -13,18 +13,22 @@
     font-weight: lighter;
     color: #666666;
     transition: 300ms, font-size 0ms, font-weight 0ms;
-    pointer-events: none;
     opacity: 0;
     text-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    pointer-events: none;
     /*backdrop-filter: blur(30px);*/
     background-color: rgba(200, 200, 200, 0.15);
 }
-
+.wating-service *{
+    pointer-events: none!important;
+}
 .wating-service.show {
-    pointer-events: auto;
+    pointer-events: auto!important;
     opacity: 1;
 }
-
+.wating-service.show *{
+    pointer-events: auto;
+}
 .input-psw {
     display: flex;
     background-color: #ffffff;
@@ -131,7 +135,6 @@
 }
 
 .wating-service .get-data.show {
-    pointer-events: auto;
     height: 300px;
     opacity: 1;
 }

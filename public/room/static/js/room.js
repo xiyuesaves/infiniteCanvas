@@ -85,5 +85,66 @@ function getRoomInfo() {
 
     function socketConnection() {
         // 开始尝试socket连接
+        let roomName = getRoomName()
+        const room = io('/room')
+        room.on("connect", () => {
+            console.log("连接成功")
+            connectSuccess()
+        })
+        room.on('disconnect', (data) => {
+            console.log("断开连接", data)
+            if (data === "transport close") {
+                // alert("与服务器的连接已断开")
+            } else {
+                // alert("您的连接请求已被拒绝")
+            }
+        })
+
+        function connectSuccess() {
+            room.emit("getHistoricalData")
+            room.on("historicalData", (msg,player,path,my) => {
+                console.log("历史数据", msg,player,path,my)
+                document.querySelector(".wating-service").className = "wating-service"
+                clearMsg()
+                for (let i = 0; i < msg.length; i++) {
+                    if (msg[i].user_id === my.userId) {
+                        myMsg(msg[i])
+                    } else {
+                        newMsg(msg[i])
+                    }
+                }
+            })
+            room.on("mouse", (point) => {
+                console.log("鼠标数据", users)
+            })
+        }
     }
+
+    // 自己发送的消息
+    function myMsg(msg) {
+        const msgListEl = document.querySelector(".message-list")
+        let tempHtml = document.querySelector("#my-msg").content.cloneNode(true)
+        tempHtml.querySelector(".user-name").innerText = msg.user_name
+        tempHtml.querySelector(".content").innerText = msg.content
+        msgListEl.appendChild(tempHtml)
+    }
+    // 其他人的消息
+    function newMsg(msg) {
+        const msgListEl = document.querySelector(".message-list")
+        let tempHtml = document.querySelector("#msg").content.cloneNode(true)
+        tempHtml.querySelector(".user-name").innerText = msg.user_name
+        tempHtml.querySelector(".content").innerText = msg.content
+        msgListEl.appendChild(tempHtml)
+    }
+    // 清空消息区
+    function clearMsg() {
+        const msgEl = document.querySelectorAll(".message-list .msg-box")
+        for (let i = 0; i < msgEl.length; i++) {
+            msgEl[i].remove()
+        }
+    }
+}
+
+function getRoomName() {
+    return window.location.pathname.replace(/\/room\//, "")
 }

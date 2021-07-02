@@ -7,7 +7,8 @@
     width: 100%;
     height: 100%;
 }
-.main #main-canvas{
+
+.main #main-canvas {
     position: absolute;
     top: 0;
     left: 0;
@@ -15,11 +16,135 @@
     width: 100%;
     height: 100%;
 }
-.main #full-canvas{
+
+.main #full-canvas {
     position: absolute;
     top: 0;
     left: 0;
     z-index: 0;
     width: 100%;
     height: 100%;
+}
+
+/* 菜单层 */
+.main .menu-view {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 20;
+    width: 100%;
+    height: 100%;
+}
+
+.main .menu-view .message-box {
+    position: absolute;
+    width: 360px;
+    height: 240px;
+    border-radius: 6px 6px 0 0;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.08);
+    background-color: rgba(255, 255, 255, 0.2);
+    border: solid 1px rgba(255, 255, 255, 0.8);
+    box-sizing: border-box;
+    border-bottom: none;
+    left: 40px;
+    backdrop-filter: blur(30px);
+    bottom: 0;
+    padding: 10px;
+    padding-bottom: 0;
+}
+
+::selection {
+    background-color: #333333;
+    color: #ffffff;
+}
+
+::-moz-selection {
+    background-color: #333333;
+    color: #ffffff;
+}
+
+::-webkit-selection {
+    background-color: #333333;
+    color: #ffffff;
+}
+
+.main .menu-view .message-box .message-list {
+    width: 100%;
+    height: 190px;
+    overflow-y: scroll;
+    font-weight: lighter;
+    color: #666666;
+}
+
+.main .menu-view .message-box .message-list::-webkit-scrollbar {
+    width: 1px;
+    background-color: transparent;
+}
+
+.main .menu-view .message-box .message-list::-webkit-scrollbar-button {
+    height: 0;
+}
+
+.main .menu-view .message-box .message-list::-webkit-scrollbar-thumb {
+    background-color: #cccccc;
+}
+
+.main .menu-view .message-box .message-list .msg-box {
+    width: 100%;
+    min-height: 40px;
+    font-size: 15px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+}
+.main .menu-view .message-box .message-list .msg-box.us{
+    justify-content: flex-end;
+}
+.main .menu-view .message-box .message-list .msg-box.us .user-name::after{
+    content: "";
+}
+.main .menu-view .message-box .message-list .msg-box.us .user-name::before{
+    content: "：";
+}
+.main .menu-view .message-box .message-list .msg-box .user-name {
+    width: 60px;
+    padding-top: 10px;
+}
+
+.main .menu-view .message-box .message-list .msg-box .content {
+    padding-top: 10px;
+    padding-bottom: 10px;
+    max-width: 260px;
+    line-height: 22px;
+    letter-spacing: 1px;
+}
+
+.main .menu-view .message-box .message-list .msg-box .user-name::after {
+    content: "：";
+}
+
+.main .menu-view .message-box .send-box {
+    width: 100%;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.main .menu-view .message-box .send-box input{
+    width: 280px;
+    height: 30px;
+    background-color: transparent;
+    border: none;
+    font-size: 15px;
+    color: #666666;
+    line-height: 30px;
+    text-indent: 8px;
+    border-bottom: solid 1px #666666;
+}
+.main .menu-view .message-box .send-box button{
+    width: 50px;
+    border: none;
+    background-color: transparent;
+    color: #666666;
+    height: 30px;
 }

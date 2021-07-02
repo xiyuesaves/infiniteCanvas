@@ -102,48 +102,45 @@ function startHttpServer() {
         const roomName = req.path.replace(/\/room\//, "");
         let getRoom = db.prepare("SELECT * FROM room WHERE canvas_name = ?").get(roomName)
         if (getRoom) {
-            console.log("访问房间地址", roomName)
             res.sendFile(`${__dirname}/public/room/index.html`);
         } else {
-            console.log("没有找到房间", roomName)
+            console.error("没有找到房间", roomName)
             res.sendFile(`${__dirname}/public/errPage/notFoundRoom.html`);
         }
     });
 
     // 获取房间密码
     app.post('/room/*', function(req, res) {
-        const checkUser = db.prepare("SELECT user_id FROM user WHERE cookie = ?").get(req.cookies.user)
+        const checkUser = db.prepare("SELECT user_id,user_name FROM user WHERE cookie = ?").get(req.cookies.user)
         const reqData = req.body
         const roomName = req.path.replace(/\/room\//, "");
-        const roomDetail = db.prepare("SELECT password,canvas_id FROM room WHERE canvas_name = ?").get(roomName)
-        console.log(roomDetail)
+        const roomDetail = db.prepare("SELECT password,canvas_id,canvas_name FROM room WHERE canvas_name = ?").get(roomName)
         if (checkUser) {
             const userId = checkUser.user_id
-            console.log("用户已登录",reqData)
             if (reqData.type === "enterRoom") {
                 const roomId = db.prepare("SELECT room_id FROM room_user WHERE canvas_id = ? AND user_id = ?").get(roomDetail.canvas_id, userId)
                 if (roomId) {
-                    console.log("进入房间")
+                    console.log(`${checkUser.user_name} 进入房间 ${roomDetail.canvas_name}`)
                     const sessionStr = uuidv4()
                     db.prepare("UPDATE user SET room_session = ? WHERE user_id = ?").run(sessionStr, userId)
                     res.cookie("room", sessionStr, { maxAge: new Date("Fri, 31 Dec 9999 23:59:59 GMT").getTime() })
                     res.send({ status: true, data: "enterSuccess" })
                 } else {
-                    console.log("需要加入房间")
+                    console.log(`${checkUser.user_name} 需要申请进入`)
                     res.send({ status: false, error: "notJoinRoom" })
                 }
             } else if (reqData.type === "joinRoom") {
                 if (roomDetail.password === reqData.password) {
-                    console.log("密码正确")
+                    console.log(`${checkUser.user_name} 加入房间`)
                     const insert = db.prepare("INSERT INTO room_user (user_id,canvas_id,join_date) VALUES (?,?,?)").run(userId, roomDetail.canvas_id, new Date().getTime())
                     res.send({ status: true, data: "joinSuccess" })
                 } else {
-                    console.log("密码错误")
+                    console.log(`${checkUser.user_name} 密码错误`)
                     res.send({ status: false, error: "wrongPassword" })
                 }
             }
         } else {
-            console.log("拒绝请求")
+            console.error(`拒绝请求`)
             res.send({ status: false, error: "rejectRequest" })
         }
     })
@@ -208,3 +205,53 @@ function startHttpServer() {
     console.log(`服务已启动,正在监听${point}`)
 }
 startHttpServer()
+// 处理socket连接
+function startSocketServer() {
+    const room = io.of("/room")
+    let onlineUser = {}
+    room.use((socket, next) => {
+        let roomName = socket.handshake.headers.referer.split("/")
+        roomName = roomName[roomName.length - 1]
+        roomSession = socket.handshake.headers.cookie.split("room=")[1]
+        let roomDetail = db.prepare("SELECT password,canvas_id FROM room WHERE canvas_name = ?").get(roomName)
+        let userDetail = db.prepare("SELECT user_id,user_name FROM user WHERE room_session = ?").get(roomSession)
+        if (roomDetail && userDetail) { // 判断该连接是否有效
+            socket.join(roomName)
+            onlineUser[socket.id] = {
+                session: roomSession,
+                canvasId: roomDetail.canvas_id,
+                userId: userDetail.user_id,
+                userName: userDetail.user_name,
+                roomName: roomName
+            }
+            next()
+        } else {
+            socket.disconnect()
+        }
+    })
+    room.on("connection", (socket) => {
+        console.log(`${onlineUser[socket.id].userName} socket连接`)
+        socket.on("disconnect", () => {
+            console.log(`${onlineUser[socket.id].userName} socket断开`)
+            delete onlineUser[socket.id]
+        })
+        socket.on("getHistoricalData", () => {
+            let userInfo = onlineUser[socket.id]
+            console.log(`${userInfo.userName} 请求 ${userInfo.roomName} 房间历史数据`)
+            if (userInfo) {
+                const msg = db.prepare("SELECT m.msg_id,m.user_id,u.user_name,m.content,m.date FROM message AS m,user AS u WHERE m.canvas_id = ? AND m.user_id = u.user_id").all(userInfo.canvasId)
+                const players = db.prepare("SELECT r.room_id,u.user_id,u.user_name FROM room_user AS r,user AS u WHERE r.canvas_id = ? AND r.user_id = u.user_id").all(userInfo.canvasId)
+                const path = db.prepare("SELECT path_data,path_id,user_id FROM path WHERE canvas_id = ?").all(userInfo.canvasId)
+                const my = {
+                    userId: userInfo.userId,
+                    userName: userInfo.userName
+                }
+                socket.emit("historicalData",msg,players,path,my)
+            } else {
+                console.error("没有找到该用户",socket.id)
+                socket.disconnect()
+            }
+        })
+    })
+}
+startSocketServer()
