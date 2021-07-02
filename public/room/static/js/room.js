@@ -102,10 +102,6 @@ function getRoomInfo() {
                 document.querySelector(".wating-service").className += " show"
             }
         })
-        room.on('loginout', () => {
-            console.log("连接已被服务器断开")
-            room.disconnect()
-        })
         // 接收到消息
         room.on('newMsg', (msg) => {
             console.log(msg)

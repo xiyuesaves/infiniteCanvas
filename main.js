@@ -220,7 +220,7 @@ function startSocketServer() {
             for(var key in onlineUser){
                 if (onlineUser[key].userId === userDetail.user_id) {
                     console.log("删除之前的连接",key)
-                    room.to(key).emit("loginout")
+                    room.in(key).disconnectSockets();
                     delete onlineUser[key]
                 }
             }
