@@ -8,10 +8,14 @@ document.addEventListener("DOMContentLoaded", function() {
 function loginSuccessReturn() {
     // 获取房间信息
 	getRoomInfo()
-    // 初始化画布
-    initCanvas()
 }
-
+// 获取房间信息后调用
+function getRoomInfoSuccess(room) {
+    // 初始化画布
+    initCanvas(room)
+    // 初始化消息模块
+    initMessage(room)
+}
 
 // 获取下一个元素 - 传入元素
 function getNextEl(el) {

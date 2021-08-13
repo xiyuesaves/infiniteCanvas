@@ -220,14 +220,14 @@ function startSocketServer() {
         let userDetail = db.prepare("SELECT user_id,user_name FROM user WHERE room_session = ?").get(roomSession)
         if (roomDetail && userDetail) { // 判断该连接是否有效
             socket.join(roomName)
-            for(var key in onlineUser){
+            for (var key in onlineUser) {
                 if (onlineUser[key].userId === userDetail.user_id) {
-                    console.log("删除之前的连接",key)
+                    console.log("删除之前的连接", key)
                     room.in(key).disconnectSockets();
                     delete onlineUser[key]
                 }
             }
-            console.log("新连接",socket.id)
+            console.log("新连接", socket.id)
             onlineUser[socket.id] = {
                 session: roomSession,
                 canvasId: roomDetail.canvas_id,
@@ -252,12 +252,22 @@ function startSocketServer() {
             if (userInfo) {
                 const msg = db.prepare("SELECT m.msg_id,m.user_id,u.user_name,m.content,m.date FROM message AS m,user AS u WHERE m.canvas_id = ? AND m.user_id = u.user_id").all(userInfo.canvasId)
                 const players = db.prepare("SELECT r.room_id,u.user_id,u.user_name FROM room_user AS r,user AS u WHERE r.canvas_id = ? AND r.user_id = u.user_id").all(userInfo.canvasId)
-                const path = db.prepare("SELECT path_data,path_id,user_id FROM path WHERE canvas_id = ?").all(userInfo.canvasId)
                 const my = {
                     userId: userInfo.userId,
                     userName: userInfo.userName
                 }
-                socket.emit("historicalData", msg, players, path, my)
+                socket.emit("historicalData", msg, players, my)
+            } else {
+                console.error("没有找到该用户", socket.id)
+                socket.disconnect()
+            }
+        })
+        socket.on("getHistoricalPath", () => {
+            let userInfo = onlineUser[socket.id]
+            console.log(`${userInfo.userName} 请求 ${userInfo.roomName} 房间路径数据`)
+            if (userInfo) {
+                const path = db.prepare("SELECT path_data,path_id,user_id FROM path WHERE canvas_id = ?").all(userInfo.canvasId)
+                socket.emit("historicalPath", path)
             } else {
                 console.error("没有找到该用户", socket.id)
                 socket.disconnect()
@@ -269,7 +279,7 @@ function startSocketServer() {
                 console.log(`${onlineUser[socket.id].userName}: ${msg}`)
                 const date = new Date().getTime()
                 let msgId = db.prepare("INSERT INTO message (canvas_id,user_id,content,date) VALUES (?,?,?,?)").run(onlineUser[socket.id].canvasId, onlineUser[socket.id].userId, msg, date).lastInsertRowid;
-                socket.broadcast.to(userInfo.roomName).emit("newMsg",{
+                socket.broadcast.to(userInfo.roomName).emit("newMsg", {
                     content: msg,
                     date: date,
                     msg_id: msgId,
