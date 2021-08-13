@@ -98,7 +98,7 @@ function getRoomInfo() {
                 document.querySelector(".wating-service .get-data p").innerText = "与服务器的通信已断开,正在重新连接"
                 document.querySelector(".wating-service").className += " show"
             } else {
-                document.querySelector(".wating-service .get-data p").innerText = "您的连接已被服务器拒绝,请刷新页面"
+                document.querySelector(".wating-service .get-data p").innerText = "您的连接已断开,请刷新页面"
                 document.querySelector(".wating-service").className += " show"
             }
         })
@@ -136,23 +136,25 @@ function getRoomInfo() {
         // 发送消息
         function initSendMsg() {
             console.log("开始监听")
-            const sendBtn = document.querySelector(".send-box button")
-            const sendInput = document.querySelector(".send-box input")
+            // const sendBtn = document.querySelector(".send-box button")
+            const sendInput = document.querySelector(".send-box .input-text")
             sendInput.addEventListener("keydown", (event) => {
                 if (event.keyCode === 13) {
-                    sendBtn.click()
+                    event.preventDefault()
                 }
             })
-            sendBtn.addEventListener("click", function() {
-                const inputVal = sendInput.value
-                if (inputVal.length) {
-                    // console.log(inputVal)
-                    room.emit("sendMsg", inputVal)
-                    myMsg({
-                        user_name: myData.userName,
-                        content: inputVal
-                    })
-                    sendInput.value = ""
+            sendInput.addEventListener("keyup", (event) => {
+                const inputVal = sendInput.innerText
+                const checkVal = inputVal.replace(/\s/g,"")
+                if (event.keyCode === 13) {
+                    if (checkVal.length) {
+                        room.emit("sendMsg", inputVal)
+                        myMsg({
+                            user_name: myData.userName,
+                            content: inputVal
+                        })
+                    }
+                    sendInput.innerText = ""
                 }
             })
         }

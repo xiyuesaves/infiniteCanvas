@@ -54,7 +54,7 @@ function initDatabase(tableList) {
                 db.prepare('CREATE TABLE "room" (  "canvas_id" integer NOT NULL PRIMARY KEY AUTOINCREMENT,  "canvas_name" text NOT NULL,  "create_user_id" text NOT NULL,  "create_date" text NOT NULL,  "password" text);').run()
                 break
             case "user":
-                db.prepare('CREATE TABLE "user" (  "user_id" integer NOT NULL PRIMARY KEY AUTOINCREMENT,  "user_name" text NOT NULL,  "password" text NOT NULL,  "create_date" text NOT NULL,  "cookie" text);').run()
+                db.prepare('CREATE TABLE "user" (  "user_id" integer NOT NULL PRIMARY KEY AUTOINCREMENT,  "user_name" text NOT NULL,  "password" text NOT NULL,  "create_date" integer NOT NULL,  "cookie" text);').run()
                 break
         }
     }
@@ -79,6 +79,9 @@ function startHttpServer() {
     });
     app.get('/pixi.js', function(req, res) {
         res.sendFile(`${__dirname}/node_modules/pixi.js/dist/browser/pixi.js`);
+    });
+    app.get('/Stats.js', function(req, res) {
+        res.sendFile(`${__dirname}/node_modules/stats-js/build/Stats.js`);
     });
 
     // 处理错误地址

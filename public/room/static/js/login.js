@@ -298,7 +298,7 @@ function initLogin() {
             if (pswEl.value.length <= 18) {
 
             } else {
-                infoText.innerText = "密码至多18位"
+                infoText.innerText = "密码最多18位"
                 infoText.className = "text-info show war"
             }
         } else {

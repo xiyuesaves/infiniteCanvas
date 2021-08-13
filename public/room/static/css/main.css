@@ -34,12 +34,14 @@
     z-index: 20;
     width: 100%;
     height: 100%;
+    pointer-events: none;
 }
 
 .main .menu-view .message-box {
+    pointer-events: auto;
     position: absolute;
     width: 360px;
-    height: 240px;
+    min-height: 240px;
     border-radius: 6px 6px 0 0;
     box-shadow: 0 0 15px rgba(0, 0, 0, 0.08);
     background-color: rgba(255, 255, 255, 0.2);
@@ -74,10 +76,11 @@
     overflow-y: scroll;
     font-weight: lighter;
     color: #666666;
+
 }
 
 .main .menu-view .message-box .message-list::-webkit-scrollbar {
-    width: 1px;
+    width: 2px;
     background-color: transparent;
 }
 
@@ -92,45 +95,63 @@
 .main .menu-view .message-box .message-list .msg-box {
     width: 100%;
     min-height: 40px;
-    font-size: 15px;
+    font-size: 14px;
     display: flex;
     align-items: flex-start;
     justify-content: flex-start;
+    flex-direction: column;
+    margin-bottom: 12px;
+    font-weight: normal;
 }
-.main .menu-view .message-box .message-list .msg-box.us{
-    justify-content: flex-end;
+
+.main .menu-view .message-box .message-list .msg-box.us {
+    align-items: flex-end;
+    padding-right: 4px;
 }
-.main .menu-view .message-box .message-list .msg-box.us .user-name::after{
-    content: "";
+
+.main .menu-view .message-box .message-list .msg-box.us .user-name {
+    text-align: right;
+    padding-left: 0;
+    padding-right: 2px;
 }
-.main .menu-view .message-box .message-list .msg-box.us .user-name::before{
-    content: "：";
-}
+
 .main .menu-view .message-box .message-list .msg-box .user-name {
-    width: 60px;
-    padding-top: 10px;
+    width: 60%;
+    padding-left: 2px;
+    margin-bottom: 2px;
+}
+
+.main .menu-view .message-box .message-list .msg-box.us .content {
+    background-color: #1e6eff;
+    color: #ffffff;
+    border-radius: 10px 4px 10px 10px;
 }
 
 .main .menu-view .message-box .message-list .msg-box .content {
-    padding-top: 10px;
-    padding-bottom: 10px;
-    max-width: 260px;
+    max-width: 288px;
     line-height: 22px;
     letter-spacing: 1px;
-}
-
-.main .menu-view .message-box .message-list .msg-box .user-name::after {
-    content: "：";
+    background-color: #E9E9EB;
+    color: #333333;
+    word-break: break-all;
+    word-wrap: break-word;
+    padding: 6px 8px;
+    border-radius: 4px 10px 10px 10px;
+    font-size: 16px;
 }
 
 .main .menu-view .message-box .send-box {
     width: 100%;
-    height: 40px;
+    min-height: 40px;
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-end;
+    padding-right: 6px;
+    padding-bottom: 8px;
+    padding-top: 8px;
 }
-.main .menu-view .message-box .send-box input{
+
+.main .menu-view .message-box .send-box input {
     width: 280px;
     height: 30px;
     background-color: transparent;
@@ -141,14 +162,65 @@
     text-indent: 8px;
     border-bottom: solid 1px #666666;
 }
-.main .menu-view .message-box .send-box button{
+
+.main .menu-view .message-box .send-box button {
     width: 50px;
     border: none;
-    background-color: transparent;
+    /*background-color: transparent;*/
     color: #666666;
     height: 30px;
     cursor: pointer;
+    transition: background-color 150ms;
 }
-.main .menu-view .message-box .send-box button:active{
+
+.main .menu-view .message-box .send-box button:active {
     background-color: #dddddd;
+}
+
+.main .menu-view .message-box .send-box .input-text {
+    min-height: 34px;
+    background-color: #e9e9eb;
+    border-radius: 10px 4px 10px 10px;
+    outline: none;
+    line-height: 22px;
+    letter-spacing: 1px;
+    padding: 6px 8px;
+    font-size: 16px;
+    color: #666666;
+    transition: background-color 300ms, min-width 300ms, color 300ms;
+}
+
+.main .menu-view .message-box .send-box .input-text:empty {
+    min-width: 332px;
+    position: relative;
+}
+
+.main .menu-view .message-box .send-box .input-text::before {
+    position: absolute;
+    display: block;
+    height: 34px;
+    line-height: 34px;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    pointer-events: none;
+    text-align: center;
+    content: "在此输入";
+    font-size: 14px;
+    opacity: 0;
+}
+
+.main .menu-view .message-box .send-box .input-text:empty:before {
+    opacity: 1;
+    transition: 300ms;
+}
+
+.main .menu-view .message-box .send-box .input-text:focus:before {
+    opacity: 0;
+}
+
+.main .menu-view .message-box .send-box .input-text:focus {
+    min-width: 30px;
+    background-color: #1e6eff;
+    color: #ffffff;
 }

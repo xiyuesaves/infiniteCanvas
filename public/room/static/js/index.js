@@ -6,7 +6,10 @@ document.addEventListener("DOMContentLoaded", function() {
 
 // 登录成功后调用
 function loginSuccessReturn() {
+    // 获取房间信息
 	getRoomInfo()
+    // 初始化画布
+    initCanvas()
 }
 
 

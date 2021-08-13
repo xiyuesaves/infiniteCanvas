@@ -7,6 +7,7 @@
     <script src='../socket.io/socket.io.js'></script>
     <script src='../cookies.js'></script>
     <script src='../axios.js'></script>
+    <script src='../Stats.js'></script>
     <script src='static/js/index.js'></script>
     <script src='static/js/login.js'></script>
     <script src='static/js/room.js'></script>
@@ -98,8 +99,8 @@
                     </template>
                     <template id="my-msg">
                         <div class="msg-box us">
-                            <p class="content"></p>
                             <p class="user-name of-ellipsis"></p>
+                            <p class="content"></p>
                         </div>
                     </template>
                     <div class="msg-ovf">
@@ -107,13 +108,13 @@
                     </div>
                 </div>
                 <div class="send-box">
-                    <input type="text" name="">
-                    <button>发送</button>
+                    <div class="input-text" contenteditable="plaintext-only"></div>
+                    <!-- <button>发送</button> -->
                 </div>
             </div>
         </div>
-        <canvas id="main-canvas"></canvas>
-        <canvas id="full-canvas"></canvas>
+        <canvas style="opacity: 0.5;" id="main-canvas"></canvas>
+        <canvas style="opacity: 0.5;" id="full-canvas"></canvas>
     </div>
 </body>
 

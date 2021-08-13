@@ -25,7 +25,8 @@
     "js-cookie": "^2.2.1",
     "node-uuid": "^1.4.8",
     "pixi.js": "^6.0.4",
-    "socket.io": "^4.0.1"
+    "socket.io": "^4.0.1",
+    "stats-js": "^1.0.1"
   },
   "devDependencies": {
     "nodemon": "^2.0.7"
