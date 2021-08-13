@@ -13,7 +13,7 @@ function initCanvas(room) {
         fullCanvas.width = window.innerWidth * 3;
         fullCanvas.height = window.innerHeight * 3;
         let fCtx = fullCanvas.getContext("2d");
-        // fCtx.fillRect(window.innerWidth, window.innerHeight, 200, 200);
+        fCtx.fillRect(window.innerWidth, window.innerHeight, 200, 200);
 
         // 用户可见画布
         let screenCanvas = document.querySelector("#main-canvas");
