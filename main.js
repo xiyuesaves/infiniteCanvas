@@ -81,7 +81,7 @@ function startHttpServer() {
         res.sendFile(`${__dirname}/node_modules/pixi.js/dist/browser/pixi.js`);
     });
     app.get('/Stats.js', function(req, res) {
-        res.sendFile(`${__dirname}/node_modules/stats-js/build/Stats.js`);
+        res.sendFile(`${__dirname}/node_modules/stats-js/build/stats.js`);
     });
 
     // 处理错误地址
