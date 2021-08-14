@@ -32,10 +32,9 @@ function initCanvas(room) {
         }
         // 后台渲染层
         let fullPoint = {
-            x: 0,
-            y: 0
+            x: -window.innerWidth,
+            y: -window.innerHeight
         }
-
         // 窗口大小变更时刷新
         window.onresize = function() {
             fullPoint.x -= (window.innerWidth * 3 - fullCanvas.width) / 2
@@ -101,7 +100,6 @@ function initCanvas(room) {
             fullPoint.y -= (((window.innerHeight + event.offsetY) / beforeH) * (beforeH - afterH)) / dZoom;
             screenPoint.x -= ((event.offsetX / beforeW) * (beforeW - afterW)) / screenZoom;
             screenPoint.y -= ((event.offsetY / beforeH) * (beforeH - afterH)) / screenZoom;
-
             clearTimeout(timeOut)
             timeOut = setTimeout(function() {
                 timeOut = null
