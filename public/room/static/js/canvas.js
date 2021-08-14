@@ -92,7 +92,6 @@ function initCanvas(room) {
             fCtx.scale(zooms, zooms);
             if (!timeOut) {
                 sCtx.save()
-                console.log("状态已保存")
             }
             screenZoom = screenZoom * zooms
             sCtx.scale(zooms, zooms);
@@ -102,16 +101,14 @@ function initCanvas(room) {
             fullPoint.y -= (((window.innerHeight + event.offsetY) / beforeH) * (beforeH - afterH)) / dZoom;
             screenPoint.x -= ((event.offsetX / beforeW) * (beforeW - afterW)) / screenZoom;
             screenPoint.y -= ((event.offsetY / beforeH) * (beforeH - afterH)) / screenZoom;
-            
+
             clearTimeout(timeOut)
             timeOut = setTimeout(function() {
                 timeOut = null
-                console.log("执行")
                 drenArr(pathArr, fCtx, fullCanvas, fullPoint)
                 sCtx.restore()
                 screenZoom = 1
-            }, 200)
-            console.log("忽略")
+            }, 500)
         });
         // 渲染历史数据
         let pathArr = [];

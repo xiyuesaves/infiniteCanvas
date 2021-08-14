@@ -11,7 +11,7 @@ const { v4: uuidv4 } = require('node-uuid');
 const db = require('better-sqlite3')('canvas.db');
 
 // http服务端口
-const point = 3399;
+const point = 7749;
 // 房间列表
 const roomList = ["test"]
 // 验证数据库
