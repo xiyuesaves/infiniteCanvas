@@ -20,14 +20,6 @@ function initCanvas(room) {
         screenCanvas.height = window.innerHeight;
         let sCtx = screenCanvas.getContext("2d");
 
-        // 窗口大小变更时刷新
-        window.onresize = function() {
-            screenCanvas.width = window.innerWidth;
-            screenCanvas.height = window.innerHeight;
-            fullCanvas.width = window.innerWidth * 3;
-            fullCanvas.height = window.innerHeight * 3;
-            drenArr(pathArr, fCtx, fullCanvas, fullPoint)
-        };
         // 去除默认右键菜单
         document.oncontextmenu = function(event) {
             event.preventDefault();
@@ -42,6 +34,18 @@ function initCanvas(room) {
             x: window.innerWidth,
             y: window.innerHeight
         }
+
+        // 窗口大小变更时刷新
+        window.onresize = function() {
+            fullPoint.x -= (window.innerWidth * 3 - fullCanvas.width) / 2
+            fullPoint.y -= (window.innerHeight * 3 - fullCanvas.height) / 2
+            screenCanvas.width = window.innerWidth;
+            screenCanvas.height = window.innerHeight;
+            fullCanvas.width = window.innerWidth * 3;
+            fullCanvas.height = window.innerHeight * 3;
+            drenArr(pathArr, fCtx, fullCanvas, fullPoint)
+        };
+
         let renderOk = true
         let renderS = true
         screenCanvas.addEventListener("mousemove", function(event) {
@@ -85,6 +89,27 @@ function initCanvas(room) {
             //     })
             // }
         })
+        // 缩放监听
+        let dZoom = 1
+        let zoom = 1.1
+        screenCanvas.addEventListener('mousewheel', function(event) {
+            let delta = event.deltaY / 90
+            console.log(delta)
+            let zooms = 0
+            if (delta > 0) {
+                zooms = Math.pow(zoom, -1.1);
+            } else {
+                zooms = Math.pow(zoom, 1.1);
+            }
+            let afterW = fullCanvas.width * dZoom,
+                afterH = fullCanvas.height * dZoom;
+            dZoom = dZoom * zooms;
+            let beforeW = fullCanvas.width * dZoom,
+                beforeH = fullCanvas.height * dZoom;
+            fullPoint.x = fullPoint.x + (((event.offsetX * 3) / afterW) * (afterW - beforeW)) / dZoom;
+            fullPoint.y = fullPoint.y + (((event.offsetY * 3) / afterH) * (afterH - beforeH)) / dZoom;
+            drenArr(pathArr, fCtx, fullCanvas, fullPoint)
+        }, false);
         // 渲染历史数据
         let pathArr = [];
         // 循环该用户的所有路径
@@ -105,24 +130,23 @@ function initCanvas(room) {
         };
         // 渲染核心算法
         function drenArr(pathArr, ctx, canvas, xy) {
-            console.log("render")
-            let dZoom = 1
-            ctx.clearRect(0, 0, canvas.width / dZoom, canvas.height / dZoom);
+            console.log("render", dZoom)
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.fillStyle = "#d9d9d9";
-            ctx.fillRect(0, 0, canvas.width / dZoom, canvas.height / dZoom)
+            ctx.fillRect(0, 0, canvas.width, canvas.height)
             ctx.fill();
             // 绘制所有路径
             let lastX = 0,
                 lastY = 0
             if (xy) {
-                lastX = -xy.x
-                lastY = -xy.y
+                lastX = -xy.x / dZoom
+                lastY = -xy.y / dZoom
             }
             for (let path = 0; path < pathArr.length; path++) {
                 // 开始绘制路径
                 // 判断是否已缓存路径
                 // 如果路径点少于阈值,使用点绘制,否则根据配置选择点绘制还是线绘制
-                if (pathArr[path].length > 2) {
+                if (pathArr[path].length > 2 && false) {
                     // 判断绘制方法
                     ctx.beginPath();
                     ctx.lineCap = "round";
@@ -154,11 +178,12 @@ function initCanvas(room) {
                     for (let point = 0; point < pathArr[path].length; point++) {
                         ctx.beginPath();
                         ctx.fillStyle = pathArr[path][0].color;
-                        ctx.arc((pathArr[path][point].x + lastX), (pathArr[path][point].y + lastY), pathArr[path][0].brushSize / 2, 0, 2 * Math.PI);
+                        ctx.arc((pathArr[path][point].x + lastX) * dZoom, (pathArr[path][point].y + lastY) * dZoom, (pathArr[path][0].brushSize * dZoom) / 2, 0, 2 * Math.PI);
                         ctx.fill();
                     };
                 };
             };
+            ctx.strokeRect(window.innerWidth, window.innerHeight, window.innerWidth, window.innerHeight)
             console.log("canvas ok")
             screenPoint = {
                 x: window.innerWidth,
