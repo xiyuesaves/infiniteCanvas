@@ -9,7 +9,8 @@ function initCanvas(room) {
     room.on("historicalPath", (path) => {
         console.log(path)
         // 底层画布
-        let fullCanvas = document.querySelector("#full-canvas");
+        // let fullCanvas = document.querySelector("#full-canvas");
+        let fullCanvas = document.createElement("canvas");
         fullCanvas.width = window.innerWidth * 3;
         fullCanvas.height = window.innerHeight * 3;
         let fCtx = fullCanvas.getContext("2d");
@@ -66,32 +67,16 @@ function initCanvas(room) {
             }
         })
         screenCanvas.addEventListener("mouseup", function(event) {
-            // mouseMove = {
-            //     x: 0,
-            //     y: 0
-            // }
-            // if (event.button === 2 && renderOk) {
-            //     renderOk = false
-            //     setTimeout(function() {
-            //         drenArr(pathArr, fCtx, fullCanvas, fullPoint)
-            //     })
-            // }
+
         })
         screenCanvas.addEventListener("mouseleave", function(event) {
-            // mouseMove = {
-            //     x: 0,
-            //     y: 0
-            // }
-            // if (renderOk) {
-            //     renderOk = false
-            //     setTimeout(function() {
-            //         drenArr(pathArr, fCtx, fullCanvas, fullPoint)
-            //     })
-            // }
+
         })
         // 缩放监听
-        let dZoom = 1
-        let zoom = 1.1
+        let zoom = 1.1,
+            dZoom = 1,
+            screenZoom = 1,
+            timeOut
         screenCanvas.addEventListener('mousewheel', function(event) {
             let delta = event.deltaY / 90
             let zooms = 0
@@ -100,17 +85,34 @@ function initCanvas(room) {
             } else {
                 zooms = Math.pow(zoom, 1.1);
             }
+
             let beforeW = screenCanvas.width * dZoom,
                 beforeH = screenCanvas.height * dZoom;
             dZoom = dZoom * zooms;
             fCtx.scale(zooms, zooms);
+            if (!timeOut) {
+                sCtx.save()
+                console.log("状态已保存")
+            }
+            screenZoom = screenZoom * zooms
+            sCtx.scale(zooms, zooms);
             let afterW = screenCanvas.width * dZoom,
                 afterH = screenCanvas.height * dZoom;
-            console.log(event.offsetX * dZoom / beforeW * (afterW - beforeW) * 3 + " -- " + (afterW - beforeW) / 2 * 3)
             fullPoint.x -= (((window.innerWidth + event.offsetX) / beforeW) * (beforeW - afterW)) / dZoom;
             fullPoint.y -= (((window.innerHeight + event.offsetY) / beforeH) * (beforeH - afterH)) / dZoom;
-            drenArr(pathArr, fCtx, fullCanvas, fullPoint)
-        }, false);
+            screenPoint.x -= ((event.offsetX / beforeW) * (beforeW - afterW)) / screenZoom;
+            screenPoint.y -= ((event.offsetY / beforeH) * (beforeH - afterH)) / screenZoom;
+            
+            clearTimeout(timeOut)
+            timeOut = setTimeout(function() {
+                timeOut = null
+                console.log("执行")
+                drenArr(pathArr, fCtx, fullCanvas, fullPoint)
+                sCtx.restore()
+                screenZoom = 1
+            }, 200)
+            console.log("忽略")
+        });
         // 渲染历史数据
         let pathArr = [];
         // 循环该用户的所有路径
@@ -125,13 +127,13 @@ function initCanvas(room) {
         function refreshCanvas() {
             stats.begin();
             sCtx.clearRect(0, 0, screenCanvas.width, screenCanvas.height)
-            sCtx.drawImage(fullCanvas, screenPoint.x, screenPoint.y, window.innerWidth, window.innerHeight, 0, 0, window.innerWidth, window.innerHeight);
+            sCtx.drawImage(fullCanvas, screenPoint.x, screenPoint.y, window.innerWidth / screenZoom, window.innerHeight / screenZoom, 0, 0, window.innerWidth / screenZoom, window.innerHeight / screenZoom);
             stats.end();
             window.requestAnimationFrame(refreshCanvas);
         };
         // 渲染核心算法
         function drenArr(pathArr, ctx, canvas, xy) {
-            console.log("render", dZoom)
+            console.log("render")
             ctx.fillStyle = "#d9d9d9";
             ctx.fillRect(0, 0, canvas.width / dZoom, canvas.height / dZoom)
             ctx.fill();
@@ -183,7 +185,7 @@ function initCanvas(room) {
                     };
                 };
             };
-            ctx.lineWidth = 1;
+            ctx.lineWidth = 1 / dZoom;
             ctx.strokeStyle = "#000000";
             ctx.strokeRect(window.innerWidth / dZoom, window.innerHeight / dZoom, window.innerWidth / dZoom, window.innerHeight / dZoom)
             console.log("canvas ok")
