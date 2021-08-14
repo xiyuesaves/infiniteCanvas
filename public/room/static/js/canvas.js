@@ -13,7 +13,6 @@ function initCanvas(room) {
         fullCanvas.width = window.innerWidth * 3;
         fullCanvas.height = window.innerHeight * 3;
         let fCtx = fullCanvas.getContext("2d");
-        fCtx.fillRect(window.innerWidth, window.innerHeight, 200, 200);
 
         // 用户可见画布
         let screenCanvas = document.querySelector("#main-canvas");
@@ -25,37 +24,75 @@ function initCanvas(room) {
         window.onresize = function() {
             screenCanvas.width = window.innerWidth;
             screenCanvas.height = window.innerHeight;
+            fullCanvas.width = window.innerWidth * 3;
+            fullCanvas.height = window.innerHeight * 3;
+            drenArr(pathArr, fCtx, fullCanvas, fullPoint)
         };
         // 去除默认右键菜单
         document.oncontextmenu = function(event) {
             event.preventDefault();
         };
-        // 鼠标在画布上的事件监听
-        let mouseMove = {
-            x: 0,
-            y: 0
-        }
+        // 显示屏幕位置[每次重置]
         let screenPoint = {
             x: window.innerWidth,
             y: window.innerHeight
         }
-        screenCanvas.addEventListener("mousedown", function(event) {
-            if (event.buttons === 2) {
-                mouseMove.x = event.clientX
-                mouseMove.y = event.clientY
-            }
-        })
+        // 后台渲染层
+        let fullPoint = {
+            x: window.innerWidth,
+            y: window.innerHeight
+        }
+        let renderOk = true
+        let renderS = true
         screenCanvas.addEventListener("mousemove", function(event) {
             if (event.buttons === 2) {
+                renderS = true
+                fullPoint.x -= event.movementX
+                fullPoint.y -= event.movementY
                 screenPoint.x -= event.movementX
                 screenPoint.y -= event.movementY
+            } else if (renderS) {
+                renderS = false
+                if (renderOk) {
+                    renderOk = false
+                    setTimeout(function() {
+                        drenArr(pathArr, fCtx, fullCanvas, fullPoint)
+                    }, 10)
+                }
             }
         })
         screenCanvas.addEventListener("mouseup", function(event) {
-            if (event.button === 2) {
-                drenArr(pathArr2, fCtx, fullCanvas, screenPoint)
-            }
+            // mouseMove = {
+            //     x: 0,
+            //     y: 0
+            // }
+            // if (event.button === 2 && renderOk) {
+            //     renderOk = false
+            //     setTimeout(function() {
+            //         drenArr(pathArr, fCtx, fullCanvas, fullPoint)
+            //     })
+            // }
         })
+        screenCanvas.addEventListener("mouseleave", function(event) {
+            // mouseMove = {
+            //     x: 0,
+            //     y: 0
+            // }
+            // if (renderOk) {
+            //     renderOk = false
+            //     setTimeout(function() {
+            //         drenArr(pathArr, fCtx, fullCanvas, fullPoint)
+            //     })
+            // }
+        })
+        // 渲染历史数据
+        let pathArr = [];
+        // 循环该用户的所有路径
+        for (let i = 0; i < path.length; i++) {
+            pathArr.push(JSON.parse(path[i].path_data));
+        };
+        drenArr(pathArr, fCtx, fullCanvas, fullPoint)
+
         // 循环渲染模块
         window.requestAnimationFrame(refreshCanvas);
 
@@ -66,29 +103,24 @@ function initCanvas(room) {
             stats.end();
             window.requestAnimationFrame(refreshCanvas);
         };
-    })
-
-    // 绘制数组路径
-    function drenArr(pathArr, ctx, canvas, xy, callback) {
-        console.log("render")
-        let dZoom = 1
-        ctx.clearRect(0, 0, canvas.width / dZoom, canvas.height / dZoom);
-        ctx.fillStyle = "#d9d9d9";
-        ctx.fillRect(0, 0, canvas.width / dZoom, canvas.height / dZoom)
-        ctx.fill();
-        // 绘制所有路径
-        for (let path = 0; path < pathArr.length; path++) {
-            // 开始绘制路径
-            // 判断是否已缓存路径
+        // 渲染核心算法
+        function drenArr(pathArr, ctx, canvas, xy) {
+            console.log("render")
+            let dZoom = 1
+            ctx.clearRect(0, 0, canvas.width / dZoom, canvas.height / dZoom);
+            ctx.fillStyle = "#d9d9d9";
+            ctx.fillRect(0, 0, canvas.width / dZoom, canvas.height / dZoom)
+            ctx.fill();
+            // 绘制所有路径
             let lastX = 0,
                 lastY = 0
             if (xy) {
                 lastX = -xy.x
                 lastY = -xy.y
             }
-            if (pathArr[path][0].imageData) {
-
-            } else {
+            for (let path = 0; path < pathArr.length; path++) {
+                // 开始绘制路径
+                // 判断是否已缓存路径
                 // 如果路径点少于阈值,使用点绘制,否则根据配置选择点绘制还是线绘制
                 if (pathArr[path].length > 2) {
                     // 判断绘制方法
@@ -126,9 +158,15 @@ function initCanvas(room) {
                         ctx.fill();
                     };
                 };
+            };
+            console.log("canvas ok")
+            screenPoint = {
+                x: window.innerWidth,
+                y: window.innerHeight
             }
+            renderOk = true
         };
-    };
+    })
 
     // 转换坐标点为贝塞尔控制点
     let Vector2 = function(x, y) {
