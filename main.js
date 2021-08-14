@@ -227,7 +227,7 @@ function startSocketServer() {
                     delete onlineUser[key]
                 }
             }
-            console.log("新连接", socket.id)
+            // console.log("新连接", socket.id)
             onlineUser[socket.id] = {
                 session: roomSession,
                 canvasId: roomDetail.canvas_id,
@@ -241,7 +241,7 @@ function startSocketServer() {
         }
     })
     room.on("connection", (socket) => {
-        console.log(`${onlineUser[socket.id].userName} socket连接`)
+        console.log(`${onlineUser[socket.id].userName} 进入房间 ${onlineUser[socket.id].roomName}`)
         socket.on("disconnect", () => {
             console.log(`${onlineUser[socket.id] ? onlineUser[socket.id].userName : socket.id} socket断开`)
             delete onlineUser[socket.id]
