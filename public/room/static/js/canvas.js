@@ -53,8 +53,8 @@ function initCanvas(room) {
                 renderS = true
                 fullPoint.x -= event.movementX / dZoom
                 fullPoint.y -= event.movementY / dZoom
-                screenPoint.x -= event.movementX
-                screenPoint.y -= event.movementY
+                screenPoint.x -= event.movementX / screenZoom
+                screenPoint.y -= event.movementY / screenZoom
             } else if (renderS) {
                 renderS = false
                 if (renderOk) {
@@ -65,11 +65,31 @@ function initCanvas(room) {
                 }
             }
         })
-        screenCanvas.addEventListener("mouseup", function(event) {
-
+        // 移动端适配
+        let lastTouchPoint = {
+            x: 0,
+            y: 0
+        }
+        screenCanvas.addEventListener("touchstart", function(event) {
+            lastTouchPoint.x = event.changedTouches[0].clientX
+            lastTouchPoint.y = event.changedTouches[0].clientY
         })
-        screenCanvas.addEventListener("mouseleave", function(event) {
-
+        screenCanvas.addEventListener("touchmove", function(event) {
+            renderS = true
+            fullPoint.x += lastTouchPoint.x - event.changedTouches[0].clientX / dZoom
+            fullPoint.y += lastTouchPoint.y - event.changedTouches[0].clientY / dZoom
+            screenPoint.x += lastTouchPoint.x - event.changedTouches[0].clientX / screenZoom
+            screenPoint.y += lastTouchPoint.y - event.changedTouches[0].clientY / screenZoom
+            lastTouchPoint.x = event.changedTouches[0].clientX
+            lastTouchPoint.y = event.changedTouches[0].clientY
+        })
+        screenCanvas.addEventListener("touchend", function(event) {
+            if (renderOk) {
+                renderOk = false
+                setTimeout(function() {
+                    drenArr(pathArr, fCtx, fullCanvas, fullPoint)
+                }, 10)
+            }
         })
         // 缩放监听
         let zoom = 1.1,
@@ -100,6 +120,7 @@ function initCanvas(room) {
             fullPoint.y -= (((window.innerHeight + event.offsetY) / beforeH) * (beforeH - afterH)) / dZoom;
             screenPoint.x -= ((event.offsetX / beforeW) * (beforeW - afterW)) / screenZoom;
             screenPoint.y -= ((event.offsetY / beforeH) * (beforeH - afterH)) / screenZoom;
+
             clearTimeout(timeOut)
             timeOut = setTimeout(function() {
                 timeOut = null
@@ -121,14 +142,13 @@ function initCanvas(room) {
 
         function refreshCanvas() {
             stats.begin();
-            sCtx.clearRect(0, 0, screenCanvas.width, screenCanvas.height)
+            sCtx.clearRect(0, 0, screenCanvas.width / screenZoom, screenCanvas.height / screenZoom)
             sCtx.drawImage(fullCanvas, screenPoint.x, screenPoint.y, window.innerWidth / screenZoom, window.innerHeight / screenZoom, 0, 0, window.innerWidth / screenZoom, window.innerHeight / screenZoom);
             stats.end();
             window.requestAnimationFrame(refreshCanvas);
         };
         // 渲染核心算法
         function drenArr(pathArr, ctx, canvas, xy) {
-            console.log("render")
             ctx.fillStyle = "#d9d9d9";
             ctx.fillRect(0, 0, canvas.width / dZoom, canvas.height / dZoom)
             ctx.fill();
@@ -139,6 +159,7 @@ function initCanvas(room) {
                 lastX = -xy.x
                 lastY = -xy.y
             }
+            console.time("canvas")
             for (let path = 0; path < pathArr.length; path++) {
                 // 开始绘制路径
                 // 判断是否已缓存路径
@@ -183,12 +204,14 @@ function initCanvas(room) {
             ctx.lineWidth = 1 / dZoom;
             ctx.strokeStyle = "#000000";
             ctx.strokeRect(window.innerWidth / dZoom, window.innerHeight / dZoom, window.innerWidth / dZoom, window.innerHeight / dZoom)
-            console.log("canvas ok")
+            ctx.strokeStyle = "#ff0000";
+            ctx.strokeRect(0, 0, window.innerWidth * 3 / dZoom, window.innerHeight * 3 / dZoom)
             screenPoint = {
                 x: window.innerWidth,
                 y: window.innerHeight
             }
             renderOk = true
+            console.timeEnd("canvas")
         };
     })
 

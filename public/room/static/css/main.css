@@ -151,28 +151,6 @@
     padding-top: 8px;
 }
 
-.main .menu-view .message-box .send-box input {
-    width: 280px;
-    height: 30px;
-    background-color: transparent;
-    border: none;
-    font-size: 15px;
-    color: #666666;
-    line-height: 30px;
-    text-indent: 8px;
-    border-bottom: solid 1px #666666;
-}
-
-.main .menu-view .message-box .send-box button {
-    width: 50px;
-    border: none;
-    /*background-color: transparent;*/
-    color: #666666;
-    height: 30px;
-    cursor: pointer;
-    transition: background-color 150ms;
-}
-
 .main .menu-view .message-box .send-box button:active {
     background-color: #dddddd;
 }
@@ -191,7 +169,7 @@
 }
 
 .main .menu-view .message-box .send-box .input-text:empty {
-    min-width: 332px;
+    min-width: calc(100vw - 32px);
     position: relative;
 }
 
@@ -223,4 +201,17 @@
     min-width: 30px;
     background-color: #1e6eff;
     color: #ffffff;
+}
+
+/* 小屏设备优化 */
+@media (max-width: 750px) {
+    .main .menu-view .message-box {
+        width: 100%;
+        min-height: 100px;
+        left: 0px;
+        bottom: 0;
+    }
+    .main .menu-view .message-box .message-list{
+        height: 120px;
+    }
 }
