@@ -82,24 +82,63 @@ function initCanvas(room) {
         })
         // 移动端适配
         let lastTouchPoint = {
-            x: 0,
-            y: 0
-        }
+                x: 0,
+                y: 0
+            },
+            oneTouchPoint = {
+                x: 0,
+                y: 0
+            },
+            newPoint = {
+                clientX: 0,
+                clientY: 0
+            }
+        onemouse = true
         screenCanvas.addEventListener("touchstart", function(event) {
-            lastTouchPoint.x = event.changedTouches[0].clientX * window.devicePixelRatio
-            lastTouchPoint.y = event.changedTouches[0].clientY * window.devicePixelRatio
+            lastTouchPoint.x = event.touches[0].clientX * window.devicePixelRatio
+            lastTouchPoint.y = event.touches[0].clientY * window.devicePixelRatio
         })
         screenCanvas.addEventListener("touchmove", function(event) {
-            renderS = true
-            fullPoint.x += lastTouchPoint.x - event.changedTouches[0].clientX * window.devicePixelRatio / dZoom
-            fullPoint.y += lastTouchPoint.y - event.changedTouches[0].clientY * window.devicePixelRatio / dZoom
-            screenPoint.x += lastTouchPoint.x - event.changedTouches[0].clientX * window.devicePixelRatio / screenZoom
-            screenPoint.y += lastTouchPoint.y - event.changedTouches[0].clientY * window.devicePixelRatio / screenZoom
-            lastTouchPoint.x = event.changedTouches[0].clientX * window.devicePixelRatio
-            lastTouchPoint.y = event.changedTouches[0].clientY * window.devicePixelRatio
+            event.preventDefault();
+            if (event.touches.length === 1) {
+                fullPoint.x += lastTouchPoint.x - event.touches[0].clientX * window.devicePixelRatio / dZoom
+                fullPoint.y += lastTouchPoint.y - event.touches[0].clientY * window.devicePixelRatio / dZoom
+                screenPoint.x += lastTouchPoint.x - event.touches[0].clientX * window.devicePixelRatio / screenZoom
+                screenPoint.y += lastTouchPoint.y - event.touches[0].clientY * window.devicePixelRatio / screenZoom
+                lastTouchPoint.x = event.touches[0].clientX * window.devicePixelRatio
+                lastTouchPoint.y = event.touches[0].clientY * window.devicePixelRatio
+                if (!onemouse) {
+                    onemouse = true
+                    fullPoint.x += lastTouchPoint.x - newPoint.clientX * window.devicePixelRatio
+                    fullPoint.y += lastTouchPoint.y - newPoint.clientY * window.devicePixelRatio
+                    screenPoint.x += lastTouchPoint.x - newPoint.clientX * window.devicePixelRatio
+                    screenPoint.y += lastTouchPoint.y - newPoint.clientY * window.devicePixelRatio
+                }
+            } else if (event.touches.length === 2) {
+                let ev1 = event.touches[0],
+                    ev2 = event.touches[1]
+                newPoint = {
+                    clientX: (ev1.clientX + ev2.clientX) / 2,
+                    clientY: (ev1.clientY + ev2.clientY) / 2
+                }
+                if (onemouse) {
+                    onemouse = false
+                    fullPoint.x -= lastTouchPoint.x - newPoint.clientX * window.devicePixelRatio
+                    fullPoint.y -= lastTouchPoint.y - newPoint.clientY * window.devicePixelRatio
+                    screenPoint.x -= lastTouchPoint.x - newPoint.clientX * window.devicePixelRatio
+                    screenPoint.y -= lastTouchPoint.y - newPoint.clientY * window.devicePixelRatio
+                }
+                fullPoint.x += lastTouchPoint.x - newPoint.clientX * window.devicePixelRatio
+                fullPoint.y += lastTouchPoint.y - newPoint.clientY * window.devicePixelRatio
+                screenPoint.x += lastTouchPoint.x - newPoint.clientX * window.devicePixelRatio
+                screenPoint.y += lastTouchPoint.y - newPoint.clientY * window.devicePixelRatio
+                lastTouchPoint.x = newPoint.clientX * window.devicePixelRatio
+                lastTouchPoint.y = newPoint.clientY * window.devicePixelRatio
+            }
+
         })
         screenCanvas.addEventListener("touchend", function(event) {
-            if (renderOk) {
+            if (renderOk && event.touches.length === 0) {
                 renderOk = false
                 setTimeout(function() {
                     drenArr(pathArr, fCtx, fullCanvas, fullPoint)
@@ -216,6 +255,7 @@ function initCanvas(room) {
                     };
                 };
             };
+            // 标注渲染范围
             ctx.lineWidth = 1 / dZoom;
             ctx.strokeStyle = "#000000";
             ctx.strokeRect(screenSize.width / dZoom, screenSize.height / dZoom, screenSize.width / dZoom, screenSize.height / dZoom)
@@ -286,3 +326,14 @@ function initCanvas(room) {
         return arrs;
     }
 };
+
+// 临时debug用
+function msgs(msg) {
+    const msgListEl = document.querySelector(".message-list")
+    const msgListinsEl = msgListEl.querySelector(".msg-ovf")
+    let tempHtml = document.querySelector("#my-msg").content.cloneNode(true)
+    // tempHtml.querySelector(".user-name").innerText = msg.user_name
+    tempHtml.querySelector(".content").innerText = msg
+    msgListinsEl.appendChild(tempHtml)
+    msgListEl.scroll({ top: msgListinsEl.clientHeight, left: 0, behavior: 'smooth' });
+}
