@@ -169,7 +169,7 @@
 }
 
 .main .menu-view .message-box .send-box .input-text:empty {
-    min-width: calc(100vw - 32px);
+    min-width: 326px;
     position: relative;
 }
 
@@ -211,7 +211,19 @@
         left: 0px;
         bottom: 0;
     }
-    .main .menu-view .message-box .message-list{
+
+    .main .menu-view .message-box .message-list {
         height: 120px;
+    }
+
+    .main .menu-view .message-box .send-box .input-text:empty {
+        min-width: calc(100vw - 32px);
+        position: relative;
+    }
+
+    .main .menu-view .message-box .send-box .input-text:focus {
+        min-width: 30px;
+        background-color: #1e6eff;
+        color: #ffffff;
     }
 }

@@ -7,18 +7,25 @@ function initCanvas(room) {
 
     room.emit("getHistoricalPath")
     room.on("historicalPath", (path) => {
+        let screenSize = {
+                width: window.innerWidth * window.devicePixelRatio,
+                height: window.innerHeight * window.devicePixelRatio
+            },
+            fullSize = {
+                width: window.innerWidth * window.devicePixelRatio * 3,
+                height: window.innerHeight * window.devicePixelRatio * 3
+            }
         console.log(path)
         // 底层画布
-        // let fullCanvas = document.querySelector("#full-canvas");
         let fullCanvas = document.createElement("canvas");
-        fullCanvas.width = window.innerWidth * 3;
-        fullCanvas.height = window.innerHeight * 3;
+        fullCanvas.width = fullSize.width;
+        fullCanvas.height = fullSize.height;
         let fCtx = fullCanvas.getContext("2d");
 
         // 用户可见画布
         let screenCanvas = document.querySelector("#main-canvas");
-        screenCanvas.width = window.innerWidth;
-        screenCanvas.height = window.innerHeight;
+        screenCanvas.width = screenSize.width;
+        screenCanvas.height = screenSize.height;
         let sCtx = screenCanvas.getContext("2d");
 
         // 去除默认右键菜单
@@ -27,22 +34,30 @@ function initCanvas(room) {
         };
         // 显示屏幕位置[每次重置]
         let screenPoint = {
-            x: window.innerWidth,
-            y: window.innerHeight
+            x: screenSize.width,
+            y: screenSize.height
         }
-        // 后台渲染层
+        // 后台渲染层初始坐标
         let fullPoint = {
-            x: -window.innerWidth,
-            y: -window.innerHeight
+            x: -screenSize.width,
+            y: -screenSize.height
         }
         // 窗口大小变更时刷新
         window.onresize = function() {
-            fullPoint.x -= (window.innerWidth * 3 - fullCanvas.width) / 2
-            fullPoint.y -= (window.innerHeight * 3 - fullCanvas.height) / 2
-            screenCanvas.width = window.innerWidth;
-            screenCanvas.height = window.innerHeight;
-            fullCanvas.width = window.innerWidth * 3;
-            fullCanvas.height = window.innerHeight * 3;
+            screenSize = {
+                width: window.innerWidth * window.devicePixelRatio,
+                height: window.innerHeight * window.devicePixelRatio
+            }
+            fullSize = {
+                width: window.innerWidth * window.devicePixelRatio * 3,
+                height: window.innerHeight * window.devicePixelRatio * 3
+            }
+            fullPoint.x -= (fullSize.width - fullCanvas.width) / 2
+            fullPoint.y -= (fullSize.height - fullCanvas.height) / 2
+            screenCanvas.width = screenSize.width;
+            screenCanvas.height = screenSize.height;
+            fullCanvas.width = fullSize.width;
+            fullCanvas.height = fullSize.height;
             drenArr(pathArr, fCtx, fullCanvas, fullPoint)
         };
 
@@ -51,10 +66,10 @@ function initCanvas(room) {
         screenCanvas.addEventListener("mousemove", function(event) {
             if (event.buttons === 2) {
                 renderS = true
-                fullPoint.x -= event.movementX / dZoom
-                fullPoint.y -= event.movementY / dZoom
-                screenPoint.x -= event.movementX / screenZoom
-                screenPoint.y -= event.movementY / screenZoom
+                fullPoint.x -= event.movementX * window.devicePixelRatio / dZoom
+                fullPoint.y -= event.movementY * window.devicePixelRatio / dZoom
+                screenPoint.x -= event.movementX * window.devicePixelRatio / screenZoom
+                screenPoint.y -= event.movementY * window.devicePixelRatio / screenZoom
             } else if (renderS) {
                 renderS = false
                 if (renderOk) {
@@ -71,17 +86,17 @@ function initCanvas(room) {
             y: 0
         }
         screenCanvas.addEventListener("touchstart", function(event) {
-            lastTouchPoint.x = event.changedTouches[0].clientX
-            lastTouchPoint.y = event.changedTouches[0].clientY
+            lastTouchPoint.x = event.changedTouches[0].clientX * window.devicePixelRatio
+            lastTouchPoint.y = event.changedTouches[0].clientY * window.devicePixelRatio
         })
         screenCanvas.addEventListener("touchmove", function(event) {
             renderS = true
-            fullPoint.x += lastTouchPoint.x - event.changedTouches[0].clientX / dZoom
-            fullPoint.y += lastTouchPoint.y - event.changedTouches[0].clientY / dZoom
-            screenPoint.x += lastTouchPoint.x - event.changedTouches[0].clientX / screenZoom
-            screenPoint.y += lastTouchPoint.y - event.changedTouches[0].clientY / screenZoom
-            lastTouchPoint.x = event.changedTouches[0].clientX
-            lastTouchPoint.y = event.changedTouches[0].clientY
+            fullPoint.x += lastTouchPoint.x - event.changedTouches[0].clientX * window.devicePixelRatio / dZoom
+            fullPoint.y += lastTouchPoint.y - event.changedTouches[0].clientY * window.devicePixelRatio / dZoom
+            screenPoint.x += lastTouchPoint.x - event.changedTouches[0].clientX * window.devicePixelRatio / screenZoom
+            screenPoint.y += lastTouchPoint.y - event.changedTouches[0].clientY * window.devicePixelRatio / screenZoom
+            lastTouchPoint.x = event.changedTouches[0].clientX * window.devicePixelRatio
+            lastTouchPoint.y = event.changedTouches[0].clientY * window.devicePixelRatio
         })
         screenCanvas.addEventListener("touchend", function(event) {
             if (renderOk) {
@@ -116,8 +131,8 @@ function initCanvas(room) {
             sCtx.scale(zooms, zooms);
             let afterW = screenCanvas.width * dZoom,
                 afterH = screenCanvas.height * dZoom;
-            fullPoint.x -= (((window.innerWidth + event.offsetX) / beforeW) * (beforeW - afterW)) / dZoom;
-            fullPoint.y -= (((window.innerHeight + event.offsetY) / beforeH) * (beforeH - afterH)) / dZoom;
+            fullPoint.x -= (((screenSize.width + event.offsetX) / beforeW) * (beforeW - afterW)) / dZoom;
+            fullPoint.y -= (((screenSize.height + event.offsetY) / beforeH) * (beforeH - afterH)) / dZoom;
             screenPoint.x -= ((event.offsetX / beforeW) * (beforeW - afterW)) / screenZoom;
             screenPoint.y -= ((event.offsetY / beforeH) * (beforeH - afterH)) / screenZoom;
 
@@ -143,7 +158,7 @@ function initCanvas(room) {
         function refreshCanvas() {
             stats.begin();
             sCtx.clearRect(0, 0, screenCanvas.width / screenZoom, screenCanvas.height / screenZoom)
-            sCtx.drawImage(fullCanvas, screenPoint.x, screenPoint.y, window.innerWidth / screenZoom, window.innerHeight / screenZoom, 0, 0, window.innerWidth / screenZoom, window.innerHeight / screenZoom);
+            sCtx.drawImage(fullCanvas, screenPoint.x, screenPoint.y, screenSize.width / screenZoom, screenSize.height / screenZoom, 0, 0, screenSize.width / screenZoom, screenSize.height / screenZoom);
             stats.end();
             window.requestAnimationFrame(refreshCanvas);
         };
@@ -203,12 +218,12 @@ function initCanvas(room) {
             };
             ctx.lineWidth = 1 / dZoom;
             ctx.strokeStyle = "#000000";
-            ctx.strokeRect(window.innerWidth / dZoom, window.innerHeight / dZoom, window.innerWidth / dZoom, window.innerHeight / dZoom)
+            ctx.strokeRect(screenSize.width / dZoom, screenSize.height / dZoom, screenSize.width / dZoom, screenSize.height / dZoom)
             ctx.strokeStyle = "#ff0000";
-            ctx.strokeRect(0, 0, window.innerWidth * 3 / dZoom, window.innerHeight * 3 / dZoom)
+            ctx.strokeRect(0, 0, screenSize.width * 3 / dZoom, screenSize.height * 3 / dZoom)
             screenPoint = {
-                x: window.innerWidth,
-                y: window.innerHeight
+                x: screenSize.width,
+                y: screenSize.height
             }
             renderOk = true
             console.timeEnd("canvas")
