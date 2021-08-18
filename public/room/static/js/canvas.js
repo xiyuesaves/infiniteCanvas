@@ -101,7 +101,8 @@ function initCanvas(room) {
                 clientX: 0,
                 clientY: 0
             },
-            onemouse = true
+            onemouse = true,
+            scale = false
         // 获取坐标之间的距离
         var getDistance = function(point) {
             return Math.hypot(point.x1 - point.x2, point.y1 - point.y2);
@@ -115,17 +116,16 @@ function initCanvas(room) {
             }
         };
         // 缩放监听
-        let zoom = 1.1,         // 缩放步幅(pc)
-            dZoom = 1,          // 初始缩放值
+        let zoom = 1.1, // 缩放步幅(pc)
+            dZoom = 1, // 初始缩放值
             fZoom = 1,
-            screenZoom = 1,     // 渲染缩放值[每次重置]
-            timeOut,            // 节流
-            zooms = 0           // 单次缩放倍率
+            tZoom = 1,
+            screenZoom = 1, // 渲染缩放值[每次重置]
+            timeOut, // 节流
+            zooms = 0 // 单次缩放倍率
         screenCanvas.addEventListener("touchstart", function(event) {
             event.preventDefault();
             if (event.touches.length === 1) {
-                startTouches.x1 = event.touches[0].clientX
-                startTouches.y1 = event.touches[0].clientY
                 // msgs("单点渲染")
                 onemouse = true
                 lastTouchPoint.x = event.touches[0].clientX * window.devicePixelRatio
@@ -136,7 +136,12 @@ function initCanvas(room) {
                 screenPoint.y += lastTouchPoint.y / screenZoom - event.touches[0].clientY * window.devicePixelRatio / screenZoom
             } else if (event.touches.length === 2) {
                 msgs("双指模式")
-                sCtx.save()
+                if (!scale) {
+                    sCtx.save()
+                }
+                scale = true
+                startTouches.x1 = event.touches[0].clientX
+                startTouches.y1 = event.touches[0].clientY
                 startTouches.x2 = event.touches[1].clientX
                 startTouches.y2 = event.touches[1].clientY
                 let ev1 = event.touches[0],
@@ -158,6 +163,8 @@ function initCanvas(room) {
                 screenPoint.y += lastTouchPoint.y / screenZoom - newPoint.clientY * window.devicePixelRatio / screenZoom
                 lastTouchPoint.x = newPoint.clientX * window.devicePixelRatio
                 lastTouchPoint.y = newPoint.clientY * window.devicePixelRatio
+            } else {
+                msgs(event.touches.length)
             }
         })
         screenCanvas.addEventListener("touchmove", function(event) {
@@ -182,10 +189,12 @@ function initCanvas(room) {
                 }
                 let beforeW = screenCanvas.width * screenZoom,
                     beforeH = screenCanvas.height * screenZoom;
-                screenZoom = getDistance(endTouches) / getDistance(startTouches)
+
+                screenZoom = tZoom * getDistance(endTouches) / getDistance(startTouches)
                 fZoom = dZoom * getDistance(endTouches) / getDistance(startTouches)
                 sCtx.setTransform(screenZoom, 0, 0, screenZoom, 0, 0);
                 fCtx.setTransform(fZoom, 0, 0, fZoom, 0, 0);
+
                 let afterW = screenCanvas.width * screenZoom,
                     afterH = screenCanvas.height * screenZoom;
                 msgs("缩放倍数" + fZoom)
@@ -206,6 +215,7 @@ function initCanvas(room) {
         })
         screenCanvas.addEventListener("touchend", function(event) {
             if (renderOk && event.touches.length === 0) {
+                scale = false
                 renderOk = false
                 setTimeout(function() {
                     drenArr(pathArr, fCtx, fullCanvas, fullPoint)
@@ -224,6 +234,7 @@ function initCanvas(room) {
                 screenPoint.x += lastTouchPoint.x / screenZoom - newPoint.clientX * window.devicePixelRatio / screenZoom
                 screenPoint.y += lastTouchPoint.y / screenZoom - newPoint.clientY * window.devicePixelRatio / screenZoom
                 dZoom = fZoom
+                tZoom = screenZoom
             }
         })
 
@@ -272,16 +283,21 @@ function initCanvas(room) {
             sCtx.clearRect(0, 0, screenCanvas.width / screenZoom, screenCanvas.height / screenZoom)
             sCtx.drawImage(fullCanvas, screenPoint.x, screenPoint.y, screenSize.width / screenZoom, screenSize.height / screenZoom, 0, 0, screenSize.width / screenZoom, screenSize.height / screenZoom);
             // 调试代码
+            sCtx.fillStyle = "#000000";
             sCtx.font = 25 / screenZoom + "px serif";
-            sCtx.fillText(`调试文本`, 50 / screenZoom, 260 / screenZoom);
-            sCtx.fillText(`x:${screenPoint.x} y:${screenPoint.y} zoom: ${screenZoom}`, 50 / screenZoom, 300 / screenZoom);
-            sCtx.fillText(`x:${fullPoint.x} y:${fullPoint.y} zoom: ${dZoom}`, 50 / screenZoom, 340 / screenZoom);
+            sCtx.fillText(`调试文本`, (60) / screenZoom, (60) / screenZoom);
+            sCtx.fillText(`x:${screenPoint.x} y:${screenPoint.y} zoom: ${screenZoom}`, (60) / screenZoom, (120) / screenZoom);
+            sCtx.fillText(`x:${fullPoint.x} y:${fullPoint.y} zoom: ${dZoom}`, (60) / screenZoom, (180) / screenZoom);
 
             stats.end();
             window.requestAnimationFrame(refreshCanvas);
         };
         // 渲染核心算法
         function drenArr(pathArr, ctx, canvas, xy) {
+            tZoom = 1
+            screenZoom = 1
+            sCtx.restore()
+            renderOk = true
             ctx.fillStyle = "#d9d9d9";
             ctx.fillRect(0, 0, canvas.width / dZoom, canvas.height / dZoom)
             ctx.fill();
@@ -344,9 +360,6 @@ function initCanvas(room) {
                 x: screenSize.width,
                 y: screenSize.height
             }
-            screenZoom = 1
-            renderOk = true
-            sCtx.restore()
             console.timeEnd("canvas")
         };
     })
