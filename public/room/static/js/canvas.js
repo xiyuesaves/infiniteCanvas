@@ -135,7 +135,7 @@ function initCanvas(room) {
                 screenPoint.x += lastTouchPoint.x / screenZoom - event.touches[0].clientX * window.devicePixelRatio / screenZoom
                 screenPoint.y += lastTouchPoint.y / screenZoom - event.touches[0].clientY * window.devicePixelRatio / screenZoom
             } else if (event.touches.length === 2) {
-                msgs("双指模式")
+                // msgs("双指模式")
                 if (!scale) {
                     sCtx.save()
                 }
@@ -197,7 +197,6 @@ function initCanvas(room) {
 
                 let afterW = screenCanvas.width * screenZoom,
                     afterH = screenCanvas.height * screenZoom;
-                msgs("缩放倍数" + fZoom)
                 fullPoint.x += lastTouchPoint.x / fZoom - newPoint.clientX * window.devicePixelRatio / fZoom
                 fullPoint.y += lastTouchPoint.y / fZoom - newPoint.clientY * window.devicePixelRatio / fZoom
                 screenPoint.x += lastTouchPoint.x / screenZoom - newPoint.clientX * window.devicePixelRatio / screenZoom
@@ -221,7 +220,7 @@ function initCanvas(room) {
                     drenArr(pathArr, fCtx, fullCanvas, fullPoint)
                 }, 10)
             } else if (event.touches.length === 1) {
-                msgs("离开双指")
+                // msgs("离开双指")
                 onemouse = true
                 fullPoint.x += lastTouchPoint.x / fZoom - event.touches[0].clientX * window.devicePixelRatio / fZoom
                 fullPoint.y += lastTouchPoint.y / fZoom - event.touches[0].clientY * window.devicePixelRatio / fZoom
@@ -285,9 +284,10 @@ function initCanvas(room) {
             // 调试代码
             sCtx.fillStyle = "#000000";
             sCtx.font = 25 / screenZoom + "px serif";
-            sCtx.fillText(`调试文本`, (60) / screenZoom, (60) / screenZoom);
-            sCtx.fillText(`x:${screenPoint.x} y:${screenPoint.y} zoom: ${screenZoom}`, (60) / screenZoom, (120) / screenZoom);
-            sCtx.fillText(`x:${fullPoint.x} y:${fullPoint.y} zoom: ${dZoom}`, (60) / screenZoom, (180) / screenZoom);
+            
+            // sCtx.fillText(`调试文本`, (60) / screenZoom, (60) / screenZoom);
+            // sCtx.fillText(`x:${screenPoint.x} y:${screenPoint.y} zoom: ${screenZoom}`, (60) / screenZoom, (120) / screenZoom);
+            // sCtx.fillText(`x:${fullPoint.x} y:${fullPoint.y} zoom: ${dZoom}`, (60) / screenZoom, (180) / screenZoom);
 
             stats.end();
             window.requestAnimationFrame(refreshCanvas);
