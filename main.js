@@ -221,7 +221,7 @@ function startSocketServer() {
         if (roomDetail && userDetail) { // 判断该连接是否有效
             socket.join(roomName)
             for (var key in onlineUser) {
-                if (onlineUser[key].userId === userDetail.user_id) {
+                if (onlineUser[key].userId === userDetail.user_id && onlineUser[key].roomName === roomName) {
                     console.log("删除之前的连接", key)
                     room.in(key).disconnectSockets();
                     delete onlineUser[key]
