@@ -7,13 +7,14 @@ function initCanvas(room) {
 
     room.emit("getHistoricalPath")
     room.on("historicalPath", (path) => {
-        let screenSize = {
+        let renderZoom = 3,
+            screenSize = {
                 width: window.innerWidth * window.devicePixelRatio,
                 height: window.innerHeight * window.devicePixelRatio
             },
             fullSize = {
-                width: window.innerWidth * window.devicePixelRatio * 3,
-                height: window.innerHeight * window.devicePixelRatio * 3
+                width: window.innerWidth * window.devicePixelRatio * renderZoom,
+                height: window.innerHeight * window.devicePixelRatio * renderZoom
             }
         console.log(path)
         // 底层画布
@@ -49,8 +50,8 @@ function initCanvas(room) {
                 height: window.innerHeight * window.devicePixelRatio
             }
             fullSize = {
-                width: window.innerWidth * window.devicePixelRatio * 3,
-                height: window.innerHeight * window.devicePixelRatio * 3
+                width: window.innerWidth * window.devicePixelRatio * renderZoom,
+                height: window.innerHeight * window.devicePixelRatio * renderZoom
             }
             fullPoint.x -= (fullSize.width - fullCanvas.width) / 2
             fullPoint.y -= (fullSize.height - fullCanvas.height) / 2
@@ -63,8 +64,16 @@ function initCanvas(room) {
 
         let renderOk = true
         let renderS = true
+        let dynamicTime = 0 // 无操作时降低渲染帧率
+        let renderDelay = dynamicTime
+        let requestATime = null
         screenCanvas.addEventListener("mousemove", function(event) {
             if (event.buttons === 2) {
+                renderDelay = 0
+                if (!renderS) {
+                    clearTimeout(requestATime)
+                    refreshCanvas()
+                }
                 renderS = true
                 fullPoint.x -= event.movementX * window.devicePixelRatio / dZoom
                 fullPoint.y -= event.movementY * window.devicePixelRatio / dZoom
@@ -72,6 +81,7 @@ function initCanvas(room) {
                 screenPoint.y -= event.movementY * window.devicePixelRatio / screenZoom
             } else if (renderS) {
                 renderS = false
+                renderDelay = dynamicTime
                 if (renderOk) {
                     renderOk = false
                     setTimeout(function() {
@@ -118,9 +128,10 @@ function initCanvas(room) {
         // 缩放监听
         let zoom = 1.1, // 缩放步幅(pc)
             dZoom = 1, // 初始缩放值
-            fZoom = 1,
-            tZoom = 1,
+            fZoom = 1, // 临时缩放值 用于手机端
+            tZoom = 1, // 临时缩放值 用于手机端
             screenZoom = 1, // 渲染缩放值[每次重置]
+            onZoom, // 优化渲染性能
             timeOut, // 节流
             zooms = 0 // 单次缩放倍率
         screenCanvas.addEventListener("touchstart", function(event) {
@@ -244,7 +255,6 @@ function initCanvas(room) {
             } else {
                 zooms = Math.pow(zoom, 1.1);
             }
-
             let beforeW = screenCanvas.width * dZoom,
                 beforeH = screenCanvas.height * dZoom;
             dZoom = dZoom * zooms;
@@ -265,6 +275,7 @@ function initCanvas(room) {
                 timeOut = null
                 drenArr(pathArr, fCtx, fullCanvas, fullPoint)
             }, 500)
+
         });
         // 渲染历史数据
         let pathArr = [];
@@ -276,7 +287,6 @@ function initCanvas(room) {
 
         // 循环渲染模块
         window.requestAnimationFrame(refreshCanvas);
-
         function refreshCanvas() {
             stats.begin();
             sCtx.clearRect(0, 0, screenCanvas.width / screenZoom, screenCanvas.height / screenZoom)
@@ -284,13 +294,15 @@ function initCanvas(room) {
             // 调试代码
             sCtx.fillStyle = "#000000";
             sCtx.font = 25 / screenZoom + "px serif";
-            
+
             // sCtx.fillText(`调试文本`, (60) / screenZoom, (60) / screenZoom);
             // sCtx.fillText(`x:${screenPoint.x} y:${screenPoint.y} zoom: ${screenZoom}`, (60) / screenZoom, (120) / screenZoom);
             // sCtx.fillText(`x:${fullPoint.x} y:${fullPoint.y} zoom: ${dZoom}`, (60) / screenZoom, (180) / screenZoom);
 
             stats.end();
-            window.requestAnimationFrame(refreshCanvas);
+            requestATime = setTimeout(function () {
+                window.requestAnimationFrame(refreshCanvas);
+            },renderDelay)
         };
         // 渲染核心算法
         function drenArr(pathArr, ctx, canvas, xy) {
@@ -355,7 +367,7 @@ function initCanvas(room) {
             ctx.strokeStyle = "#000000";
             ctx.strokeRect(screenSize.width / dZoom, screenSize.height / dZoom, screenSize.width / dZoom, screenSize.height / dZoom)
             ctx.strokeStyle = "#ff0000";
-            ctx.strokeRect(0, 0, screenSize.width * 3 / dZoom, screenSize.height * 3 / dZoom)
+            ctx.strokeRect(0, 0, screenSize.width * renderZoom / dZoom, screenSize.height * renderZoom / dZoom)
             screenPoint = {
                 x: screenSize.width,
                 y: screenSize.height
